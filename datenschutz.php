@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <title>Broke & Hungry - Datenschutz</title>
+</head>
+<body>
+
+<?php include_once 'header.php'; ?>
+
+
+  <main>
+    <h2>Datenschutzerklärung</h2>
+
+    <p>Der Schutz deiner Daten ist uns wichtig. Auf dieser Plattform erheben wir nur die notwendigsten personenbezogenen Daten – beispielsweise deine E-Mail-Adresse bei der Registrierung.</p>
+
+    <p>Diese Daten werden ausschließlich zur Nutzung der Plattform verwendet und nicht an Dritte weitergegeben. Eine Löschung deines Kontos und aller damit verknüpften Daten ist jederzeit möglich.</p>
+  </main>
+
+  <?php include_once 'footer.php'; ?>
+
+</body>
+</html>
