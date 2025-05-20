@@ -1,127 +1,52 @@
 <?php
-// php/model/Nutzer.php
+session_start();
+include_once 'header.php';
 
-class Nutzer {
-    public $benutzername;
-    public $passwort;
-    public $rezepte;
-
-    public function __construct($benutzername, $passwort) {
-        $this->benutzername = $benutzername;
-        $this->passwort = $passwort;
-        $this->rezepte = array();
-    }
-
-    public function addRezept($rezept) {
-        $this->rezepte[] = $rezept;
-    }
-
-    public function getRezepte() {
-        return $this->rezepte;
-    }
+if (!isset($_SESSION['eingeloggt']) || $_SESSION['eingeloggt'] !== true) {
+    header('Location: anmeldung.php');
+    exit();
 }
+?>
 
-// php/controller/NutzerController.php
+<main>
+    <h2>Mein Profil</h2>
 
-class NutzerController {
-    public function __construct() {
-        // Hier können wir die Datenbank-Verbindung herstellen
-        // oder andere Anfragen an die Datenbank senden
-    }
+    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+        <img src="images/Icon Nutzer ChatGPT.webp" alt="Profilbild" style="height: 80px; width: 80px; border-radius: 50%; padding: 10px;">
+        <div>
+            <p><strong>Benutzername:</strong> <?= htmlspecialchars($_SESSION['benutzername']) ?></p>
+            <p><strong>E-Mail:</strong> <?= htmlspecialchars($_SESSION['email']) ?></p>
+        </div>
+    </div>
 
-    public function getNutzer($benutzername) {
-        // Hier können wir die Datenbank-Abfrage ausführen
-        // um den Nutzer zu finden
-        $nutzer = new Nutzer($benutzername, 'geheim');
-        $nutzer->addRezept(new Rezept('Nudeln mit Pesto', 'Vegetarisch', '21.04.2025', 'julia@example.com'));
-        $nutzer->addRezept(new Rezept('Reis mit Curry', 'Vegan', '20.04.2025', 'max@example.com'));
-        return $nutzer;
-    }
-}
+    <h3 style="margin-top: 30px; margin-bottom: 20px;">Eigene Rezepte</h3>
 
-// php/model/Rezept.php
+    <div class="rezept-galerie">
+        <!-- TODO: Rezepte aus der Datenbank einbinden -->
+        <div class="rezept-karte">
+            <img src="images/pesto.jpg" alt="Nudeln mit Pesto">
+            <div class="inhalt">
+                <h3><a href="rezept.php">Nudeln mit Pesto</a></h3>
+                <p class="meta">Vegetarisch · 21.04.2025 · <?= htmlspecialchars($_SESSION['benutzername']) ?></p>
+            </div>
+        </div>
+    </div>
 
-class Rezept {
-    public $name;
-    public $kategorien;
-    public $datum;
-    public $autor;
+    <h3 style="margin-top: 30px; margin-bottom: 20px;">Gespeicherte Rezepte</h3>
 
-    public function __construct($name, $kategorien, $datum, $autor) {
-        $this->name = $name;
-        $this->kategorien = $kategorien;
-        $this->datum = $datum;
-        $this->autor = $autor;
-    }
-}
+    <div class="rezept-galerie">
+        <div class="rezept-karte">
+            <img src="images/reis_mit_curry.jpg" alt="Reis mit Curry">
+            <div class="inhalt">
+                <h3><a href="rezept.php">Reis mit Curry</a></h3>
+                <p class="meta">Vegan · 20.04.2025 · max@example.com</p>
+            </div>
+        </div>
+    </div>
 
-// php/view/NutzerView.php
+    <div style="margin-top: 30px;">
+        <a href="abmeldung.php" class="btn">Abmelden</a>
+    </div>
+</main>
 
-class NutzerView {
-    public function __construct() {
-        // Hier können wir die HTML-Datei einbinden
-        // und die Daten darin ausgeben
-    }
-
-    public function anzeigenNutzer($nutzer) {
-        echo '<h2>Mein Profil</h2>';
-        echo '<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">';
-        echo '<img src="../images/Icon%20Nutzer%20ChatGPT.webp" alt="Profilbild" style="height: 80px; width: 80px; border-radius: 50%; padding: 10px;">';
-        echo '<div>';
-        echo '<p><strong>Benutzername:</strong> ' . $nutzer->benutzername . '</p>';
-        echo '<p><strong>E-Mail:</strong> ' . $nutzer->passwort . '</p>';
-        echo '</div>';
-        echo '</div>';
-
-        echo '<h3 style="margin-top: 30px; margin-bottom: 20px;">Eigene Rezepte</h3>';
-
-        echo '<div class="rezept-galerie">';
-        foreach ($nutzer->getRezepte() as $rezept) {
-            echo '<div class="rezept-karte">';
-            echo '<img src="../images/' . $rezept->name . '.jpg" alt="' . $rezept->name . '">';
-            echo '<div class="inhalt">';
-            echo '<h3><a href="../rezept.html">' . $rezept->name . '</a></h3>';
-            echo '<p class="meta">' . $rezept->kategorien . ' · ' . $rezept->datum . ' · ' . $rezept->autor . '</p>';
-            echo '</div>';
-            echo '</div>';
-        }
-        echo '</div>';
-
-        echo '<h3 style="margin-top: 30px; margin-bottom: 20px;">Gespeicherte Rezepte</h3>';
-
-        echo '<div class="rezept-galerie">';
-        foreach ($nutzer->getRezepte() as $rezept) {
-            echo '<div class="rezept-karte">';
-            echo '<img src="../images/' . $rezept->name . '.jpg" alt="' . $rezept->name . '">';
-            echo '<div class="inhalt">';
-            echo '<h3><a href="../rezept.html">' . $rezept->name . '</a></h3>';
-            echo '<p class="meta">' . $rezept->kategorien . ' · ' . $rezept->datum . ' · ' . $rezept->autor . '</p>';
-            echo '</div>';
-            echo '</div>';
-        }
-        echo '</div>';
-
-        echo '<div style="margin-top: 30px;">';
-        echo '<a href="abmeldung.html" class="btn">Abmelden</a>';
-        echo '</div>';
-    }
-}
-
-// php/index.php
-
-class Index {
-    public function __construct() {
-        // Hier können wir die Controller-Instanz erstellen
-        // und die Datenbank-Verbindung herstellen
-    }
-
-    public function anzeigenNutzer() {
-        $nutzerController = new NutzerController();
-        $nutzer = $nutzerController->getNutzer('student123');
-        $nutzerView = new NutzerView();
-        $nutzerView->anzeigenNutzer($nutzer);
-    }
-}
-
-$index = new Index();
-$index->anzeigenNutzer();
+<?php include_once 'footer.php'; ?>
