@@ -18,7 +18,7 @@
     <ul>
       <li><a href="anmeldung.php">Anmelden</a></li>
       <li><a href="abmeldung.php">Abmelden</a></li>
-      <a href="nutzer.php" title="Benutzerkonto">
+      <a href="model/nutzer.php" title="Benutzerkonto">
         <img src="images/Icon Nutzer ChatGPT.webp" alt="Benutzerprofil" style="height:80px;">
       </a>
     </ul>
