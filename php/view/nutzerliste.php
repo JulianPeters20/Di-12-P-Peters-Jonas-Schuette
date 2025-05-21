@@ -1,30 +1,18 @@
 <?php if (!isset($nutzer)) $nutzer = []; ?>
+
 <main>
     <h2>Nutzerübersicht</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>Benutzername</th>
-            <th>E-Mail-Adresse</th>
-            <th>Registrierungsdatum</th>
-        </tr>
-        </thead>
-        <tbody>
+    <p>Hinweis: Diese Seite ist nur für Administratoren vorgesehen.</p>
+
+    <div class="nutzerliste">
         <?php foreach ($nutzer as $person): ?>
-            <tr>
-                <td><?= htmlspecialchars($person['benutzername']) ?></td>
-                <td><?= htmlspecialchars($person['email']) ?></td>
-                <td><?= isset($person['registriert']) ? htmlspecialchars($person['registriert']) : '-' ?></td>
-            </tr>
+            <div class="nutzer-karte">
+                <div class="nutzer-karte-inhalt">
+                    <p><strong>Benutzername:</strong> <?= htmlspecialchars($person['benutzername']) ?></p>
+                    <p><strong>E-Mail:</strong> <?= htmlspecialchars($person['email']) ?></p>
+                    <p><strong>Registriert am:</strong> <?= htmlspecialchars($person['registriert'] ?? '-') ?></p>
+                </div>
+            </div>
         <?php endforeach; ?>
-        </tbody>
-    </table>
+    </div>
 </main>
-
-<?php
-// Dateipfad: nutzerliste.php
-
-require_once 'php/controller/NutzerController.php';
-
-// Aufrufen der Funktion showNutzerListe()
-showNutzerListe();

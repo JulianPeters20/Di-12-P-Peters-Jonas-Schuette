@@ -2,37 +2,38 @@
 // Dateipfad: controller/IndexController.php
 
 function showHome() {
-    // Hier ggf. Startseitenlogik/Dummy-Daten
-    require 'views/index.php';
+    require_once 'php/model/RezeptDAO.php';
+    $rezepte = RezeptDAO::findeNeueste();
+    require 'php/view/index.php';
 }
 
 function showRezepte()
 {
     // Hier ggf. Rezept-Logik/Dummy-Daten
     $rezepte = RezeptDAO::findeAlle();
-    require 'views/rezepte.php';
+    require 'php/view/rezepte.php';
 }
 
 function showRezeptNeu()
 {
     // Hier ggf. Rezept-Neu-Logik/Dummy-Daten
-    require 'views/rezept-neu.php';
+    require 'php/view/rezept-neu.php';
 }
 
 function showImpressum()
 {
     // Hier ggf. Impressum-Logik/Dummy-Daten
-    require 'views/impressum.php';
+    require 'php/view/impressum.php';
 }
 
 function showDatenschutz()
 {
     // Hier ggf. Datenschutz-Logik/Dummy-Daten
-    require 'views/datenschutz.php';
+    require 'php/view/datenschutz.php';
 }
 
 function showNutzungsbedingungen()
 {
     // Hier ggf. Nutzungsbedingungen-Logik/Dummy-Daten
-    require 'views/nutzungsbedingungen.php';
+    require 'php/view/nutzungsbedingungen.php';
 }

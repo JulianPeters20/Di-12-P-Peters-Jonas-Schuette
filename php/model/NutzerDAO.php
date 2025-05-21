@@ -1,5 +1,4 @@
 <?php
-// php/model/NutzerDAO.php
 
 class NutzerDAO {
     // Dummy-Daten (static, because of missing DB)
@@ -7,12 +6,14 @@ class NutzerDAO {
         [
             'benutzername' => 'StudentOne',
             'email' => 'student@beispiel.de',
-            'passwort' => 'geheim123'
+            'passwort' => 'geheim123',
+            'registriert' => '01.01.2024'
         ],
         [
             'benutzername' => 'MaxMustermann',
             'email' => 'max@uni.de',
-            'passwort' => '12345678'
+            'passwort' => '12345678',
+            'registriert' => '01.01.2025'
         ]
     ];
 
@@ -24,6 +25,10 @@ class NutzerDAO {
     // Benutzer suchen (Login)
     public static function findeBenutzer($email, $passwort) {
         foreach (self::$benutzer as $nutzer) {
+            echo "<pre>DEBUG: ";
+            var_dump($nutzer['email'], $nutzer['passwort'], $email, $passwort);
+            echo "</pre>";
+
             if ($nutzer['email'] === $email && $nutzer['passwort'] === $passwort) {
                 return $nutzer;
             }
@@ -46,7 +51,8 @@ class NutzerDAO {
         self::$benutzer[] = [
             'benutzername' => $benutzername,
             'email' => $email,
-            'passwort' => $passwort
+            'passwort' => $passwort,
+            'registriert' => date('d.m.Y')
         ];
     }
 

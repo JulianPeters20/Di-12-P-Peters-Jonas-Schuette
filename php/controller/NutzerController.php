@@ -1,10 +1,12 @@
 <?php
-// php/controller/NutzerController.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 require_once __DIR__ . '/../model/NutzerDAO.php';
 
 // Anmeldung (Login-Formular anzeigen und verarbeiten)
-functionshowAnmeldeFormular() {
+function showAnmeldeFormular() {
     $fehler = "";
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $email = trim($_POST["email"]);
@@ -17,6 +19,7 @@ functionshowAnmeldeFormular() {
             if ($nutzer) {
                 $_SESSION["benutzername"] = $nutzer['benutzername'];
                 $_SESSION["email"] = $nutzer['email'];
+                $_SESSION["eingeloggt"] = true;
                 header("Location: index.php");
                 exit;
             } else {

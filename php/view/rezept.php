@@ -11,11 +11,3 @@
     <?php endif; ?>
     <a href="index.php?page=rezepte">Zurück zur Übersicht</a>
 </main>
-
-<?php
-// Dateipfad: rezept.php
-
-require_once 'php/controller/RezeptController.php';
-
-// Aufrufen der Funktion showRezept()
-showRezept();

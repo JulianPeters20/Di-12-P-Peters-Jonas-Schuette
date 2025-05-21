@@ -1,6 +1,6 @@
 <main>
     <h2>Registrierung</h2>
-    <form action="index.php?page=register" method="post">
+    <form action="index.php?page=registrierung" method="post">
         <p>
             <label for="benutzername">Benutzername:<br>
                 <input type="text" id="benutzername" name="benutzername" required>
@@ -26,13 +26,5 @@
             <input type="reset" value="Zurücksetzen">
         </p>
     </form>
-    <p>Du hast bereits ein Konto? <a href="index.php?page=login">Hier anmelden</a>.</p>
+    <p>Du hast bereits ein Konto? <a href="index.php?page=anmeldung">Hier anmelden</a>.</p>
 </main>
-
-<?php
-// Dateipfad: registrierung.php
-
-require_once 'php/controller/NutzerController.php';
-
-// Aufrufen der Funktion showRegistrierungsFormular()
-showRegistrierungsFormular();

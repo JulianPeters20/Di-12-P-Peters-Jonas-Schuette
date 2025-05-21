@@ -1,16 +1,22 @@
 <main>
-    <h2>Willkommen bei Broke & Hungry</h2>
-    <p>Hier findest du günstige, kreative und leckere Rezepte für den studentischen Alltag.</p>
-    <a href="index.php?page=rezepte" class="btn">Zu den Rezepten</a>
+    <h2 style="margin-top: 30px; margin-bottom: 20px;">Beliebte Rezepte</h2>
+
+    <div class="rezept-galerie">
+        <?php foreach ($rezepte as $rezept): ?>
+            <div class="rezept-karte">
+                <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="<?= htmlspecialchars($rezept['titel']) ?>">
+                <div class="inhalt">
+                    <h3>
+                        <a href="index.php?page=rezept&id=<?= $rezept['id'] ?>">
+                            <?= htmlspecialchars($rezept['titel']) ?>
+                        </a>
+                    </h3>
+                    <p class="meta">
+                        <?= htmlspecialchars($rezept['kategorie']) ?> · <?= htmlspecialchars($rezept['datum']) ?> · <?= htmlspecialchars($rezept['autor']) ?>
+                    </p>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
 </main>
-
-<?php
-// Dateipfad: index.php
-
-require_once 'php/controller/IndexController.php';
-
-// Aufrufen der Funktion showHome()
-showHome();
-
-// Aufrufen der Funktion showRezepte()
-showRezepte();
