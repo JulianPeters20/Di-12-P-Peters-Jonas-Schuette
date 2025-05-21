@@ -1,36 +1,37 @@
 <?php
-class NutzerDAO {
+// php/model/NutzerDAO.php
 
-    // Dummy-Daten (Benutzerliste)
+class NutzerDAO {
+    // Dummy-Daten (static, da keine DB)
     private static $benutzer = [
         [
+            'benutzername' => 'StudentOne',
             'email' => 'student@beispiel.de',
-            'passwort' => 'geheim123',      // Fürs Projekt ggf. später mit Passwort-Hash
-            'benutzername' => 'StudentOne'
+            'passwort' => 'geheim123'
         ],
         [
+            'benutzername' => 'MaxMustermann',
             'email' => 'max@uni.de',
-            'passwort' => '12345678',
-            'benutzername' => 'MaxMustermann'
+            'passwort' => '12345678'
         ]
     ];
 
-    // Gibt die komplette Benutzerliste zurück (z. B. für die Nutzerübersicht)
+    // Gibt alle Benutzer zurück
     public static function getAlleBenutzer() {
         return self::$benutzer;
     }
 
-    // Sucht Nutzer anhand von E-Mail und Passwort (z. B. für Login)
+    // Benutzer suchen (Login)
     public static function findeBenutzer($email, $passwort) {
         foreach (self::$benutzer as $nutzer) {
             if ($nutzer['email'] === $email && $nutzer['passwort'] === $passwort) {
                 return $nutzer;
             }
         }
-        return null; // Kein Treffer
+        return null;
     }
 
-    // Sucht Nutzer anhand der E-Mail-Adresse
+    // Nach E-Mail suchen (für Registrierung/Profil)
     public static function findeBenutzerNachEmail($email) {
         foreach (self::$benutzer as $nutzer) {
             if ($nutzer['email'] === $email) {
@@ -39,5 +40,13 @@ class NutzerDAO {
         }
         return null;
     }
+
+    // Benutzer hinzufügen (nur temporär, nicht persistent!)
+    public static function addBenutzer($benutzername, $email, $passwort) {
+        self::$benutzer[] = [
+            'benutzername' => $benutzername,
+            'email' => $email,
+            'passwort' => $passwort
+        ];
+    }
 }
-?>
