@@ -8,3 +8,11 @@
         <p>Nutzer nicht gefunden.</p>
     <?php endif; ?>
 </main>
+
+<?php
+// Dateipfad: nutzer.php
+
+require_once 'php/controller/NutzerController.php';
+
+// Aufrufen der Funktion showNutzerProfil()
+showNutzerProfil();

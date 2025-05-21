@@ -37,4 +37,54 @@ class RezeptDAO {
         }
         return null;
     }
+
+    // Fügt ein neues Rezept hinzu
+    public function addRezept($titel, $kategorie, $bild, $datum, $autor) {
+        $neuesRezept = [
+            'id' => count($this->rezepte) + 1,
+            'titel' => $titel,
+            'bild' => $bild,
+            'kategorie' => $kategorie,
+            'datum' => $datum,
+            'autor' => $autor
+        ];
+        $this->rezepte[] = $neuesRezept;
+        return $neuesRezept;
+    }
+
+    // Aktualisiert ein bestehendes Rezept
+    public function aktualisiereRezept($id, $titel = null, $kategorie = null, $bild = null, $datum = null, $autor = null) {
+        foreach ($this->rezepte as &$rezept) {
+            if ($rezept['id'] == $id) {
+                if ($titel !== null) {
+                    $rezept['titel'] = $titel;
+                }
+                if ($kategorie !== null) {
+                    $rezept['kategorie'] = $kategorie;
+                }
+                if ($bild !== null) {
+                    $rezept['bild'] = $bild;
+                }
+                if ($datum !== null) {
+                    $rezept['datum'] = $datum;
+                }
+                if ($autor !== null) {
+                    $rezept['autor'] = $autor;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Löscht ein bestehendes Rezept
+    public function loescheRezept($id) {
+        foreach ($this->rezepte as $key => $rezept) {
+            if ($rezept['id'] == $id) {
+                unset($this->rezepte[$key]);
+                return true;
+            }
+        }
+        return false;
+    }
 }

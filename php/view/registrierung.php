@@ -28,3 +28,11 @@
     </form>
     <p>Du hast bereits ein Konto? <a href="index.php?page=login">Hier anmelden</a>.</p>
 </main>
+
+<?php
+// Dateipfad: registrierung.php
+
+require_once 'php/controller/NutzerController.php';
+
+// Aufrufen der Funktion showRegistrierungsFormular()
+showRegistrierungsFormular();

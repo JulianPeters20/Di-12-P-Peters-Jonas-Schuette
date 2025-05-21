@@ -20,3 +20,11 @@
         </tbody>
     </table>
 </main>
+
+<?php
+// Dateipfad: nutzerliste.php
+
+require_once 'php/controller/NutzerController.php';
+
+// Aufrufen der Funktion showNutzerListe()
+showNutzerListe();

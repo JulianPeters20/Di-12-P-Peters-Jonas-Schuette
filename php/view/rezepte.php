@@ -20,3 +20,11 @@
     </div>
     <a href="index.php?page=rezept-neu" class="btn"><button>Neues Rezept hinzufügen</button></a>
 </main>
+
+<?php
+// Dateipfad: rezepte.php
+
+require_once 'php/controller/RezeptController.php';
+
+// Aufrufen der Funktion showRezepte()
+showRezepte();

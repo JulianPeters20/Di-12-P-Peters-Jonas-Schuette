@@ -25,3 +25,11 @@
         </li>
     </ul>
 </main>
+
+<?php
+// Dateipfad: impressum.php
+
+require_once 'php/controller/IndexController.php';
+
+// Aufrufen der Funktion showImpressum()
+showImpressum();

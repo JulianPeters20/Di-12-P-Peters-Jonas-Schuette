@@ -17,3 +17,14 @@
     </form>
     <p>Noch kein Konto? <a href="index.php?page=register">Jetzt registrieren</a>.</p>
 </main>
+
+<?php
+// Dateipfad: anmeldung.php
+
+require_once 'php/controller/NutzerController.php';
+
+// Aufrufen der Funktion showAnmeldeFormular()
+showAnmeldeFormular();
+
+// Aufrufen der Funktion showRegistrierungsFormular()
+showRegistrierungsFormular();

@@ -26,3 +26,11 @@
         </p>
     </form>
 </main>
+
+<?php
+// Dateipfad: rezept-neu.php
+
+require_once 'php/controller/RezeptController.php';
+
+// Aufrufen der Funktion showRezeptNeu()
+showRezeptNeu();

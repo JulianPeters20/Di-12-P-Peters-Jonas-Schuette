@@ -2,7 +2,7 @@
 // php/model/NutzerDAO.php
 
 class NutzerDAO {
-    // Dummy-Daten (static, da keine DB)
+    // Dummy-Daten (static, because of missing DB)
     private static $benutzer = [
         [
             'benutzername' => 'StudentOne',
@@ -48,5 +48,32 @@ class NutzerDAO {
             'email' => $email,
             'passwort' => $passwort
         ];
+    }
+
+    // Benutzer löschen (nur temporär, nicht persistent!)
+    public static function loescheBenutzer($email) {
+        foreach (self::$benutzer as $key => $nutzer) {
+            if ($nutzer['email'] === $email) {
+                unset(self::$benutzer[$key]);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Benutzer aktualisieren (nur temporär, nicht persistent!)
+    public static function aktualisiereBenutzer($email, $benutzername = null, $passwort = null) {
+        foreach (self::$benutzer as $key => $nutzer) {
+            if ($nutzer['email'] === $email) {
+                if ($benutzername !== null) {
+                    self::$benutzer[$key]['benutzername'] = $benutzername;
+                }
+                if ($passwort !== null) {
+                    self::$benutzer[$key]['passwort'] = $passwort;
+                }
+                return true;
+            }
+        }
+        return false;
     }
 }

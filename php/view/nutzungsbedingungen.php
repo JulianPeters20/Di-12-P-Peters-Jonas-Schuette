@@ -7,3 +7,11 @@
         <li>Du bist für deine veröffentlichten Inhalte selbst verantwortlich.</li>
     </ul>
 </main>
+
+<?php
+// Dateipfad: nutzungsbedingungen.php
+
+require_once 'php/controller/IndexController.php';
+
+// Aufrufen der Funktion showNutzungsbedingungen()
+showNutzungsbedingungen();

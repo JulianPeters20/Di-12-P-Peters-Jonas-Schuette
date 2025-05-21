@@ -4,7 +4,7 @@
 require_once __DIR__ . '/../model/NutzerDAO.php';
 
 // Anmeldung (Login-Formular anzeigen und verarbeiten)
-function showAnmeldeFormular() {
+functionshowAnmeldeFormular() {
     $fehler = "";
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $email = trim($_POST["email"]);
