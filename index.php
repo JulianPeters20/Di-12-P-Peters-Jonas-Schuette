@@ -1,76 +1,110 @@
+<?php
+ini_set('session.cookie_lifetime', 0); // Session gilt nur solange Browser offen ist
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <link rel="stylesheet" href="css/style.css">
-  <meta charset="UTF-8">
-  <title>Broke & Hungry - Rezepte</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <title>Broke & Hungry</title>
 </head>
 <body>
+<?php require_once 'php/include/header.php'; ?>
 
-  <!-- Kopfbereich -->
-  <?php include_once 'header.php'; ?>
-  
-  <!-- Hauptinhalt -->
-  <main>
-    <!-- Suchleiste -->
-    <div class="suchleiste">
-      <input type="text" placeholder="Rezept suchen..." class="suchfeld">
-    </div>
+<?php
+$page = $_GET['page'] ?? 'home';
 
+switch ($page) {
+    case 'anmeldung':
+        require_once 'php/controller/NutzerController.php';
+        showAnmeldeFormular();
+        break;
 
-  <h2 style="margin-top: 30px; margin-bottom: 20px;">Beliebte Rezepte</h2>
+    case 'abmeldung':
+        require_once 'php/controller/NutzerController.php';
+        logoutUser();
+        break;
 
-<!-- Rezept-Galerie -->
-<div class="rezept-galerie">
-  <!-- Beispiel-Karten -->
-  <div class="rezept-karte">
-    <img src="images/pesto.jpg" alt="Nudeln mit Pesto">
-    <div class="inhalt">
-      <h3><a href="rezept.php">Nudeln mit Pesto</a></h3>
-      <p class="meta">Vegetarisch · 21.04.2025 · julia@example.com</p>
-    </div>
-  </div>
+    case 'registrierung':
+        require_once 'php/controller/NutzerController.php';
+        showRegistrierungsFormular();
+        break;
 
-  <div class="rezept-karte">
-    <img src="images/reis_mit_curry.jpg" alt="Reis mit Curry">
-    <div class="inhalt">
-      <h3><a href="rezept.php">Reis mit Curry</a></h3>
-      <p class="meta">Vegan · 20.04.2025 · max@example.com</p>
-    </div>
-  </div>
+    case 'rezepte':
+        require_once 'php/controller/RezeptController.php';
+        showRezepte();
+        break;
 
-  <!-- Weitere Karten -->
-</div>
+    case 'rezept':
+        require_once 'php/controller/RezeptController.php';
+        $id = $_GET['id'] ?? null;
+        showRezeptDetails($id);
+        break;
 
+    case 'rezept-bearbeiten':
+        require_once 'php/controller/RezeptController.php';
+        $id = $_GET['id'] ?? null;
+        showRezeptBearbeitenFormular($id);
+        break;
 
-<h2 style="margin-top: 30px; margin-bottom: 20px;">Neue Rezepte</h2>
+    case 'rezept-aktualisieren':
+        require_once 'php/controller/RezeptController.php';
+        $id = $_GET['id'] ?? null;
+        aktualisiereRezept($id);
+        break;
 
-<!-- Rezept-Galerie -->
-<div class="rezept-galerie">
-  <!-- Beispiel-Karten -->
-  <div class="rezept-karte">
-    <img src="images/pesto.jpg" alt="Nudeln mit Pesto">
-    <div class="inhalt">
-      <h3><a href="rezept.php">Nudeln mit Pesto</a></h3>
-      <p class="meta">Vegetarisch · 21.04.2025 · julia@example.com</p>
-    </div>
-  </div>
+    case 'rezept-loeschen':
+        require_once 'php/controller/RezeptController.php';
+        $id = $_GET['id'] ?? null;
+        loescheRezept($id); // existiert schon!
+        break;
 
-  <div class="rezept-karte">
-    <img src="images/reis_mit_curry.jpg" alt="Reis mit Curry">
-    <div class="inhalt">
-      <h3><a href="rezept.php">Reis mit Curry</a></h3>
-      <p class="meta">Vegan · 20.04.2025 · max@example.com</p>
-    </div>
-  </div>
+    case 'rezept-neu':
+        require_once 'php/controller/RezeptController.php';
+        if (!isset($_SESSION['email'])) {
+            $_SESSION["message"] = "Nur angemeldete Nutzer können neue Rezepte erstellen.";
+            header("Location: index.php?page=anmeldung");
+            exit;
+        }
 
-  <!-- Weitere Karten -->
-</div>
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            speichereRezept();
+        } else {
+            showRezeptNeu();
+        }
+        break;
 
-  <h3><a href="rezept-neu.php" class="btn"><button>Neues Rezept hinzufügen</button></a></h3>
-  </main>
+    case 'nutzerliste':
+        require_once 'php/controller/NutzerController.php';
+        showNutzerListe();
+        break;
 
-  <?php include_once 'footer.php'; ?>
+    case 'nutzer':
+        require_once 'php/controller/NutzerController.php';
+        $email = $_GET['email'] ?? null;
+        showNutzerProfil($email);
+        break;
 
+    case 'impressum':
+        require_once 'php/view/impressum.php';
+        break;
+
+    case 'datenschutz':
+        require_once 'php/view/datenschutz.php';
+        break;
+
+    case 'nutzungsbedingungen':
+        require_once 'php/view/nutzungsbedingungen.php';
+        break;
+
+    default:
+        require_once 'php/controller/IndexController.php';
+        showHome();
+        break;
+}
+?>
+
+<?php require_once 'php/include/footer.php'; ?>
 </body>
 </html>
