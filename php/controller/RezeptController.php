@@ -1,43 +1,26 @@
 <?php
+declare(strict_types=1);
+
 require_once 'php/model/NutzerDAO.php';
-require_once 'php/model/RezeptDAO.php'; // Nicht vergessen!
+require_once 'php/model/RezeptDAO.php';
 
-// Login direkt verarbeitet (falls über POST)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'], $_POST['passwort'])) {
-    $email = trim($_POST['email']);
-    $passwort = $_POST['passwort'];
+session_start();
 
-    $nutzer = NutzerDAO::findeNachEmail($email);
-
-    if ($nutzer && password_verify($passwort, $nutzer->passwort)) {
-        $_SESSION['eingeloggt'] = true;
-        $_SESSION['benutzername'] = $nutzer->benutzername;
-        $_SESSION['email'] = $nutzer->email;
-        $_SESSION['message'] = "Willkommen, {$nutzer->benutzername}!";
-        header('Location: index.php');
-        exit();
-    } else {
-        $_SESSION['message'] = "E-Mail oder Passwort ist ungültig.";
-        header('Location: index.php?page=anmeldung');
-        exit();
-    }
-}
-
-// === Funktionsbasierter Teil ===
-
-function showRezepte()
+/**
+ * Zeigt alle Rezepte (mit optionaler Suche)
+ */
+function showRezepte(): void
 {
     $alleRezepte = RezeptDAO::findeAlle();
-
-    // Falls Suchbegriff gesetzt → filtern
     $suche = trim($_GET['suche'] ?? '');
 
-    if (!empty($suche)) {
-        $suchbegriff = strtolower($suche);
+    if ($suche !== '') {
+        $suchbegriff = mb_strtolower($suche);
         $alleRezepte = array_filter($alleRezepte, function ($rezept) use ($suchbegriff) {
-            return str_contains(strtolower($rezept['titel']), $suchbegriff)
-                || str_contains(strtolower($rezept['kategorie']), $suchbegriff)
-                || str_contains(strtolower($rezept['autor']), $suchbegriff);
+            // Suche in Titel, Kategorie (Array!) und Autor
+            return mb_stripos($rezept['titel'], $suchbegriff) !== false
+                || (is_array($rezept['kategorie']) && array_filter($rezept['kategorie'], fn($k) => mb_stripos($k, $suchbegriff) !== false))
+                || mb_stripos($rezept['autor'], $suchbegriff) !== false;
         });
     }
 
@@ -45,70 +28,66 @@ function showRezepte()
     require 'php/view/rezepte.php';
 }
 
-// Neues Rezeptformular anzeigen
-function showRezeptNeu()
+/**
+ * Zeigt das Formular zum Hinzufügen eines Rezepts
+ */
+function showRezeptNeu(): void
 {
     require 'php/view/rezept-neu.php';
 }
 
-// Einzelnes Rezept anzeigen
-function showRezeptDetails($id)
+/**
+ * Zeigt Details zu einem Rezept
+ */
+function showRezeptDetails($id): void
 {
-    if (!is_numeric($id)) {
+    if (!is_numeric($id) || $id <= 0) {
         $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
-
-    $rezept = RezeptDAO::findeNachId($id);
+    $rezept = RezeptDAO::findeNachId((int)$id);
     if (!$rezept) {
         $_SESSION["message"] = "Rezept wurde nicht gefunden.";
         header("Location: index.php?page=rezepte");
         exit;
     }
-
     require 'php/view/rezept.php';
 }
 
-// Rezept speichern
-function speichereRezept()
+/**
+ * Speichert ein neues Rezept (POST)
+ */
+function speichereRezept(): void
 {
     if (
-        !isset(
-            $_POST['titel'],
-            $_POST['kategorie'],
-            $_POST['zutaten'],
-            $_POST['zubereitung'],
-            $_POST['portionsgroesse'],
-            $_POST['preis'],
-            $_FILES['bild']
-        )
+        !isset($_POST['titel'], $_POST['kategorie'], $_POST['zutaten'], $_POST['zubereitung'], $_POST['portionsgroesse'], $_POST['preis'])
     ) {
         $_SESSION["message"] = "Fehlende Formulardaten.";
-        header("Location: index.php?page=rezept-neu");
-        exit;
-    }
-
-    $titel = trim($_POST['titel']);
-    $kategorie = trim($_POST['kategorie']);
-    $zutaten = trim($_POST['zutaten']);
-    $zubereitung = trim($_POST['zubereitung']);
-    $utensilien = trim($_POST['utensilien'] ?? '');
-    $portionsgroesse = intval($_POST['portionsgroesse']);
-    $preis = trim($_POST['preis']);
-    $bild = $_FILES['bild'];
-    $autor = $_SESSION['benutzername'] ?? "Anonym";
-    $datum = date('d.m.Y');
-
-    if (empty($titel) || empty($kategorie) || empty($zutaten) || empty($zubereitung) || empty($preis) || $portionsgroesse < 1) {
-        $_SESSION["message"] = "Bitte fülle alle Pflichtfelder aus.";
         $_SESSION["formdata"] = $_POST;
         header("Location: index.php?page=rezept-neu");
         exit;
     }
 
-    if ($bild['error'] !== 0) {
-        $_SESSION["message"] = "Bild-Upload fehlgeschlagen.";
+    $titel = trim($_POST['titel']);
+    $kategorien = $_POST['kategorie']; // Mehrfachauswahl als Array!
+    if (!is_array($kategorien)) { $kategorien = [$kategorien]; }
+    $zutaten = trim($_POST['zutaten']);
+    $zubereitung = trim($_POST['zubereitung']);
+    $utensilien = trim($_POST['utensilien'] ?? '');
+    $portionsgroesse = max(1, intval($_POST['portionsgroesse']));
+    $preis = trim($_POST['preis']);
+    $autor = $_SESSION['email'] ?? "anonym";
+    $datum = date('d.m.Y');
+
+    $bild = ''; // Hier ggf. einfache Upload-Logik mit move_uploaded_file
+    if (isset($_FILES['bild']) && $_FILES['bild']['error'] === 0) {
+        $bild = 'images/' . basename($_FILES['bild']['name']);
+        move_uploaded_file($_FILES['bild']['tmp_name'], $bild);
+    }
+
+    if (empty($titel) || empty($kategorien) || empty($zutaten) || empty($zubereitung) || empty($preis) || $portionsgroesse < 1) {
+        $_SESSION["message"] = "Bitte fülle alle Pflichtfelder aus.";
         $_SESSION["formdata"] = $_POST;
         header("Location: index.php?page=rezept-neu");
         exit;
@@ -117,8 +96,8 @@ function speichereRezept()
     try {
         RezeptDAO::addRezept(
             $titel,
-            $kategorie,
-            $bild['name'],
+            $kategorien,
+            $bild,
             $datum,
             $autor,
             $zutaten,
@@ -137,8 +116,10 @@ function speichereRezept()
     }
 }
 
-// Rezept löschen
-function loescheRezept($id)
+/**
+ * Löscht ein Rezept
+ */
+function loescheRezept($id): void
 {
     if (!is_numeric($id)) {
         $_SESSION["message"] = "Ungültige Rezept-ID.";
@@ -146,63 +127,71 @@ function loescheRezept($id)
         exit;
     }
 
-    if (RezeptDAO::loesche($id)) {
+    if (RezeptDAO::loesche((int)$id)) {
         $_SESSION["message"] = "Rezept wurde gelöscht.";
     } else {
         $_SESSION["message"] = "Rezept nicht gefunden oder konnte nicht gelöscht werden.";
     }
-
     header("Location: index.php?page=rezepte");
     exit;
 }
-// Rezept bearbeiten
-function showRezeptBearbeitenFormular($id) {
+
+/**
+ * Zeigt das Bearbeiten-Formular an
+ */
+function showRezeptBearbeitenFormular($id): void
+{
     if (!is_numeric($id)) {
         $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
+    $rezept = RezeptDAO::findeNachId((int)$id);
 
-    $rezept = RezeptDAO::findeNachId($id);
     if (!$rezept) {
         $_SESSION["message"] = "Rezept nicht gefunden.";
         header("Location: index.php?page=rezepte");
         exit;
     }
-
-    // Rechteprüfung: darf der aktuelle Nutzer das Rezept bearbeiten?
+    // Berechtigungsprüfung: Selber Nutzer?
     if (!isset($_SESSION['email']) || $rezept['autor'] !== $_SESSION['email']) {
         $_SESSION["message"] = "Du darfst dieses Rezept nicht bearbeiten.";
         header("Location: index.php?page=rezepte");
         exit;
     }
-
     require 'php/view/rezept-bearbeiten.php';
 }
 
-// Rezept aktualisieren
-function aktualisiereRezept($id) {
+/**
+ * Rezept aktualisieren
+ */
+function aktualisiereRezept($id): void
+{
     if (!is_numeric($id)) {
         $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
-
     $titel = trim($_POST['titel'] ?? '');
-    $kategorie = trim($_POST['kategorie'] ?? '');
+    $kategorien = $_POST['kategorie'] ?? [];
+    if (!is_array($kategorien)) { $kategorien = [$kategorien]; }
     $zutaten = trim($_POST['zutaten'] ?? '');
     $zubereitung = trim($_POST['zubereitung'] ?? '');
     $utensilien = trim($_POST['utensilien'] ?? '');
     $portionsgroesse = intval($_POST['portionsgroesse'] ?? 1);
     $preis = trim($_POST['preis'] ?? '');
-    $bild = $_FILES['bild']['name'] ?? null;
+    $bild = '';
+    if (isset($_FILES['bild']) && $_FILES['bild']['error'] === 0) {
+        $bild = 'images/' . basename($_FILES['bild']['name']);
+        move_uploaded_file($_FILES['bild']['tmp_name'], $bild);
+    }
     $datum = date('d.m.Y');
     $autor = $_SESSION['email'] ?? '';
 
     RezeptDAO::aktualisiereRezept(
-        $id,
+        (int)$id,
         $titel,
-        $kategorie,
+        $kategorien,
         $bild,
         $datum,
         $autor,
@@ -212,11 +201,9 @@ function aktualisiereRezept($id) {
         $portionsgroesse,
         $preis
     );
-
     $_SESSION["message"] = "Rezept wurde aktualisiert.";
     header("Location: index.php?page=nutzer&email=" . urlencode($autor));
     exit;
 }
-
 
 ?>

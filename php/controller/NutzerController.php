@@ -1,16 +1,19 @@
 <?php
+declare(strict_types=1);
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
 require_once __DIR__ . '/../model/NutzerDAO.php';
 
-// Anmeldung (Login-Formular anzeigen und verarbeiten)
-function showAnmeldeFormular() {
+/**
+ * Zeigt das Anmeldeformular und verarbeitet Logins
+ */
+function showAnmeldeFormular(): void {
     $fehler = "";
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $email = trim($_POST["email"]);
-        $passwort = trim($_POST["passwort"]);
+        $email = trim($_POST["email"] ?? '');
+        $passwort = trim($_POST["passwort"] ?? '');
 
         if (empty($email) || empty($passwort)) {
             $fehler = "Bitte alle Felder ausfüllen.";
@@ -30,14 +33,16 @@ function showAnmeldeFormular() {
     require 'php/view/anmeldung.php';
 }
 
-// Registrierung (Registrierungsformular anzeigen und verarbeiten)
-function showRegistrierungsFormular() {
+/**
+ * Registrierung (Formular und Verarbeitung)
+ */
+function showRegistrierungsFormular(): void {
     $fehler = "";
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $benutzername = trim($_POST["benutzername"]);
-        $email = trim($_POST["email"]);
-        $passwort = trim($_POST["passwort"]);
-        $passwort_wdh = trim($_POST["passwort-wdh"]);
+        $benutzername = trim($_POST["benutzername"] ?? '');
+        $email = trim($_POST["email"] ?? '');
+        $passwort = trim($_POST["passwort"] ?? '');
+        $passwort_wdh = trim($_POST["passwort-wdh"] ?? '');
 
         if (empty($benutzername) || empty($email) || empty($passwort) || empty($passwort_wdh)) {
             $fehler = "Bitte alle Felder ausfüllen.";
@@ -49,6 +54,7 @@ function showRegistrierungsFormular() {
             NutzerDAO::addBenutzer($benutzername, $email, $passwort);
             $_SESSION["benutzername"] = $benutzername;
             $_SESSION["email"] = $email;
+            $_SESSION["eingeloggt"] = true;
             header("Location: index.php");
             exit;
         }
@@ -56,21 +62,27 @@ function showRegistrierungsFormular() {
     require 'php/view/registrierung.php';
 }
 
-// Nutzer abmelden (Logout)
-function logoutUser() {
+/**
+ * Logout
+ */
+function logoutUser(): void {
     session_unset();
     session_destroy();
     require 'php/view/abmeldung.php';
 }
 
-// Nutzerliste anzeigen
-function showNutzerListe() {
+/**
+ * Zeigt die Nutzerübersichtsliste (Admin)
+ */
+function showNutzerListe(): void {
     $nutzer = NutzerDAO::getAlleBenutzer();
     require 'php/view/nutzerliste.php';
 }
 
-// Einzelnes Nutzerprofil anzeigen (optional)
-function showNutzerProfil($email = null) {
+/**
+ * Nutzerprofil anzeigen
+ */
+function showNutzerProfil($email = null): void {
     $nutzer = null;
     if ($email !== null) {
         $nutzer = NutzerDAO::findeBenutzerNachEmail($email);

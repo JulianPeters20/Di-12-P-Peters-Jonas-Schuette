@@ -1,4 +1,6 @@
 <?php
+// Zentrales Router/Dispatcher-File für Broke & Hungry
+// Leitet "page"-Aufrufe an entsprechende Controller bzw. Views weiter
 ini_set('session.cookie_lifetime', 0); // Session gilt nur solange Browser offen ist
 session_start();
 ?>

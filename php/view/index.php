@@ -1,9 +1,9 @@
 <main>
-    <h2 style="margin-top: 30px; margin-bottom: 20px;">Beliebte Rezepte</h2>
+    <h2 class="mb-2 mt-3">Beliebte Rezepte</h2>
 
-    <div class="rezept-galerie">
+    <ul class="rezept-galerie">
         <?php foreach ($rezepte as $rezept): ?>
-            <div class="rezept-karte">
+            <li class="rezept-karte">
                 <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="<?= htmlspecialchars($rezept['titel']) ?>">
                 <div class="inhalt">
                     <h3>
@@ -15,8 +15,7 @@
                         <?= htmlspecialchars($rezept['kategorie']) ?> · <?= htmlspecialchars($rezept['datum']) ?> · <?= htmlspecialchars($rezept['autor']) ?>
                     </p>
                 </div>
-            </div>
+            </li>
         <?php endforeach; ?>
-    </div>
-
+    </ul>
 </main>

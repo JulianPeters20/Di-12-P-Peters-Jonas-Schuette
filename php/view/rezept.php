@@ -1,11 +1,35 @@
 <main>
     <?php if (!empty($rezept)): ?>
-        <h2><?= htmlspecialchars($rezept['titel']) ?></h2>
-        <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="<?= htmlspecialchars($rezept['titel']) ?>" style="max-width:300px;">
-        <p><strong>Kategorie:</strong> <?= htmlspecialchars($rezept['kategorie']) ?></p>
-        <p><strong>Datum:</strong> <?= htmlspecialchars($rezept['datum']) ?></p>
-        <p><strong>Autor:</strong> <?= htmlspecialchars($rezept['autor']) ?></p>
-        <!-- Hier könntest du Zutaten & Zubereitung ausgeben, falls schon hinterlegt -->
+        <article>
+            <header>
+                <h2><?= htmlspecialchars($rezept['titel']) ?></h2>
+            </header>
+            <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="<?= htmlspecialchars($rezept['titel']) ?>" style="max-width:300px;">
+            <?php
+            $kats = $rezept['kategorie'];
+            if (is_array($kats)) {
+                $katText = implode(', ', array_map('htmlspecialchars', $kats));
+            } else {
+                $katText = htmlspecialchars($kats);
+            }
+            ?>
+            <dl>
+                <dt>Kategorie:</dt>
+                <dd><?= $katText ?></dd>
+                <dt>Datum:</dt>
+                <dd><?= htmlspecialchars($rezept['datum']) ?></dd>
+                <dt>Autor:</dt>
+                <dd><?= htmlspecialchars($rezept['autor']) ?></dd>
+            </dl>
+            <section>
+                <h3>Zutaten</h3>
+                <pre><?= htmlspecialchars($rezept['zutaten']) ?></pre>
+            </section>
+            <section>
+                <h3>Zubereitung</h3>
+                <pre><?= htmlspecialchars($rezept['zubereitung']) ?></pre>
+            </section>
+        </article>
     <?php else: ?>
         <p>Rezept nicht gefunden.</p>
     <?php endif; ?>

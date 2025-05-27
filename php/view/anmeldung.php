@@ -1,19 +1,20 @@
 <main>
     <h2>Anmeldung</h2>
-    <form action="index.php?page=anmeldung" method="post">
-        <p>
-            <label for="email">E-Mail-Adresse:<br>
-                <input type="email" id="email" name="email" required>
-            </label>
-        </p>
-        <p>
-            <label for="passwort">Passwort:<br>
-                <input type="password" id="passwort" name="passwort" required>
-            </label>
-        </p>
-        <p>
+    <form action="index.php?page=anmeldung" method="post" autocomplete="off">
+
+        <div class="form-row">
+            <label for="email">E-Mail-Adresse:</label>
+            <input type="email" id="email" name="email" required autocomplete="username">
+        </div>
+
+        <div class="form-row">
+            <label for="passwort">Passwort:</label>
+            <input type="password" id="passwort" name="passwort" required autocomplete="current-password">
+        </div>
+
+        <div class="form-row">
             <input type="submit" value="Anmelden">
-        </p>
+        </div>
     </form>
     <p>Noch kein Konto? <a href="index.php?page=registrierung">Jetzt registrieren</a>.</p>
 </main>
