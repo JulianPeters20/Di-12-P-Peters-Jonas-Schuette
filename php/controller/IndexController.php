@@ -1,39 +1,38 @@
 <?php
 // Dateipfad: controller/IndexController.php
 
-function showHome() {
-    require_once 'php/model/RezeptDAO.php';
+declare(strict_types=1);
+
+require_once 'php/model/RezeptDAO.php';
+
+function showHome(): void
+{
     $rezepte = RezeptDAO::findeNeueste();
     require 'php/view/index.php';
 }
 
-function showRezepte()
+function showRezepte(): void
 {
-    // Hier ggf. Rezept-Logik/Dummy-Daten
     $rezepte = RezeptDAO::findeAlle();
     require 'php/view/rezepte.php';
 }
 
-function showRezeptNeu()
+function showRezeptNeu(): void
 {
-    // Hier ggf. Rezept-Neu-Logik/Dummy-Daten
     require 'php/view/rezept-neu.php';
 }
 
-function showImpressum()
+function showImpressum(): void
 {
-    // Hier ggf. Impressum-Logik/Dummy-Daten
     require 'php/view/impressum.php';
 }
 
-function showDatenschutz()
+function showDatenschutz(): void
 {
-    // Hier ggf. Datenschutz-Logik/Dummy-Daten
     require 'php/view/datenschutz.php';
 }
 
-function showNutzungsbedingungen()
+function showNutzungsbedingungen(): void
 {
-    // Hier ggf. Nutzungsbedingungen-Logik/Dummy-Daten
     require 'php/view/nutzungsbedingungen.php';
 }

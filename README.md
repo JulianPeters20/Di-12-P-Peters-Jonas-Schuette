@@ -5,7 +5,6 @@
 ## Projektgruppe
 - Julian Peters
 - Leon Jonas
-- Janis-Gawin Schütte
 
 ---
 

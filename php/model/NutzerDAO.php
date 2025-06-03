@@ -1,7 +1,12 @@
 <?php
+declare(strict_types=1);
 
+/**
+ * Datenzugriffsobjekt (DAO) für Nutzer.
+ * Achtung: Alle Daten sind nur temporär und werden NICHT persistent gespeichert!
+ */
 class NutzerDAO {
-    // Dummy-Daten (static, because of missing DB)
+    // Dummy-Daten
     private static $benutzer = [
         [
             'benutzername' => 'StudentOne',
@@ -17,18 +22,18 @@ class NutzerDAO {
         ]
     ];
 
-    // Gibt alle Benutzer zurück
-    public static function getAlleBenutzer() {
+    /**
+     * Gibt alle Benutzer zurück.
+     */
+    public static function getAlleBenutzer(): array {
         return self::$benutzer;
     }
 
-    // Benutzer suchen (Login)
-    public static function findeBenutzer($email, $passwort) {
+    /**
+     * Sucht Benutzer anhand von E-Mail und Passwort.
+     */
+    public static function findeBenutzer(string $email, string $passwort): ?array {
         foreach (self::$benutzer as $nutzer) {
-            echo "<pre>DEBUG: ";
-            var_dump($nutzer['email'], $nutzer['passwort'], $email, $passwort);
-            echo "</pre>";
-
             if ($nutzer['email'] === $email && $nutzer['passwort'] === $passwort) {
                 return $nutzer;
             }
@@ -36,8 +41,10 @@ class NutzerDAO {
         return null;
     }
 
-    // Nach E-Mail suchen (für Registrierung/Profil)
-    public static function findeBenutzerNachEmail($email) {
+    /**
+     * Gibt Benutzer anhand E-Mail zurück.
+     */
+    public static function findeBenutzerNachEmail(string $email): ?array {
         foreach (self::$benutzer as $nutzer) {
             if ($nutzer['email'] === $email) {
                 return $nutzer;
@@ -46,8 +53,10 @@ class NutzerDAO {
         return null;
     }
 
-    // Benutzer hinzufügen (nur temporär, nicht persistent!)
-    public static function addBenutzer($benutzername, $email, $passwort) {
+    /**
+     * Fügt einen neuen Benutzer hinzu.
+     */
+    public static function addBenutzer(string $benutzername, string $email, string $passwort): void {
         self::$benutzer[] = [
             'benutzername' => $benutzername,
             'email' => $email,
@@ -56,8 +65,10 @@ class NutzerDAO {
         ];
     }
 
-    // Benutzer löschen (nur temporär, nicht persistent!)
-    public static function loescheBenutzer($email) {
+    /**
+     * Löscht Benutzer anhand E-Mail.
+     */
+    public static function loescheBenutzer(string $email): bool {
         foreach (self::$benutzer as $key => $nutzer) {
             if ($nutzer['email'] === $email) {
                 unset(self::$benutzer[$key]);
@@ -67,8 +78,10 @@ class NutzerDAO {
         return false;
     }
 
-    // Benutzer aktualisieren (nur temporär, nicht persistent!)
-    public static function aktualisiereBenutzer($email, $benutzername = null, $passwort = null) {
+    /**
+     * Aktualisiert Nutzer-Daten.
+     */
+    public static function aktualisiereBenutzer(string $email, ?string $benutzername = null, ?string $passwort = null): bool {
         foreach (self::$benutzer as $key => $nutzer) {
             if ($nutzer['email'] === $email) {
                 if ($benutzername !== null) {

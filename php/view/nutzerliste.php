@@ -2,15 +2,15 @@
 
 <main>
     <h2>Nutzerübersicht</h2>
-    <p>Hinweis: Diese Seite ist nur für Administratoren vorgesehen.</p>
+    <div>Hinweis: Diese Seite ist nur für Administratoren vorgesehen.</div>
 
     <div class="nutzerliste">
         <?php foreach ($nutzer as $person): ?>
             <div class="nutzer-karte">
                 <div class="nutzer-karte-inhalt">
-                    <p><strong>Benutzername:</strong> <?= htmlspecialchars($person['benutzername']) ?></p>
-                    <p><strong>E-Mail:</strong> <?= htmlspecialchars($person['email']) ?></p>
-                    <p><strong>Registriert am:</strong> <?= htmlspecialchars($person['registriert'] ?? '-') ?></p>
+                    <div><strong>Benutzername:</strong> <?= htmlspecialchars($person['benutzername']) ?></div>
+                    <div><strong>E-Mail:</strong> <?= htmlspecialchars($person['email']) ?></div>
+                    <div><strong>Registriert am:</strong> <?= htmlspecialchars($person['registriert'] ?? '-') ?></div>
                 </div>
             </div>
         <?php endforeach; ?>

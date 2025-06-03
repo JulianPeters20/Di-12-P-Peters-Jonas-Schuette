@@ -14,7 +14,7 @@
 
     <!-- Keine Ergebnisse -->
     <?php if (empty($rezepte)): ?>
-        <p>Keine passenden Rezepte gefunden.</p>
+        <div>Keine passenden Rezepte gefunden.</div>
     <?php endif; ?>
 
     <!-- Rezept-Galerie -->
@@ -28,9 +28,15 @@
                             <?= htmlspecialchars($rezept['titel']) ?>
                         </a>
                     </h3>
-                    <p class="meta">
-                        <?= htmlspecialchars($rezept['kategorie']) ?> · <?= htmlspecialchars($rezept['datum']) ?> · <?= htmlspecialchars($rezept['autor']) ?>
-                    </p>
+                    <div class="meta">
+                        <?php
+                        if (is_array($rezept['kategorie'])) {
+                            echo htmlspecialchars(implode(', ', $rezept['kategorie']));
+                        } else {
+                            echo htmlspecialchars($rezept['kategorie']);
+                        }
+                        ?> · <?= htmlspecialchars($rezept['datum']) ?> · <?= htmlspecialchars($rezept['autor']) ?>
+                    </div>
                 </div>
             </div>
         <?php endforeach; ?>

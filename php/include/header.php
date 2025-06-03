@@ -33,7 +33,6 @@
             </li>
         </ul>
     </div>
-
 </header>
 
 <!-- 💬 Session Message anzeigen -->

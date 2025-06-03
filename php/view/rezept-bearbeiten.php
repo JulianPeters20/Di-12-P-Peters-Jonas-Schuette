@@ -17,32 +17,32 @@
     ?>
 
     <form action="index.php?page=rezept-aktualisieren&id=<?= urlencode($rezept['id']) ?>" method="post" enctype="multipart/form-data">
-        <p>
+        <div class="form-row">
             <label for="titel">Titel des Rezepts:<br>
                 <input type="text" id="titel" name="titel" required
                        value="<?= htmlspecialchars($_SESSION["formdata"]["titel"] ?? $rezept['titel']) ?>">
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div class="form-row">
             <label for="zutaten">Zutaten (eine Zutat pro Zeile):<br>
                 <textarea id="zutaten" name="zutaten" rows="6" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zutaten"] ?? $rezept['zutaten']) ?></textarea>
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div class="form-row">
             <label for="zubereitung">Zubereitung:<br>
                 <textarea id="zubereitung" name="zubereitung" rows="8" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? $rezept['zubereitung']) ?></textarea>
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div class="form-row">
             <label for="utensilien">Küchenutensilien (optional):<br>
                 <textarea id="utensilien" name="utensilien" rows="4" cols="50"><?= htmlspecialchars($_SESSION["formdata"]["utensilien"] ?? $rezept['utensilien']) ?></textarea>
             </label>
-        </p>
+        </div>
 
-        <p class="form-row">
+        <div class="form-row">
             <label for="kategorie">Kategorie:<br>
                 <select id="kategorie" name="kategorie" required>
                     <option value="">-- bitte auswählen --</option>
@@ -81,18 +81,18 @@
                     ?>
                 </select>
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div class="form-row">
             <label for="bild">Bild ändern (optional):<br>
                 <input type="file" id="bild" name="bild" accept="image/*">
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div class="form-row">
             <input type="submit" value="Änderungen speichern">
             <input type="reset" value="Eingaben zurücksetzen">
-        </p>
+        </div>
     </form>
 
     <?php unset($_SESSION["formdata"]); ?>

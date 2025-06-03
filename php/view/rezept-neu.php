@@ -7,32 +7,32 @@
     <?php endif; ?>
 
     <form action="index.php?page=rezept-neu" method="post" enctype="multipart/form-data">
-        <p>
+        <div>
             <label for="titel">Titel des Rezepts:<br>
                 <input type="text" id="titel" name="titel" required
                        value="<?= htmlspecialchars($_SESSION["formdata"]["titel"] ?? "") ?>">
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div>
             <label for="zutaten">Zutaten (eine Zutat pro Zeile):<br>
                 <textarea id="zutaten" name="zutaten" rows="6" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zutaten"] ?? "") ?></textarea>
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div>
             <label for="zubereitung">Zubereitung:<br>
                 <textarea id="zubereitung" name="zubereitung" rows="8" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? "") ?></textarea>
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div>
             <label for="utensilien">Küchenutensilien (optional):<br>
                 <textarea id="utensilien" name="utensilien" rows="4" cols="50"><?= htmlspecialchars($_SESSION["formdata"]["utensilien"] ?? "") ?></textarea>
             </label>
-        </p>
+        </div>
 
-        <p class="form-row">
+        <div class="form-row">
             <label for="kategorie">Kategorie:<br>
                 <select id="kategorie" name="kategorie" required>
                     <option value="">-- Bitte auswählen --</option>
@@ -70,18 +70,18 @@
                     ?>
                 </select>
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div>
             <label for="bild">Bild hochladen (optional):<br>
                 <input type="file" id="bild" name="bild" accept="image/*">
             </label>
-        </p>
+        </div>
 
-        <p>
+        <div>
             <input type="submit" value="Rezept speichern">
             <input type="reset" value="Eingaben zurücksetzen">
-        </p>
+        </div>
     </form>
 
     <?php unset($_SESSION["formdata"]); ?>

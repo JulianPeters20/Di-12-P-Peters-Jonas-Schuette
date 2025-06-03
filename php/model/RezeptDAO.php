@@ -1,14 +1,18 @@
 <?php
-// models/RezeptDAO.php
+declare(strict_types=1);
 
+/**
+ * Datenzugriffsobjekt (DAO) für Rezepte.
+ * Achtung: Alle Daten sind nur temporär und werden NICHT persistent gespeichert!
+ */
 class RezeptDAO {
-    // Statische Dummy-Daten für alle Instanzen
+    //Dummy-Daten
     private static $rezepte = [
         [
             'id' => 1,
             'titel' => 'Nudeln mit Pesto',
             'bild' => 'images/pesto.jpg',
-            'kategorie' => 'vegetarisch',
+            'kategorie' => ['vegetarisch'],
             'datum' => '21.04.2025',
             'autor' => 'student@beispiel.de',
             'zutaten' => "200g Nudeln\n2 EL Pesto\nSalz\nPfeffer",
@@ -21,7 +25,7 @@ class RezeptDAO {
             'id' => 2,
             'titel' => 'Reis mit Curry',
             'bild' => 'images/reis_mit_curry.jpg',
-            'kategorie' => 'vegan',
+            'kategorie' => ['vegan'],
             'datum' => '20.04.2025',
             'autor' => 'max@example.com',
             'zutaten' => "150g Reis\n1 Dose Kokosmilch\n1 TL Currypulver\nGemüse nach Wahl",
@@ -32,47 +36,56 @@ class RezeptDAO {
         ]
     ];
 
-    private static $naechsteId = 3;
+    private static int $naechsteId = 3;
 
-    // Gibt alle Rezepte zurück
-    public static function findeAlle() {
+    /**
+     * Gibt alle Rezepte zurück.
+     */
+    public static function findeAlle(): array {
         return self::$rezepte;
     }
 
-    // Gibt die $anzahl neuesten Rezepte zurück
-    public static function findeNeueste($anzahl = 3) {
-        // Kopie der Rezepte
+    /**
+     * Gibt die $anzahl der neuesten Rezepte zurück, sortiert nach ID absteigend.
+     */
+    public static function findeNeueste(int $anzahl = 3): array {
         $kopie = self::$rezepte;
-
-        // Sortieren nach ID absteigend (neuste oben)
-        usort($kopie, function($a, $b) {
-            return $b['id'] <=> $a['id'];
-        });
-
+        usort($kopie, fn($a, $b) => $b['id'] <=> $a['id']);
         return array_slice($kopie, 0, $anzahl);
     }
 
-    // Sucht und gibt ein Rezept nach ID zurück (oder null)
-    public static function findeNachId($id) {
+    /**
+     * Gibt ein Rezept anhand der ID zurück oder null, falls nicht gefunden.
+     */
+    public static function findeNachId(int $id): ?array {
         foreach (self::$rezepte as $rezept) {
-            if ($rezept['id'] == $id) {
+            if ($rezept['id'] === $id) {
                 return $rezept;
             }
         }
         return null;
     }
 
-    // Fügt ein neues Rezept hinzu
+    /**
+     * Fügt ein neues Rezept hinzu.
+     */
     public static function addRezept(
-        $titel, $kategorie, $bild, $datum, $autor,
-        $zutaten = '', $zubereitung = '', $utensilien = '',
-        $portionsgroesse = 1, $preis = ''
-    ) {
+        string $titel,
+        array $kategorien,
+        string $bild,
+        string $datum,
+        string $autor,
+        string $zutaten = '',
+        string $zubereitung = '',
+        string $utensilien = '',
+        int $portionsgroesse = 1,
+        string $preis = ''
+    ): array {
         $neuesRezept = [
             'id' => self::$naechsteId++,
             'titel' => $titel,
             'bild' => $bild,
-            'kategorie' => $kategorie,
+            'kategorie' => $kategorien,
             'datum' => $datum,
             'autor' => $autor,
             'zutaten' => $zutaten,
@@ -85,24 +98,26 @@ class RezeptDAO {
         return $neuesRezept;
     }
 
-    // Aktualisiert ein bestehendes Rezept
+    /**
+     * Aktualisiert ein bestehendes Rezept. Gibt true bei Erfolg zurück.
+     */
     public static function aktualisiereRezept(
-        $id,
-        $titel = null,
-        $kategorie = null,
-        $bild = null,
-        $datum = null,
-        $autor = null,
-        $zutaten = null,
-        $zubereitung = null,
-        $utensilien = null,
-        $portionsgroesse = null,
-        $preis = null
-    ) {
+        int $id,
+        ?string $titel = null,
+        ?array $kategorien = null,
+        ?string $bild = null,
+        ?string $datum = null,
+        ?string $autor = null,
+        ?string $zutaten = null,
+        ?string $zubereitung = null,
+        ?string $utensilien = null,
+        ?int $portionsgroesse = null,
+        ?string $preis = null
+    ): bool {
         foreach (self::$rezepte as &$rezept) {
-            if ($rezept['id'] == $id) {
+            if ($rezept['id'] === $id) {
                 if ($titel !== null) $rezept['titel'] = $titel;
-                if ($kategorie !== null) $rezept['kategorie'] = $kategorie;
+                if ($kategorien !== null) $rezept['kategorie'] = $kategorien;
                 if ($bild !== null) $rezept['bild'] = $bild;
                 if ($datum !== null) $rezept['datum'] = $datum;
                 if ($autor !== null) $rezept['autor'] = $autor;
@@ -117,14 +132,36 @@ class RezeptDAO {
         return false;
     }
 
-    // Löscht ein Rezept
-    public static function loesche($id) {
+    /**
+     * Löscht ein Rezept anhand der ID. Gibt true bei Erfolg zurück.
+     */
+    public static function loesche(int $id): bool {
         foreach (self::$rezepte as $index => $rezept) {
-            if ($rezept['id'] == $id) {
+            if ($rezept['id'] === $id) {
                 array_splice(self::$rezepte, $index, 1);
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Sucht alle Rezepte eines Autors (z. B. für das eigene Profil).
+     */
+    public static function findeAlleVonAutor(string $autorMail): array {
+        return array_filter(
+            self::$rezepte,
+            fn($rezept) => $rezept['autor'] === $autorMail
+        );
+    }
+
+    /**
+     * Sucht alle Rezepte, die einer bestimmten Kategorie angehören.
+     */
+    public static function findeAlleMitKategorie(string $kategorie): array {
+        return array_filter(
+            self::$rezepte,
+            fn($rezept) => in_array($kategorie, (array)$rezept['kategorie'], true)
+        );
     }
 }
