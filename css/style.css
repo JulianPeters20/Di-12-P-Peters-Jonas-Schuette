@@ -235,12 +235,17 @@ input[type="file"] {
 
 /* Footer */
 footer {
+  margin-top: 60px;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
   text-align: center;
-  padding: 20px;
+  padding: 20px 0;
   font-size: 0.9rem;
   color: var(--text);
-  border-top: 1px solid var(--border);
-  margin-top: 60px;
 }
 
 footer a {
