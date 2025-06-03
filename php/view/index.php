@@ -11,9 +11,15 @@
                             <?= htmlspecialchars($rezept['titel']) ?>
                         </a>
                     </h3>
-                    <p class="meta">
-                        <?= htmlspecialchars($rezept['kategorie']) ?> · <?= htmlspecialchars($rezept['datum']) ?> · <?= htmlspecialchars($rezept['autor']) ?>
-                    </p>
+                    <div class="meta">
+                        <?php
+                        if (is_array($rezept['kategorie'])) {
+                            echo htmlspecialchars(implode(', ', $rezept['kategorie']));
+                        } else {
+                            echo htmlspecialchars($rezept['kategorie']);
+                        }
+                        ?> · <?= htmlspecialchars($rezept['datum']) ?> · <?= htmlspecialchars($rezept['autor']) ?>
+                    </div>
                 </div>
             </li>
         <?php endforeach; ?>

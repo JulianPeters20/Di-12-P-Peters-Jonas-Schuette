@@ -1,16 +1,16 @@
 <main>
     <h2>Impressum</h2>
     <section>
-        <p>Angaben gemäß § 5 TMG</p>
+        <div>Angaben gemäß § 5 TMG</div>
         <address>
             Broke &amp; Hungry<br>
-            Julian Peters, Leon Jonas, Janis-Gawin Schuette<br>
+            Julian Peters, Leon Jonas<br>
             Carl von Ossietzky Universität Oldenburg<br>
             Ammerländer Heerstr. 114-118<br>
             26129 Oldenburg
         </address>
-        <p><strong>Kontakt:</strong><br>
-            E-Mail: <a href="mailto:info@brokeandhungry.de">info@brokeandhungry.de</a></p>
+        <div><strong>Kontakt:</strong><br>
+            E-Mail: <a href="mailto:info@brokeandhungry.de">info@brokeandhungry.de</a></div>
     </section>
     <section>
         <h3>Quellenangaben für verwendete Medien</h3>

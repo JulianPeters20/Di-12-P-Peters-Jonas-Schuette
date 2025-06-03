@@ -11,79 +11,82 @@
     $rezept['zutaten'] = $rezept['zutaten'] ?? '';
     $rezept['zubereitung'] = $rezept['zubereitung'] ?? '';
     $rezept['utensilien'] = $rezept['utensilien'] ?? '';
-    $rezept['kategorie'] = $rezept['kategorie'] ?? [];
+    $rezept['kategorie'] = $rezept['kategorie'] ?? '';
     $rezept['portionsgroesse'] = $rezept['portionsgroesse'] ?? 1;
     $rezept['preis'] = $rezept['preis'] ?? '';
     ?>
 
     <form action="index.php?page=rezept-aktualisieren&id=<?= urlencode($rezept['id']) ?>" method="post" enctype="multipart/form-data">
-
         <div class="form-row">
-            <label for="titel">Titel des Rezepts:</label>
-            <input type="text" id="titel" name="titel" required
-                   value="<?= htmlspecialchars($_SESSION["formdata"]["titel"] ?? $rezept['titel']) ?>">
+            <label for="titel">Titel des Rezepts:<br>
+                <input type="text" id="titel" name="titel" required
+                       value="<?= htmlspecialchars($_SESSION["formdata"]["titel"] ?? $rezept['titel']) ?>">
+            </label>
         </div>
 
         <div class="form-row">
-            <label for="zutaten">Zutaten (eine Zutat pro Zeile):</label>
-            <textarea id="zutaten" name="zutaten" rows="6" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zutaten"] ?? $rezept['zutaten']) ?></textarea>
+            <label for="zutaten">Zutaten (eine Zutat pro Zeile):<br>
+                <textarea id="zutaten" name="zutaten" rows="6" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zutaten"] ?? $rezept['zutaten']) ?></textarea>
+            </label>
         </div>
 
         <div class="form-row">
-            <label for="zubereitung">Zubereitung:</label>
-            <textarea id="zubereitung" name="zubereitung" rows="8" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? $rezept['zubereitung']) ?></textarea>
+            <label for="zubereitung">Zubereitung:<br>
+                <textarea id="zubereitung" name="zubereitung" rows="8" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? $rezept['zubereitung']) ?></textarea>
+            </label>
         </div>
 
         <div class="form-row">
-            <label for="utensilien">Küchenutensilien (optional):</label>
-            <textarea id="utensilien" name="utensilien" rows="4" cols="50"><?= htmlspecialchars($_SESSION["formdata"]["utensilien"] ?? $rezept['utensilien']) ?></textarea>
-        </div>
-
-        <fieldset class="form-row">
-            <legend>Kategorien:</legend>
-            <?php
-            $kategorien = ["vegetarisch", "vegan", "schnell", "guenstig", "klassisch"];
-            $kategorieArr = $_SESSION["formdata"]["kategorie"] ?? (is_array($rezept['kategorie']) ? $rezept['kategorie'] : (array)$rezept['kategorie']);
-            foreach ($kategorien as $kat):
-                $checked = is_array($kategorieArr) && in_array($kat, $kategorieArr) ? "checked" : "";
-                ?>
-                <label>
-                    <input type="checkbox" name="kategorie[]" value="<?= htmlspecialchars($kat) ?>" <?= $checked ?>>
-                    <?= ucfirst($kat) ?>
-                </label>
-            <?php endforeach; ?>
-        </fieldset>
-
-        <div class="form-row">
-            <label for="portionsgroesse">Portionsgröße:</label>
-            <input type="number" id="portionsgroesse" name="portionsgroesse" min="1"
-                   value="<?= htmlspecialchars($_SESSION["formdata"]["portionsgroesse"] ?? $rezept['portionsgroesse']) ?>" required>
+            <label for="utensilien">Küchenutensilien (optional):<br>
+                <textarea id="utensilien" name="utensilien" rows="4" cols="50"><?= htmlspecialchars($_SESSION["formdata"]["utensilien"] ?? $rezept['utensilien']) ?></textarea>
+            </label>
         </div>
 
         <div class="form-row">
-            <label for="preis">Kosten für Zutaten:</label>
-            <select id="preis" name="preis" required>
-                <option value="">-- Bitte auswählen --</option>
-                <?php
-                $preisoptionen = [
-                    "lt5" => "&lt; 5 €",
-                    "5 - 10" => "5 bis 10 €",
-                    "10 - 15" => "10 bis 15 €",
-                    "15-20" => "15 bis 20 €",
-                    "gt20" => "&gt; 20 €"
-                ];
-                $preiswert = $_SESSION["formdata"]["preis"] ?? $rezept['preis'];
-                foreach ($preisoptionen as $value => $label) {
-                    $selected = ($preiswert === $value) ? "selected" : "";
-                    echo "<option value=\"$value\" $selected>$label</option>";
-                }
-                ?>
-            </select>
+            <label for="kategorie">Kategorie:<br>
+                <select id="kategorie" name="kategorie" required>
+                    <option value="">-- bitte auswählen --</option>
+                    <?php
+                    $kategorien = ["vegetarisch", "vegan", "schnell", "guenstig", "klassisch"];
+                    $auswahl = $_SESSION["formdata"]["kategorie"] ?? $rezept['kategorie'];
+                    foreach ($kategorien as $kat) {
+                        $selected = ($auswahl === $kat) ? "selected" : "";
+                        echo "<option value=\"$kat\" $selected>" . ucfirst($kat) . "</option>";
+                    }
+                    ?>
+                </select>
+            </label>
+
+            <label for="portionsgroesse">Portionsgröße:<br>
+                <input type="number" id="portionsgroesse" name="portionsgroesse" min="1"
+                       value="<?= htmlspecialchars($_SESSION["formdata"]["portionsgroesse"] ?? $rezept['portionsgroesse']) ?>" required>
+            </label>
+
+            <label for="preis">Kosten für Zutaten:<br>
+                <select id="preis" name="preis" required>
+                    <option value="">-- Bitte auswählen --</option>
+                    <?php
+                    $preisoptionen = [
+                        "lt5" => "&lt; 5 €",
+                        "5 - 10" => "5 bis 10 €",
+                        "10 - 15" => "10 bis 15 €",
+                        "15-20" => "15 bis 20 €",
+                        "gt20" => "&gt; 20 €"
+                    ];
+                    $preiswert = $_SESSION["formdata"]["preis"] ?? $rezept['preis'];
+                    foreach ($preisoptionen as $value => $label) {
+                        $selected = ($preiswert === $value) ? "selected" : "";
+                        echo "<option value=\"$value\" $selected>$label</option>";
+                    }
+                    ?>
+                </select>
+            </label>
         </div>
 
         <div class="form-row">
-            <label for="bild">Bild ändern (optional):</label>
-            <input type="file" id="bild" name="bild" accept="image/*">
+            <label for="bild">Bild ändern (optional):<br>
+                <input type="file" id="bild" name="bild" accept="image/*">
+            </label>
         </div>
 
         <div class="form-row">

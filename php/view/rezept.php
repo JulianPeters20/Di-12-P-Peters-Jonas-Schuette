@@ -31,7 +31,7 @@
             </section>
         </article>
     <?php else: ?>
-        <p>Rezept nicht gefunden.</p>
+        <div>Rezept nicht gefunden.</div>
     <?php endif; ?>
     <a href="index.php?page=rezepte">Zurück zur Übersicht</a>
 </main>

@@ -37,7 +37,15 @@
                                         <?= htmlspecialchars($rezept['titel']) ?>
                                     </a>
                                 </h4>
-                                <p class="meta"><?= htmlspecialchars($rezept['kategorie']) ?> · <?= htmlspecialchars($rezept['datum']) ?></p>
+                                <div class="meta">
+                                    <?php
+                                    if (is_array($rezept['kategorie'])) {
+                                        echo htmlspecialchars(implode(', ', $rezept['kategorie']));
+                                    } else {
+                                        echo htmlspecialchars($rezept['kategorie']);
+                                    }
+                                    ?> · <?= htmlspecialchars($rezept['datum']) ?>
+                                </div>
                                 <div class="rezept-aktion" style="margin-top: 10px;">
                                     <a href="index.php?page=rezept-bearbeiten&id=<?= $rezept['id'] ?>" class="btn">Bearbeiten</a>
                                     <a href="index.php?page=rezept-loeschen&id=<?= $rezept['id'] ?>" class="btn" onclick="return confirm('Möchtest du dieses Rezept wirklich löschen?');">Löschen</a>

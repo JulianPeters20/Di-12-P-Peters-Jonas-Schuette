@@ -27,5 +27,5 @@
             <input type="reset" value="Zurücksetzen">
         </div>
     </form>
-    <p>Du hast bereits ein Konto? <a href="index.php?page=anmeldung">Hier anmelden</a>.</p>
+    <div>Du hast bereits ein Konto? <a href="index.php?page=anmeldung">Hier anmelden</a>.</div>
 </main>

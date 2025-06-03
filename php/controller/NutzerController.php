@@ -1,14 +1,11 @@
 <?php
-declare(strict_types=1);
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
 require_once __DIR__ . '/../model/NutzerDAO.php';
 
-/**
- * Zeigt das Anmeldeformular und verarbeitet Logins
- */
+// Anmeldung (Login-Formular anzeigen und verarbeiten)
 function showAnmeldeFormular(): void {
     $fehler = "";
     if ($_SERVER["REQUEST_METHOD"] === "POST") {

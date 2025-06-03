@@ -2,22 +2,17 @@
 
 <main>
     <h2>Nutzerübersicht</h2>
-    <p>Hinweis: Diese Seite ist nur für Administratoren vorgesehen.</p>
+    <div>Hinweis: Diese Seite ist nur für Administratoren vorgesehen.</div>
 
-    <ul class="nutzerliste">
+    <div class="nutzerliste">
         <?php foreach ($nutzer as $person): ?>
-            <li class="nutzer-karte">
+            <div class="nutzer-karte">
                 <div class="nutzer-karte-inhalt">
-                    <dl>
-                        <dt>Benutzername:</dt>
-                        <dd><?= htmlspecialchars($person['benutzername']) ?></dd>
-                        <dt>E-Mail:</dt>
-                        <dd><?= htmlspecialchars($person['email']) ?></dd>
-                        <dt>Registriert am:</dt>
-                        <dd><?= htmlspecialchars($person['registriert'] ?? '-') ?></dd>
-                    </dl>
+                    <div><strong>Benutzername:</strong> <?= htmlspecialchars($person['benutzername']) ?></div>
+                    <div><strong>E-Mail:</strong> <?= htmlspecialchars($person['email']) ?></div>
+                    <div><strong>Registriert am:</strong> <?= htmlspecialchars($person['registriert'] ?? '-') ?></div>
                 </div>
-            </li>
+            </div>
         <?php endforeach; ?>
-    </ul>
+    </div>
 </main>

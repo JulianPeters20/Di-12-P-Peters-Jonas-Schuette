@@ -16,5 +16,5 @@
             <input type="submit" value="Anmelden">
         </div>
     </form>
-    <p>Noch kein Konto? <a href="index.php?page=registrierung">Jetzt registrieren</a>.</p>
+    <div>Noch kein Konto? <a href="index.php?page=registrierung">Jetzt registrieren</a>.</div>
 </main>
