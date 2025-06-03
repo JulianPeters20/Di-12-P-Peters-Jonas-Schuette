@@ -8,44 +8,46 @@
 
     <?php
     // Fallbacks für ältere Rezepte ohne alle Felder
-    $rezept['zutaten'] = $rezept['zutaten'] ?? '';
-    $rezept['zubereitung'] = $rezept['zubereitung'] ?? '';
-    $rezept['utensilien'] = $rezept['utensilien'] ?? '';
-    $rezept['kategorie'] = $rezept['kategorie'] ?? '';
-    $rezept['portionsgroesse'] = $rezept['portionsgroesse'] ?? 1;
-    $rezept['preis'] = $rezept['preis'] ?? '';
+    $rezept['zutaten'] ??= '';
+    $rezept['zubereitung'] ??= '';
+    $rezept['utensilien'] ??= '';
+    $rezept['kategorie'] ??= '';
+    $rezept['portionsgroesse'] ??= 1;
+    $rezept['preis'] ??= '';
+    $rezept['titel'] ??= '';
     ?>
 
     <form action="index.php?page=rezept-aktualisieren&id=<?= urlencode($rezept['id']) ?>" method="post" enctype="multipart/form-data">
-        <div class="form-row">
-            <label for="titel">Titel des Rezepts:<br>
+        <div>
+            <label for="titel">
+                Titel des Rezepts:
                 <input type="text" id="titel" name="titel" required
                        value="<?= htmlspecialchars($_SESSION["formdata"]["titel"] ?? $rezept['titel']) ?>">
             </label>
         </div>
 
-        <div class="form-row">
+        <div>
             <label for="zutaten">Zutaten (eine Zutat pro Zeile):<br>
-                <textarea id="zutaten" name="zutaten" rows="6" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zutaten"] ?? $rezept['zutaten']) ?></textarea>
+                <textarea id="zutaten" name="zutaten" rows="6" required><?= htmlspecialchars($_SESSION["formdata"]["zutaten"] ?? $rezept['zutaten']) ?></textarea>
             </label>
         </div>
 
-        <div class="form-row">
+        <div>
             <label for="zubereitung">Zubereitung:<br>
-                <textarea id="zubereitung" name="zubereitung" rows="8" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? $rezept['zubereitung']) ?></textarea>
+                <textarea id="zubereitung" name="zubereitung" rows="8" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? $rezept['zubereitung']) ?></textarea>
             </label>
         </div>
 
-        <div class="form-row">
+        <div>
             <label for="utensilien">Küchenutensilien (optional):<br>
-                <textarea id="utensilien" name="utensilien" rows="4" cols="50"><?= htmlspecialchars($_SESSION["formdata"]["utensilien"] ?? $rezept['utensilien']) ?></textarea>
+                <textarea id="utensilien" name="utensilien" rows="4"><?= htmlspecialchars($_SESSION["formdata"]["utensilien"] ?? $rezept['utensilien']) ?></textarea>
             </label>
         </div>
 
-        <div class="form-row">
+        <div>
             <label for="kategorie">Kategorie:<br>
                 <select id="kategorie" name="kategorie" required>
-                    <option value="">-- bitte auswählen --</option>
+                    <option value="">-- Bitte auswählen --</option>
                     <?php
                     $kategorien = ["vegetarisch", "vegan", "schnell", "guenstig", "klassisch"];
                     $auswahl = $_SESSION["formdata"]["kategorie"] ?? $rezept['kategorie'];
@@ -56,12 +58,16 @@
                     ?>
                 </select>
             </label>
+        </div>
 
+        <div>
             <label for="portionsgroesse">Portionsgröße:<br>
                 <input type="number" id="portionsgroesse" name="portionsgroesse" min="1"
                        value="<?= htmlspecialchars($_SESSION["formdata"]["portionsgroesse"] ?? $rezept['portionsgroesse']) ?>" required>
             </label>
+        </div>
 
+        <div>
             <label for="preis">Kosten für Zutaten:<br>
                 <select id="preis" name="preis" required>
                     <option value="">-- Bitte auswählen --</option>
@@ -83,15 +89,24 @@
             </label>
         </div>
 
-        <div class="form-row">
-            <label for="bild">Bild ändern (optional):<br>
-                <input type="file" id="bild" name="bild" accept="image/*">
-            </label>
+        <div class="form-row bild-upload">
+            <label for="bild">Bild ändern:</label>
+        </div>
+        <div class="form-row datei-auswahl">
+            <div class="custom-file-upload">
+                <button type="button" id="btn-select-file" class="btn">Datei auswählen</button>
+                <span id="selected-file-name">Keine ausgewählt</span>
+                <input type="file" id="bild" name="bild" accept="image/*" hidden>
+            </div>
         </div>
 
-        <div class="form-row">
-            <input type="submit" value="Änderungen speichern">
-            <input type="reset" value="Eingaben zurücksetzen">
+        <div id="preview-container" style="display:none; border-radius:6px; margin-top: 10px; overflow: visible;">
+            <img id="img-preview" src="" alt="Bildvorschau" style="border-radius:6px; display:none; width:auto; max-width:100%; height:auto; object-fit:contain;">
+        </div>
+
+        <div class="form-row justify-center">
+            <input type="submit" value="Änderungen speichern" class="btn">
+            <input type="reset" value="Eingaben zurücksetzen" class="btn">
         </div>
     </form>
 

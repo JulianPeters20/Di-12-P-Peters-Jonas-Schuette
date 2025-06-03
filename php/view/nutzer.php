@@ -4,17 +4,20 @@
 
     <?php if (!empty($nutzer)): ?>
         <!-- Nutzer-Infos -->
-        <section class="nutzerprofil" style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+        <section class="nutzerprofil" style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px; background-color: #f7f5f2;">
             <img src="images/Icon Nutzer ChatGPT.webp" alt="Profilbild"
-                 style="height: 80px; width: 80px; border-radius: 50%; padding: 10px;">
-            <dl>
-                <dt>Benutzername:</dt>
-                <dd><?= htmlspecialchars($nutzer['benutzername']) ?></dd>
-                <dt>E-Mail:</dt>
-                <dd><?= htmlspecialchars($nutzer['email']) ?></dd>
-                <dt>Registrierungsdatum:</dt>
-                <dd><?= htmlspecialchars($nutzer['registriert']) ?></dd>
-            </dl>
+                 style="height: 120px; width: 120px; border-radius: 50%; padding: 10px; border: 2px solid #7fbe82;">
+            <div style="margin-left: 20px;">
+                <h4>Profil Informationen</h4>
+                <dl>
+                    <dt>Benutzername:</dt>
+                    <dd><?= htmlspecialchars($nutzer['benutzername']) ?></dd>
+                    <dt>E-Mail:</dt>
+                    <dd><?= htmlspecialchars($nutzer['email']) ?></dd>
+                    <dt>Registrierungsdatum:</dt>
+                    <dd><?= htmlspecialchars($nutzer['registriert']) ?></dd>
+                </dl>
+            </div>
         </section>
 
         <!-- Eigene Rezepte -->

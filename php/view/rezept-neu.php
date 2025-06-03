@@ -8,7 +8,8 @@
 
     <form action="index.php?page=rezept-neu" method="post" enctype="multipart/form-data">
         <div>
-            <label for="titel">Titel des Rezepts:<br>
+            <label for="titel">
+                <span>Titel des Rezepts:</span>
                 <input type="text" id="titel" name="titel" required
                        value="<?= htmlspecialchars($_SESSION["formdata"]["titel"] ?? "") ?>">
             </label>
@@ -16,23 +17,24 @@
 
         <div>
             <label for="zutaten">Zutaten (eine Zutat pro Zeile):<br>
-                <textarea id="zutaten" name="zutaten" rows="6" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zutaten"] ?? "") ?></textarea>
+                <textarea id="zutaten" name="zutaten" rows="6" required><?= htmlspecialchars($_SESSION["formdata"]["zutaten"] ?? "") ?></textarea>
             </label>
         </div>
 
         <div>
             <label for="zubereitung">Zubereitung:<br>
-                <textarea id="zubereitung" name="zubereitung" rows="8" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? "") ?></textarea>
+                <textarea id="zubereitung" name="zubereitung" rows="8" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? "") ?></textarea>
             </label>
         </div>
 
         <div>
             <label for="utensilien">Küchenutensilien (optional):<br>
-                <textarea id="utensilien" name="utensilien" rows="4" cols="50"><?= htmlspecialchars($_SESSION["formdata"]["utensilien"] ?? "") ?></textarea>
+                <textarea id="utensilien" name="utensilien" rows="4"><?= htmlspecialchars($_SESSION["formdata"]["utensilien"] ?? "") ?></textarea>
             </label>
         </div>
 
-        <div class="form-row">
+        <!-- JETZT: Jedes Auswahlfeld einzeln untereinander -->
+        <div>
             <label for="kategorie">Kategorie:<br>
                 <select id="kategorie" name="kategorie" required>
                     <option value="">-- Bitte auswählen --</option>
@@ -45,12 +47,16 @@
                     ?>
                 </select>
             </label>
+        </div>
 
+        <div>
             <label for="portionsgroesse">Portionsgröße:<br>
                 <input type="number" id="portionsgroesse" name="portionsgroesse" min="1"
                        value="<?= htmlspecialchars($_SESSION["formdata"]["portionsgroesse"] ?? "1") ?>" required>
             </label>
+        </div>
 
+        <div>
             <label for="preis">Kosten für Zutaten:<br>
                 <select id="preis" name="preis" required>
                     <option value="">-- Bitte auswählen --</option>
@@ -72,15 +78,26 @@
             </label>
         </div>
 
-        <div>
-            <label for="bild">Bild hochladen (optional):<br>
-                <input type="file" id="bild" name="bild" accept="image/*">
+        <div class="form-row bild-upload">
+            <label for="bild">
+                <span>Bild hochladen:</span>
             </label>
         </div>
+        <div class="form-row datei-auswahl">
+            <div class="custom-file-upload">
+                <button type="button" id="btn-select-file" class="btn">Datei auswählen</button>
+                <span id="selected-file-name">Keine ausgewählt</span>
+                <input type="file" id="bild" name="bild" accept="image/*" hidden>
+            </div>
+        </div>
 
-        <div>
-            <input type="submit" value="Rezept speichern">
-            <input type="reset" value="Eingaben zurücksetzen">
+        <div id="preview-container" style="display:none; border-radius:6px; margin-top: 10px; overflow: visible;">
+            <img id="img-preview" src="" alt="Bildvorschau" style="border-radius:6px; display:none; width:auto; max-width:100%; height:auto; object-fit:contain;">
+        </div>
+
+        <div class="form-row">
+            <input type="submit" value="Rezept speichern" class="btn">
+            <input type="reset" value="Eingaben zurücksetzen" class="btn">
         </div>
     </form>
 

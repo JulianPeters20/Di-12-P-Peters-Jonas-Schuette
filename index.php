@@ -145,5 +145,47 @@ switch ($page) {
 
 <?php require_once 'php/include/footer.php'; ?>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const realFileInput = document.getElementById('bild');
+        const btnSelectFile = document.getElementById('btn-select-file');
+        const fileNameSpan = document.getElementById('selected-file-name');
+        const previewContainer = document.getElementById('preview-container');
+        const imgPreview = document.getElementById('img-preview');
+
+        if (btnSelectFile && realFileInput && fileNameSpan && previewContainer && imgPreview) {
+            btnSelectFile.addEventListener('click', function() {
+                realFileInput.click();
+            });
+
+            realFileInput.addEventListener('change', function() {
+                if (realFileInput.files.length > 0) {
+                    const file = realFileInput.files[0];
+                    fileNameSpan.textContent = file.name;
+
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imgPreview.src = e.target.result;
+                            previewContainer.style.display = 'block';  // Container anzeigen
+                            imgPreview.style.display = 'block';         // Bild anzeigen
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        previewContainer.style.display = 'none'; // Container ausblenden
+                        imgPreview.style.display = 'none';        // Bild ausblenden
+                        imgPreview.src = '';
+                    }
+                } else {
+                    fileNameSpan.textContent = 'Keine ausgewählt';
+                    previewContainer.style.display = 'none';
+                    imgPreview.style.display = 'none';
+                    imgPreview.src = '';
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>
