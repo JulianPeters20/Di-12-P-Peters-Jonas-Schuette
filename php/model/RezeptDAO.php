@@ -1,167 +1,358 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../../data/pdo.php';
+
 /**
- * Datenzugriffsobjekt (DAO) für Rezepte.
- * Achtung: Alle Daten sind nur temporär und werden NICHT persistent gespeichert!
+ * DAO-Klasse für den Zugriff auf Rezepte in der Datenbank.
+ * Diese Klasse ermöglicht das Abrufen, Löschen und Suchen von Rezepten.
+ * @author Julian Peters
+ * @since 2025-06-03
  */
 class RezeptDAO {
-    //Dummy-Daten
-    private static $rezepte = [
-        [
-            'id' => 1,
-            'titel' => 'Nudeln mit Pesto',
-            'bild' => 'images/pesto.jpg',
-            'kategorie' => ['vegetarisch'],
-            'datum' => '21.04.2025',
-            'autor' => 'student@beispiel.de',
-            'zutaten' => "200g Nudeln\n2 EL Pesto\nSalz\nPfeffer",
-            'zubereitung' => "Nudeln nach Packungsanweisung kochen.\nAbgießen und mit Pesto vermengen.\nMit Salz und Pfeffer abschmecken.",
-            'utensilien' => "Topf\nSieb\nLöffel",
-            'portionsgroesse' => 2,
-            'preis' => "lt5"
-        ],
-        [
-            'id' => 2,
-            'titel' => 'Reis mit Curry',
-            'bild' => 'images/reis_mit_curry.jpg',
-            'kategorie' => ['vegan'],
-            'datum' => '20.04.2025',
-            'autor' => 'max@example.com',
-            'zutaten' => "150g Reis\n1 Dose Kokosmilch\n1 TL Currypulver\nGemüse nach Wahl",
-            'zubereitung' => "Reis kochen.\nGemüse anbraten, mit Kokosmilch und Currypulver ablöschen.\nMit dem Reis servieren.",
-            'utensilien' => "Topf\nPfanne\nSchneidebrett\nMesser",
-            'portionsgroesse' => 4,
-            'preis' => "5 - 10"
-        ]
-    ];
+    private PDO $db;
 
-    private static int $naechsteId = 3;
-
-    /**
-     * Gibt alle Rezepte zurück.
-     */
-    public static function findeAlle(): array {
-        return self::$rezepte;
+    public function __construct() {
+        $this->db = Database::getConnection();
     }
 
     /**
-     * Gibt die $anzahl der neuesten Rezepte zurück, sortiert nach ID absteigend.
+     * Gibt alle Rezepte zurück – inkl. Kategorien, Zutaten, Utensilien.
      */
-    public static function findeNeueste(int $anzahl = 3): array {
-        $kopie = self::$rezepte;
-        usort($kopie, fn($a, $b) => $b['id'] <=> $a['id']);
-        return array_slice($kopie, 0, $anzahl);
-    }
+    public function findeAlle(): array {
+        $sql = "
+        SELECT * FROM Rezept
+        ORDER BY Erstellungsdatum DESC
+    ";
+        $stmt = $this->db->query($sql);
+        $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    /**
-     * Gibt ein Rezept anhand der ID zurück oder null, falls nicht gefunden.
-     */
-    public static function findeNachId(int $id): ?array {
-        foreach (self::$rezepte as $rezept) {
-            if ($rezept['id'] === $id) {
-                return $rezept;
-            }
+        foreach ($rezepte as &$rezept) {
+            $rezeptID = (int)$rezept['RezeptID'];
+
+            // Kategorien
+            $stmtK = $this->db->prepare("SELECT KategorieID FROM RezeptKategorie WHERE RezeptID = ?");
+            $stmtK->execute([$rezeptID]);
+            $rezept['kategorien'] = array_column($stmtK->fetchAll(PDO::FETCH_ASSOC), 'KategorieID');
+
+            // Utensilien
+            $stmtU = $this->db->prepare("SELECT UtensilID FROM RezeptUtensil WHERE RezeptID = ?");
+            $stmtU->execute([$rezeptID]);
+            $rezept['utensilien'] = array_column($stmtU->fetchAll(PDO::FETCH_ASSOC), 'UtensilID');
+
+            // Zutaten
+            $stmtZ = $this->db->prepare("SELECT Zutat, Menge, Einheit FROM RezeptZutat WHERE RezeptID = ?");
+            $stmtZ->execute([$rezeptID]);
+            $rezept['zutaten'] = $stmtZ->fetchAll(PDO::FETCH_ASSOC);
         }
-        return null;
+
+        return $rezepte;
     }
 
     /**
-     * Fügt ein neues Rezept hinzu.
+     * @param int $nutzerId
+     * Gibt alle Rezepte eines bestimmten Nutzers zurück – inkl. Kategorien, Zutaten, Utensilien.
      */
-    public static function addRezept(
+    public function findeNachErstellerID(int $nutzerId): array {
+        $sql = "
+        SELECT * FROM Rezept
+        WHERE ErstellerID = ?
+        ORDER BY Erstellungsdatum DESC
+    ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$nutzerId]);
+        $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($rezepte as &$rezept) {
+            $rezeptID = (int)$rezept['RezeptID'];
+
+            // Kategorien
+            $stmtK = $this->db->prepare("SELECT KategorieID FROM RezeptKategorie WHERE RezeptID = ?");
+            $stmtK->execute([$rezeptID]);
+            $rezept['kategorien'] = array_column($stmtK->fetchAll(PDO::FETCH_ASSOC), 'KategorieID');
+
+            // Utensilien
+            $stmtU = $this->db->prepare("SELECT UtensilID FROM RezeptUtensil WHERE RezeptID = ?");
+            $stmtU->execute([$rezeptID]);
+            $rezept['utensilien'] = array_column($stmtU->fetchAll(PDO::FETCH_ASSOC), 'UtensilID');
+
+            // Zutaten
+            $stmtZ = $this->db->prepare("SELECT Zutat, Menge, Einheit FROM RezeptZutat WHERE RezeptID = ?");
+            $stmtZ->execute([$rezeptID]);
+            $rezept['zutaten'] = $stmtZ->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return $rezepte;
+    }
+
+    /**
+     * @param int $id
+     * Sucht ein Rezept anhand der ID – inkl. Zutaten, Kategorien und Utensilien.
+     */
+    public function findeNachId(int $id): ?array {
+        // 1. Hauptrezept – gezielte Felder + Aliase
+        $sql = "
+        SELECT
+            RezeptID AS id,
+            Titel AS titel,
+            Zubereitung AS zubereitung,
+            BildPfad AS bild,
+            Erstellungsdatum AS datum,
+            ErstellerID AS erstellerId,
+            PreisklasseID AS preisklasseId,
+            PortionsgrößeID AS portionsgroesseId
+        FROM Rezept
+        WHERE RezeptID = ?
+    ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id]);
+        $rezept = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$rezept) {
+            return null;
+        }
+
+        // 2. Kategorien (IDs)
+        $stmt = $this->db->prepare("SELECT KategorieID FROM RezeptKategorie WHERE RezeptID = ?");
+        $stmt->execute([$id]);
+        $rezept['kategorien'] = array_map('intval', array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'KategorieID'));
+
+        // 3. Utensilien (IDs)
+        $stmt = $this->db->prepare("SELECT UtensilID FROM RezeptUtensil WHERE RezeptID = ?");
+        $stmt->execute([$id]);
+        $rezept['utensilien'] = array_map('intval', array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'UtensilID'));
+
+        // 4. Zutaten (freie Texte)
+        $stmt = $this->db->prepare("SELECT Zutat AS zutat, Menge AS menge, Einheit AS einheit FROM RezeptZutat WHERE RezeptID = ?");
+        $stmt->execute([$id]);
+        $rezept['zutaten'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rezept;
+    }
+
+    /**
+     * @param int $id
+     * Löscht ein Rezept samt aller Verknüpfungen.
+     */
+    public function loesche(int $id): bool {
+        try {
+            $this->db->beginTransaction();
+
+            // 🖼 Bildpfad holen
+            $stmt = $this->db->prepare("SELECT BildPfad FROM Rezept WHERE RezeptID = ?");
+            $stmt->execute([$id]);
+            $bildPfad = $stmt->fetchColumn();
+
+            // Datenbankeinträge löschen
+            $this->db->prepare("DELETE FROM RezeptKategorie WHERE RezeptID = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM RezeptZutat WHERE RezeptID = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM RezeptUtensil WHERE RezeptID = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM Bewertung WHERE RezeptID = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM Rezept WHERE RezeptID = ?")->execute([$id]);
+
+            $this->db->commit();
+
+            // Bild aus dem Dateisystem löschen (wenn vorhanden)
+            if ($bildPfad && file_exists($bildPfad)) {
+                unlink($bildPfad);
+            }
+
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+
+    /**
+     * Sucht alle Rezepte mit bestimmter Kategorie – inkl. Zutaten & Utensilien.
+     */
+    public function findeAlleMitKategorie(string $kategorie): array {
+        // 1. Alle passenden Rezepte (JOIN mit Kategorie-Tabelle)
+        $sql = "
+        SELECT r.*
+        FROM Rezept r
+        JOIN RezeptKategorie rk ON r.RezeptID = rk.RezeptID
+        JOIN Kategorie k ON rk.KategorieID = k.KategorieID
+        WHERE k.Bezeichnung = ?
+        ORDER BY r.Erstellungsdatum DESC
+    ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$kategorie]);
+        $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. Für jedes Rezept: Kategorien, Utensilien, Zutaten laden
+        foreach ($rezepte as &$rezept) {
+            $rezeptID = (int)$rezept['RezeptID'];
+
+            // Kategorien
+            $stmtK = $this->db->prepare("SELECT KategorieID FROM RezeptKategorie WHERE RezeptID = ?");
+            $stmtK->execute([$rezeptID]);
+            $rezept['kategorien'] = array_column($stmtK->fetchAll(PDO::FETCH_ASSOC), 'KategorieID');
+
+            // Utensilien
+            $stmtU = $this->db->prepare("SELECT UtensilID FROM RezeptUtensil WHERE RezeptID = ?");
+            $stmtU->execute([$rezeptID]);
+            $rezept['utensilien'] = array_column($stmtU->fetchAll(PDO::FETCH_ASSOC), 'UtensilID');
+
+            // Zutaten
+            $stmtZ = $this->db->prepare("SELECT Zutat, Menge, Einheit FROM RezeptZutat WHERE RezeptID = ?");
+            $stmtZ->execute([$rezeptID]);
+            $rezept['zutaten'] = $stmtZ->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return $rezepte;
+    }
+
+    /**
+     * @param string $titel
+     * @param string $zubereitung
+     * @param string $bildPfad
+     * @param int $erstellerID
+     * @param int $preisklasseID
+     * @param int $portionsgrößeID
+     * @param array $kategorien      // KategorieIDs
+     * @param array $zutaten         // assoziativ: [zutatID => menge]
+     * @param array $utensilien       // UtensilIDs
+     *
+     * Fügt ein neues Rezept samt Verknüpfungen ein.
+     * Gibt die ID des neuen Rezepts zurück oder false bei Fehler.
+     */
+    public function addRezept(
         string $titel,
+        string $zubereitung,
+        string $bildPfad,
+        int $erstellerID,
+        int $preisklasseID,
+        int $portionsgrößeID,
         array $kategorien,
-        string $bild,
-        string $datum,
-        string $autor,
-        string $zutaten = '',
-        string $zubereitung = '',
-        string $utensilien = '',
-        int $portionsgroesse = 1,
-        string $preis = ''
-    ): array {
-        $neuesRezept = [
-            'id' => self::$naechsteId++,
-            'titel' => $titel,
-            'bild' => $bild,
-            'kategorie' => $kategorien,
-            'datum' => $datum,
-            'autor' => $autor,
-            'zutaten' => $zutaten,
-            'zubereitung' => $zubereitung,
-            'utensilien' => $utensilien,
-            'portionsgroesse' => $portionsgroesse,
-            'preis' => $preis
-        ];
-        self::$rezepte[] = $neuesRezept;
-        return $neuesRezept;
+        array $zutaten,
+        array $utensilien
+    ): int|false {
+        try {
+            $this->db->beginTransaction();
+
+            // 1. Hauptrezept speichern
+            $stmt = $this->db->prepare("
+            INSERT INTO Rezept (Titel, Zubereitung, BildPfad, ErstellerID, PreisklasseID, PortionsgrößeID, Erstellungsdatum)
+            VALUES (?, ?, ?, ?, ?, ?, date('now'))
+        ");
+            $stmt->execute([
+                trim($titel),
+                trim($zubereitung),
+                trim($bildPfad),
+                $erstellerID,
+                $preisklasseID,
+                $portionsgrößeID
+            ]);
+
+            $rezeptID = (int)$this->db->lastInsertId();
+
+            // 2. Kategorien (nur Integer-Werte zulassen)
+            $stmtKategorie = $this->db->prepare("
+            INSERT INTO RezeptKategorie (RezeptID, KategorieID) VALUES (?, ?)
+        ");
+            foreach ($kategorien as $katID) {
+                if (is_int($katID)) {
+                    $stmtKategorie->execute([$rezeptID, $katID]);
+                }
+            }
+
+            // 3. Zutaten (frei eingegeben)
+            $stmtZutat = $this->db->prepare("
+            INSERT INTO RezeptZutat (RezeptID, Zutat, Menge, Einheit)
+            VALUES (?, ?, ?, ?)
+        ");
+            foreach ($zutaten as $z) {
+                $zutat = trim($z['zutat'] ?? '');
+                $menge = trim($z['menge'] ?? '');
+                $einheit = trim($z['einheit'] ?? '');
+
+                if ($zutat !== '' && $menge !== '' && $einheit !== '') {
+                    $stmtZutat->execute([$rezeptID, $zutat, $menge, $einheit]);
+                }
+            }
+
+            // 4. Utensilien
+            $stmtUtensil = $this->db->prepare("
+            INSERT INTO RezeptUtensil (RezeptID, UtensilID) VALUES (?, ?)
+        ");
+            foreach ($utensilien as $utenID) {
+                if (is_int($utenID)) {
+                    $stmtUtensil->execute([$rezeptID, $utenID]);
+                }
+            }
+
+            $this->db->commit();
+            return $rezeptID;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            // Optional: Logging
+            // error_log("Fehler bei addRezept(): " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
-     * Aktualisiert ein bestehendes Rezept. Gibt true bei Erfolg zurück.
+     * @param int $rezeptID
+     * @param string $titel
+     * @param string $zubereitung
+     * @param string|null $bildPfad
+     * @param array $kategorien
+     * @param array $zutaten
+     * @param array $utensilien
+     * @return bool
+     * Aktualisiert ein bestehendes Rezept.
      */
-    public static function aktualisiereRezept(
-        int $id,
-        ?string $titel = null,
-        ?array $kategorien = null,
-        ?string $bild = null,
-        ?string $datum = null,
-        ?string $autor = null,
-        ?string $zutaten = null,
-        ?string $zubereitung = null,
-        ?string $utensilien = null,
-        ?int $portionsgroesse = null,
-        ?string $preis = null
+    public function aktualisiere(
+        int $rezeptID,
+        string $titel,
+        string $zubereitung,
+        ?string $bildPfad,
+        array $kategorien,
+        array $zutaten,     // zutatID => menge
+        array $utensilien
     ): bool {
-        foreach (self::$rezepte as &$rezept) {
-            if ($rezept['id'] === $id) {
-                if ($titel !== null) $rezept['titel'] = $titel;
-                if ($kategorien !== null) $rezept['kategorie'] = $kategorien;
-                if ($bild !== null) $rezept['bild'] = $bild;
-                if ($datum !== null) $rezept['datum'] = $datum;
-                if ($autor !== null) $rezept['autor'] = $autor;
-                if ($zutaten !== null) $rezept['zutaten'] = $zutaten;
-                if ($zubereitung !== null) $rezept['zubereitung'] = $zubereitung;
-                if ($utensilien !== null) $rezept['utensilien'] = $utensilien;
-                if ($portionsgroesse !== null) $rezept['portionsgroesse'] = $portionsgroesse;
-                if ($preis !== null) $rezept['preis'] = $preis;
-                return true;
+        try {
+            $this->db->beginTransaction();
+
+            $this->db->prepare("
+            UPDATE Rezept SET Titel = ?, Zubereitung = ?" .
+                ($bildPfad ? ", BildPfad = ?" : "") .
+                " WHERE RezeptID = ?
+        ")->execute(
+                $bildPfad
+                    ? [$titel, $zubereitung, $bildPfad, $rezeptID]
+                    : [$titel, $zubereitung, $rezeptID]
+            );
+
+            $this->db->prepare("DELETE FROM RezeptKategorie WHERE RezeptID = ?")->execute([$rezeptID]);
+            $this->db->prepare("DELETE FROM RezeptZutat WHERE RezeptID = ?")->execute([$rezeptID]);
+            $this->db->prepare("DELETE FROM RezeptUtensil WHERE RezeptID = ?")->execute([$rezeptID]);
+
+            foreach ($kategorien as $k) {
+                $this->db->prepare("INSERT INTO RezeptKategorie (RezeptID, KategorieID) VALUES (?, ?)")->execute([$rezeptID, $k]);
             }
-        }
-        return false;
-    }
-
-    /**
-     * Löscht ein Rezept anhand der ID. Gibt true bei Erfolg zurück.
-     */
-    public static function loesche(int $id): bool {
-        foreach (self::$rezepte as $index => $rezept) {
-            if ($rezept['id'] === $id) {
-                array_splice(self::$rezepte, $index, 1);
-                return true;
+            $stmtZutat = $this->db->prepare("
+                INSERT INTO RezeptZutat (RezeptID, Zutat, Menge, Einheit)
+                VALUES (?, ?, ?, ?)
+            ");
+            foreach ($zutaten as $z) {
+                if (isset($z['zutat'], $z['menge'], $z['einheit'])) {
+                    $stmtZutat->execute([$rezeptID, $z['zutat'], $z['menge'], $z['einheit']]);
+                }
             }
+            foreach ($utensilien as $u) {
+                $this->db->prepare("INSERT INTO RezeptUtensil (RezeptID, UtensilID) VALUES (?, ?)")->execute([$rezeptID, $u]);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
         }
-        return false;
     }
 
-    /**
-     * Sucht alle Rezepte eines Autors (z. B. für das eigene Profil).
-     */
-    public static function findeAlleVonAutor(string $autorMail): array {
-        return array_filter(
-            self::$rezepte,
-            fn($rezept) => $rezept['autor'] === $autorMail
-        );
-    }
-
-    /**
-     * Sucht alle Rezepte, die einer bestimmten Kategorie angehören.
-     */
-    public static function findeAlleMitKategorie(string $kategorie): array {
-        return array_filter(
-            self::$rezepte,
-            fn($rezept) => in_array($kategorie, (array)$rezept['kategorie'], true)
-        );
-    }
 }

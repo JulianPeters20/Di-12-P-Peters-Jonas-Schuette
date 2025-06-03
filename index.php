@@ -1,40 +1,12 @@
 <?php
 declare(strict_types=1);
 
+require_once 'php/include/form_utils.php';
+
 // Zentrales Router/Dispatcher-File für Broke & Hungry
 // Leitet "page"-Aufrufe an entsprechende Controller bzw. Views weiter
 ini_set('session.cookie_lifetime', '0'); // Session gilt nur solange Browser offen ist
 session_start();
-
-/**
- * Validiert die ID aus dem GET-Parameter.
- * Liefert int oder null (bei ungültiger Eingabe).
- *
- * @param mixed $idRaw
- * @return int|null
- */
-function validateId($idRaw): ?int
-{
-    if (isset($idRaw) && ctype_digit((string)$idRaw)) {
-        return (int)$idRaw;
-    }
-    return null;
-}
-
-/**
- * Validiert eine E-Mail-Adresse aus GET-Parameter.
- * Liefert String oder null.
- *
- * @param mixed $emailRaw
- * @return string|null
- */
-function validateEmail($emailRaw): ?string
-{
-    if (isset($emailRaw) && filter_var($emailRaw, FILTER_VALIDATE_EMAIL)) {
-        return $emailRaw;
-    }
-    return null;
-}
 
 $page = $_GET['page'] ?? 'home';
 
@@ -122,6 +94,32 @@ switch ($page) {
         require_once 'php/controller/NutzerController.php';
         $email = validateEmail($_GET['email'] ?? null);
         showNutzerProfil($email);
+        break;
+
+    case 'nutzer-loeschen':
+        require_once 'php/controller/NutzerController.php';
+
+        if (!istAdmin()) {
+            $_SESSION["message"] = "Nur Administratoren dürfen Nutzer löschen.";
+            header("Location: index.php?page=nutzerliste");
+            exit;
+        }
+
+        $id = validateId($_GET['id'] ?? null);
+        if ($id === null) {
+            $_SESSION["message"] = "Ungültige Nutzer-ID.";
+            header("Location: index.php?page=nutzerliste");
+            exit;
+        }
+
+        // Schutz: Admin darf sich selbst nicht löschen
+        if (isset($_SESSION['nutzerId']) && (int)$_SESSION['nutzerId'] === $id) {
+            $_SESSION["message"] = "Du kannst deinen eigenen Account nicht löschen.";
+            header("Location: index.php?page=nutzerliste");
+            exit;
+        }
+
+        loescheNutzer($id);
         break;
 
     case 'impressum':

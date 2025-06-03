@@ -1,19 +1,39 @@
-<?php require_once 'php/model/RezeptDAO.php'; ?>
+<?php
+require_once 'php/model/NutzerDAO.php';
+require_once 'php/model/RezeptDAO.php';
+
+session_start();
+
+// Prüfen, ob Nutzer eingeloggt ist
+if (!isset($_SESSION['nutzerId'])) {
+    header("Location: index.php?page=login");
+    exit;
+}
+
+$nutzerDAO = new NutzerDAO();
+$nutzer = $nutzerDAO->findeNachID((int)$_SESSION['nutzerId']);
+$rezeptDAO = new RezeptDAO();
+?>
+
 <main>
     <h2>Mein Profil</h2>
 
-    <?php if (!empty($nutzer)): ?>
+    <?php if ($nutzer): ?>
         <!-- Nutzer-Infos -->
         <section class="nutzerprofil" style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
             <img src="images/Icon Nutzer ChatGPT.webp" alt="Profilbild"
                  style="height: 80px; width: 80px; border-radius: 50%; padding: 10px;">
             <dl>
                 <dt>Benutzername:</dt>
-                <dd><?= htmlspecialchars($nutzer['benutzername']) ?></dd>
+                <dd><?= htmlspecialchars($nutzer->benutzername) ?></dd>
                 <dt>E-Mail:</dt>
-                <dd><?= htmlspecialchars($nutzer['email']) ?></dd>
+                <dd><?= htmlspecialchars($nutzer->email) ?></dd>
                 <dt>Registrierungsdatum:</dt>
-                <dd><?= htmlspecialchars($nutzer['registriert']) ?></dd>
+                <dd><?= htmlspecialchars($nutzer->registrierungsDatum) ?></dd>
+                <?php if ($nutzer->istAdmin): ?>
+                    <dt>Rolle:</dt>
+                    <dd>Administrator</dd>
+                <?php endif; ?>
             </dl>
         </section>
 
@@ -21,34 +41,25 @@
         <section>
             <h3>Eigene Rezepte</h3>
             <?php
-            $rezepte = RezeptDAO::findeAlle();
-            $eigene = array_filter($rezepte, function ($r) use ($nutzer) {
-                return $r['autor'] === $nutzer['email'];
-            });
+            $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->id);
             ?>
-            <?php if (!empty($eigene)): ?>
+            <?php if (!empty($rezepte)): ?>
                 <ul class="rezept-galerie">
-                    <?php foreach ($eigene as $rezept): ?>
+                    <?php foreach ($rezepte as $rezept): ?>
                         <li class="rezept-karte">
-                            <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="<?= htmlspecialchars($rezept['titel']) ?>">
+                            <img src="<?= htmlspecialchars($rezept['BildPfad']) ?>" alt="<?= htmlspecialchars($rezept['Titel']) ?>">
                             <div class="inhalt">
                                 <h4>
-                                    <a href="index.php?page=rezept&id=<?= $rezept['id'] ?>">
-                                        <?= htmlspecialchars($rezept['titel']) ?>
+                                    <a href="index.php?page=rezept&id=<?= $rezept['RezeptID'] ?>">
+                                        <?= htmlspecialchars($rezept['Titel']) ?>
                                     </a>
                                 </h4>
                                 <div class="meta">
-                                    <?php
-                                    if (is_array($rezept['kategorie'])) {
-                                        echo htmlspecialchars(implode(', ', $rezept['kategorie']));
-                                    } else {
-                                        echo htmlspecialchars($rezept['kategorie']);
-                                    }
-                                    ?> · <?= htmlspecialchars($rezept['datum']) ?>
+                                    <?= htmlspecialchars($rezept['Kategorie'] ?? '') ?> · <?= htmlspecialchars($rezept['Erstellungsdatum']) ?>
                                 </div>
                                 <div class="rezept-aktion" style="margin-top: 10px;">
-                                    <a href="index.php?page=rezept-bearbeiten&id=<?= $rezept['id'] ?>" class="btn">Bearbeiten</a>
-                                    <a href="index.php?page=rezept-loeschen&id=<?= $rezept['id'] ?>" class="btn" onclick="return confirm('Möchtest du dieses Rezept wirklich löschen?');">Löschen</a>
+                                    <a href="index.php?page=rezept-bearbeiten&id=<?= $rezept['RezeptID'] ?>" class="btn">Bearbeiten</a>
+                                    <a href="index.php?page=rezept-loeschen&id=<?= $rezept['RezeptID'] ?>" class="btn" onclick="return confirm('Möchtest du dieses Rezept wirklich löschen?');">Löschen</a>
                                 </div>
                             </div>
                         </li>
@@ -59,7 +70,7 @@
             <?php endif; ?>
         </section>
 
-        <!-- Optional: Gespeicherte Rezepte -->
+        <!-- Gespeicherte Rezepte -->
         <section>
             <h3>Gespeicherte Rezepte</h3>
             <div class="rezept-galerie">

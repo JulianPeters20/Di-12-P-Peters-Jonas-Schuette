@@ -24,18 +24,14 @@
                 <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="<?= htmlspecialchars($rezept['titel']) ?>">
                 <div class="inhalt">
                     <h3>
-                        <a href="index.php?page=rezept&id=<?= $rezept['id'] ?>">
+                        <a href="index.php?page=rezept&id=<?= (int)$rezept['id'] ?>">
                             <?= htmlspecialchars($rezept['titel']) ?>
                         </a>
                     </h3>
                     <div class="meta">
-                        <?php
-                        if (is_array($rezept['kategorie'])) {
-                            echo htmlspecialchars(implode(', ', $rezept['kategorie']));
-                        } else {
-                            echo htmlspecialchars($rezept['kategorie']);
-                        }
-                        ?> · <?= htmlspecialchars($rezept['datum']) ?> · <?= htmlspecialchars($rezept['autor']) ?>
+                        <?= htmlspecialchars(is_array($rezept['kategorie']) ? implode(', ', $rezept['kategorie']) : $rezept['kategorie']) ?>
+                        · <?= htmlspecialchars($rezept['datum']) ?>
+                        · <?= htmlspecialchars($rezept['autor']) ?>
                     </div>
                 </div>
             </div>
@@ -43,5 +39,7 @@
     </div>
 
     <!-- Button für neues Rezept -->
-    <a href="index.php?page=rezept-neu" class="btn"><button>Neues Rezept hinzufügen</button></a>
+    <?php if (isset($_SESSION['nutzerId'])): ?>
+        <a href="index.php?page=rezept-neu" class="btn">Neues Rezept hinzufügen</a>
+    <?php endif; ?>
 </main>
