@@ -12,9 +12,11 @@
             <input type="password" id="passwort" name="passwort" required autocomplete="current-password">
         </div>
 
-        <div class="form-row">
+        <div class="form-row justify-center">
             <input type="submit" value="Anmelden">
         </div>
     </form>
-    <div>Noch kein Konto? <a href="index.php?page=registrierung">Jetzt registrieren</a>.</div>
+    <div style="margin-top:16px; text-align:center;">
+        Noch kein Konto? <a href="index.php?page=registrierung" class="btn">Jetzt registrieren</a>
+    </div>
 </main>

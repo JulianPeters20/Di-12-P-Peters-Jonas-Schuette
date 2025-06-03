@@ -6,10 +6,10 @@
     <!-- Suchformular -->
     <form method="get" action="index.php" class="suchleiste">
         <input type="hidden" name="page" value="rezepte">
-        <input type="text" name="suche" class="suchfeld"
+        <input type="search" name="suche" class="suchfeld"
                placeholder="Suchbegriff eingeben..."
-               value="<?= htmlspecialchars($_GET["suche"] ?? "") ?>">
-        <input type="submit" value="Suchen" class="btn">
+               value="<?= htmlspecialchars($_GET["suche"] ?? "") ?>" aria-label="Suchbegriff eingeben">
+        <button type="submit" class="btn suchen-btn">Suchen</button>
     </form>
 
     <!-- Keine Ergebnisse -->
@@ -43,5 +43,5 @@
     </div>
 
     <!-- Button für neues Rezept -->
-    <a href="index.php?page=rezept-neu" class="btn"><button>Neues Rezept hinzufügen</button></a>
+    <a href="index.php?page=rezept-neu" class="btn neuer-rezept-btn">Neues Rezept hinzufügen</a>
 </main>

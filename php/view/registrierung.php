@@ -22,10 +22,16 @@
             <input type="password" id="passwort-wdh" name="passwort-wdh" required minlength="8" autocomplete="new-password">
         </div>
 
-        <div class="form-row">
-            <input type="submit" value="Registrieren">
+        <div class="form-row justify-center">
+            <input type="submit" value="Registrieren" class="btn">
             <input type="reset" value="Zurücksetzen">
         </div>
     </form>
-    <div>Du hast bereits ein Konto? <a href="index.php?page=anmeldung">Hier anmelden</a>.</div>
+    <div style="margin-top: 16px; text-align:center;">
+        Du hast bereits ein Konto?
+        <form action="index.php?page=anmeldung" method="get" style="display:inline;">
+            <input type="hidden" name="page" value="anmeldung">
+            <button type="submit" class="btn" style="margin-left:8px;">Hier anmelden</button>
+        </form>
+    </div>
 </main>
