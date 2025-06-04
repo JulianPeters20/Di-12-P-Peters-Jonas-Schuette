@@ -1,10 +1,15 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'php/model/NutzerDAO.php';
 require_once 'php/model/RezeptDAO.php';
+require_once 'php/model/KategorieDAO.php';
+require_once 'php/model/UtensilDAO.php';
 require_once 'php/include/form_utils.php';
 
-function showRezepte()
-{
+function showRezepte(): void {
     $dao = new RezeptDAO();
     $alleRezepte = $dao->findeAlle();
 
@@ -12,8 +17,8 @@ function showRezepte()
     if ($suche !== '') {
         $suchbegriff = mb_strtolower($suche);
         $alleRezepte = array_filter($alleRezepte, function ($rezept) use ($suchbegriff) {
-            return mb_stripos($rezept['Titel'], $suchbegriff) !== false
-                || mb_stripos($rezept['Kategorie'] ?? '', $suchbegriff) !== false;
+            return mb_stripos($rezept['titel'] ?? '', $suchbegriff) !== false
+                || mb_stripos($rezept['kategorie'] ?? '', $suchbegriff) !== false;
         });
     }
 
@@ -21,11 +26,7 @@ function showRezepte()
     require 'php/view/rezepte.php';
 }
 
-function showRezeptNeu()
-{
-    require_once 'php/model/KategorieDAO.php';
-    require_once 'php/model/UtensilDAO.php';
-
+function showRezeptNeu(): void {
     $katDAO = new KategorieDAO();
     $utenDAO = new UtensilDAO();
 
@@ -34,20 +35,18 @@ function showRezeptNeu()
 
     require 'php/view/rezept-neu.php';
 }
-/**
- * Zeigt die Details eines Rezepts an.
- * Prüft, ob die Rezept-ID gültig ist und ob das Rezept existiert.
- */
-function showRezeptDetails($id)
-{
-    if (!is_numeric($id) || (int)$id < 1) {
+
+function showRezeptDetails($id): void {
+    $id = validateId($id);
+    if ($id === null) {
         $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
     $dao = new RezeptDAO();
-    $rezept = $dao->findeNachId((int)$id);
+    $rezept = $dao->findeNachId($id);
+
     if (!$rezept) {
         $_SESSION["message"] = "Rezept nicht gefunden.";
         header("Location: index.php?page=rezepte");
@@ -56,18 +55,10 @@ function showRezeptDetails($id)
 
     require 'php/view/rezept.php';
 }
-/**
- * Speichert ein neues Rezept.
- * Prüft, ob der Nutzer angemeldet ist und ob die Eingaben gültig sind.
- */
-function speichereRezept()
-{
-    session_start();
 
-    $nutzerID = isset($_SESSION['nutzerId']) ? (int)$_SESSION['nutzerId'] : 0;
-
-    if ($nutzerID < 1) {
-        $_SESSION["message"] = "Ungültige Sitzung – bitte erneut anmelden.";
+function speichereRezept(): void {
+    if (empty($_SESSION['nutzerId'])) {
+        $_SESSION["message"] = "Nur angemeldete Nutzer können Rezepte speichern.";
         header("Location: index.php?page=anmeldung");
         exit;
     }
@@ -80,7 +71,7 @@ function speichereRezept()
     $bildPfad = validate_and_store_image($_FILES['bild'] ?? []);
 
     if ($titel === '' || $zubereitung === '' || empty($zutaten) || !$bildPfad) {
-        $_SESSION["message"] = "Bitte alle Pflichtfelder ausfüllen (inkl. gültigem Bild).";
+        $_SESSION["message"] = "Bitte alle Pflichtfelder ausfüllen.";
         $_SESSION["formdata"] = $_POST;
         header("Location: index.php?page=rezept-neu");
         exit;
@@ -99,36 +90,25 @@ function speichereRezept()
         $utensilien
     );
 
-    if ($rezeptID) {
-        $_SESSION["message"] = "Rezept erfolgreich gespeichert.";
-        header("Location: index.php?page=rezepte");
-        exit;
-    } else {
-        $_SESSION["message"] = "Fehler beim Speichern.";
-        $_SESSION["formdata"] = $_POST;
-        header("Location: index.php?page=rezept-neu");
-        exit;
-    }
+    $_SESSION["message"] = $rezeptID
+        ? "Rezept erfolgreich gespeichert."
+        : "Fehler beim Speichern.";
+
+    header("Location: index.php?page=" . ($rezeptID ? "rezepte" : "rezept-neu"));
+    exit;
 }
 
-/**
- * Löscht ein Rezept basierend auf der ID.
- * Prüft, ob der Nutzer angemeldet ist und ob er die Rechte zum Löschen hat.
- */
-function loescheRezept($id)
-{
-    session_start();
-
-    if (!isset($_SESSION['nutzerId'])) {
-        $_SESSION["message"] = "Bitte melde dich an.";
-        header("Location: index.php?page=anmeldung");
-        exit;
-    }
-
+function loescheRezept($id): void {
     $id = validateId($id);
     if ($id === null) {
         $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
+        exit;
+    }
+
+    if (!isset($_SESSION['nutzerId'])) {
+        $_SESSION["message"] = "Bitte melde dich an.";
+        header("Location: index.php?page=anmeldung");
         exit;
     }
 
@@ -142,58 +122,45 @@ function loescheRezept($id)
     }
 
     $istAdmin = $_SESSION['istAdmin'] ?? false;
-    $istEigentümer = (int)$rezept['ErstellerID'] === (int)$_SESSION['nutzerId'];
+    $istErsteller = (int)$rezept['erstellerId'] === (int)$_SESSION['nutzerId'];
 
-    if (!$istAdmin && !$istEigentümer) {
+    if (!$istAdmin && !$istErsteller) {
         $_SESSION["message"] = "Du darfst dieses Rezept nicht löschen.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
-    if ($dao->loesche($id)) {
-        $_SESSION["message"] = "Rezept wurde gelöscht.";
-    } else {
-        $_SESSION["message"] = "Fehler beim Löschen des Rezepts.";
-    }
+    $ok = $dao->loesche($id);
+    $_SESSION["message"] = $ok
+        ? "Rezept erfolgreich gelöscht."
+        : "Fehler beim Löschen.";
 
     header("Location: index.php?page=rezepte");
     exit;
 }
 
-/**
- * Aktualisiert ein bestehendes Rezept.
- * Prüft, ob der Nutzer angemeldet ist und ob er die Rechte zum Bearbeiten hat.
- */
-function aktualisiereRezept($id)
-{
-    session_start();
-    require_once 'php/include/form_utils.php';
+function aktualisiereRezept($id): void {
+    $id = validateId($id);
+    if ($id === null) {
+        $_SESSION["message"] = "Ungültige Rezept-ID.";
+        header("Location: index.php?page=rezepte");
+        exit;
+    }
 
-    // Zugriffsschutz
     if (!isset($_SESSION['nutzerId'])) {
         $_SESSION["message"] = "Bitte melde dich an.";
         header("Location: index.php?page=anmeldung");
         exit;
     }
 
-    // ID prüfen
-    if (!is_numeric($id) || (int)$id < 1) {
-        $_SESSION["message"] = "Ungültige Rezept-ID.";
-        header("Location: index.php?page=rezepte");
-        exit;
-    }
-    $id = (int)$id;
-
-    // Rechte prüfen
     $dao = new RezeptDAO();
     $rezept = $dao->findeNachId($id);
-    if (!$rezept || (int)$rezept['ErstellerID'] !== (int)$_SESSION['nutzerId']) {
+    if (!$rezept || ((int)$rezept['erstellerId'] !== (int)$_SESSION['nutzerId'] && empty($_SESSION['istAdmin']))) {
         $_SESSION["message"] = "Du darfst dieses Rezept nicht bearbeiten.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
-    // Eingaben
     $titel = sanitize_text($_POST['titel'] ?? '');
     $zubereitung = sanitize_text($_POST['zubereitung'] ?? '');
     $zutaten = build_zutaten_array($_POST['zutatennamen'] ?? [], $_POST['mengen'] ?? [], $_POST['einheiten'] ?? []);
@@ -214,19 +181,17 @@ function aktualisiereRezept($id)
         exit;
     }
 
-    // Bild prüfen
     $bildPfad = null;
     if (!empty($_FILES['bild']) && $_FILES['bild']['error'] === UPLOAD_ERR_OK) {
         $bildPfad = validate_and_store_image($_FILES['bild']);
         if ($bildPfad === null) {
-            $_SESSION["message"] = "Bild-Upload ungültig. Nur JPG, PNG, GIF, WebP erlaubt.";
+            $_SESSION["message"] = "Ungültiges Bildformat.";
             $_SESSION["formdata"] = $_POST;
             header("Location: index.php?page=rezept-bearbeiten&id=" . urlencode($id));
             exit;
         }
     }
 
-    // Speichern
     $ok = $dao->aktualisiere(
         $id,
         $titel,
@@ -245,20 +210,16 @@ function aktualisiereRezept($id)
     exit;
 }
 
-/**
- * Zeigt das Formular zum Bearbeiten eines Rezepts an.
- * Prüft, ob die Rezept-ID gültig ist und ob der Nutzer die Rechte zum Bearbeiten hat.
- */
-function showRezeptBearbeitenFormular($id)
-{
-    if (!is_numeric($id) || (int)$id < 1) {
+function showRezeptBearbeitenFormular($id): void {
+    $id = validateId($id);
+    if ($id === null) {
         $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
     $dao = new RezeptDAO();
-    $rezept = $dao->findeNachId((int)$id);
+    $rezept = $dao->findeNachId($id);
 
     if (!$rezept) {
         $_SESSION["message"] = "Rezept nicht gefunden.";
@@ -266,9 +227,8 @@ function showRezeptBearbeitenFormular($id)
         exit;
     }
 
-    // Rechteprüfung: Ersteller oder Admin
     if (!isset($_SESSION['nutzerId']) ||
-        ((int)$_SESSION['nutzerId'] !== (int)($rezept['erstellerId'] ?? -1) && empty($_SESSION['istAdmin']))) {
+        ((int)$_SESSION['nutzerId'] !== (int)$rezept['erstellerId'] && empty($_SESSION['istAdmin']))) {
         $_SESSION["message"] = "Du darfst dieses Rezept nicht bearbeiten.";
         header("Location: index.php?page=rezepte");
         exit;

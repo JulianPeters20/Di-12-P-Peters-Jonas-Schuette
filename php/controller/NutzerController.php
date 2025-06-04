@@ -4,12 +4,17 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../model/NutzerDAO.php';
-require_once 'php/include/form_utils.php';
+require_once __DIR__ . '/../include/form_utils.php';
 
 /**
  * Anmeldung (Login-Formular anzeigen und verarbeiten)
  */
 function showAnmeldeFormular(): void {
+    if (!empty($_SESSION["eingeloggt"])) {
+        header("Location: index.php");
+        exit;
+    }
+
     $fehler = "";
     $dao = new NutzerDAO();
 
@@ -17,7 +22,7 @@ function showAnmeldeFormular(): void {
         $email = sanitize_email($_POST["email"] ?? '');
         $passwort = sanitize_text($_POST["passwort"] ?? '');
 
-        if (empty($email) || empty($passwort)) {
+        if ($email === '' || $passwort === '') {
             $fehler = "Bitte alle Felder ausfüllen.";
         } else {
             $nutzer = $dao->findeBenutzer($email, $passwort);
@@ -27,6 +32,7 @@ function showAnmeldeFormular(): void {
                 $_SESSION["nutzerId"] = $nutzer->id;
                 $_SESSION["istAdmin"] = $nutzer->istAdmin;
                 $_SESSION["eingeloggt"] = true;
+
                 header("Location: index.php");
                 exit;
             } else {
@@ -42,6 +48,11 @@ function showAnmeldeFormular(): void {
  * Registrierung (Formular anzeigen und verarbeiten)
  */
 function showRegistrierungsFormular(): void {
+    if (!empty($_SESSION["eingeloggt"])) {
+        header("Location: index.php");
+        exit;
+    }
+
     $fehler = "";
     $dao = new NutzerDAO();
 
@@ -51,7 +62,7 @@ function showRegistrierungsFormular(): void {
         $passwort = sanitize_text($_POST["passwort"] ?? '');
         $passwort_wdh = sanitize_text($_POST["passwort-wdh"] ?? '');
 
-        if (empty($benutzername) || empty($email) || empty($passwort) || empty($passwort_wdh)) {
+        if ($benutzername === '' || $email === '' || $passwort === '' || $passwort_wdh === '') {
             $fehler = "Bitte alle Felder ausfüllen.";
         } elseif ($passwort !== $passwort_wdh) {
             $fehler = "Die Passwörter stimmen nicht überein.";
@@ -87,27 +98,20 @@ function logoutUser(): void {
 /**
  * Nutzerprofil anzeigen
  */
-function showNutzerProfil($email = null): void {
-
+function showNutzerProfil(?string $email = null): void {
     $dao = new NutzerDAO();
     $nutzer = null;
 
-    if ($email !== null) {
-        $email = sanitize_email($email);
-        if ($email === '') {
-            $_SESSION["message"] = "Ungültige E-Mail-Adresse.";
-            header("Location: index.php");
-            exit;
-        }
+    $email = sanitize_email($email);
+    if ($email === '') {
+        $_SESSION["message"] = "Ungültige E-Mail-Adresse.";
+        header("Location: index.php");
+        exit;
+    }
 
-        $nutzer = $dao->findeNachEmail($email);
-        if (!$nutzer) {
-            $_SESSION["message"] = "Nutzer nicht gefunden.";
-            header("Location: index.php");
-            exit;
-        }
-    } else {
-        $_SESSION["message"] = "Keine E-Mail übermittelt.";
+    $nutzer = $dao->findeNachEmail($email);
+    if (!$nutzer) {
+        $_SESSION["message"] = "Nutzer nicht gefunden.";
         header("Location: index.php");
         exit;
     }
@@ -115,14 +119,10 @@ function showNutzerProfil($email = null): void {
     require 'php/view/nutzer.php';
 }
 
-
 /**
- * Nutzerliste anzeigen
+ * Nutzerliste anzeigen (nur Admin)
  */
 function showNutzerListe(): void {
-    session_start();
-
-    // Nur Admins dürfen die Nutzerliste sehen
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
         $_SESSION["message"] = "Nur Administratoren dürfen die Nutzerliste sehen.";
         header("Location: index.php");
@@ -136,7 +136,7 @@ function showNutzerListe(): void {
 }
 
 /**
- * Löscht einen Nutzer anhand seiner ID – nur für Admins erlaubt.
+ * Löscht einen Nutzer anhand seiner ID (nur Admin)
  */
 function loescheNutzer(int $id): void {
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
@@ -145,18 +145,18 @@ function loescheNutzer(int $id): void {
         exit;
     }
 
-    if ((int)$id === (int)($_SESSION['nutzerId'] ?? 0)) {
+    if ((int)$_SESSION['nutzerId'] === $id) {
         $_SESSION["message"] = "Du kannst deinen eigenen Account nicht löschen.";
         header("Location: index.php?page=nutzerliste");
         exit;
     }
 
     $dao = new NutzerDAO();
-    if ($dao->loesche($id)) {
-        $_SESSION["message"] = "Nutzer erfolgreich gelöscht.";
-    } else {
-        $_SESSION["message"] = "Fehler beim Löschen des Nutzers.";
-    }
+    $ok = $dao->loesche($id);
+
+    $_SESSION["message"] = $ok
+        ? "Nutzer erfolgreich gelöscht."
+        : "Fehler beim Löschen des Nutzers.";
 
     header("Location: index.php?page=nutzerliste");
     exit;

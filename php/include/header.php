@@ -30,10 +30,13 @@
             <?php endif; ?>
 
             <li>
-                <a href="index.php?page=<?= !empty($_SESSION['email']) ? 'nutzer&email=' . urlencode($_SESSION['email']) : 'anmeldung' ?>"
-                   title="Benutzerkonto">
-                    <img src="images/Icon Nutzer ChatGPT.webp" alt="Benutzerprofil" class="nutzer-icon">
-                </a>
+                <?php if (!empty($_SESSION['email'])): ?>
+                <a href="index.php?page=nutzer&email=<?= urlencode($_SESSION['email']) ?>" title="Benutzerkonto">
+                    <?php else: ?>
+                    <a href="index.php?page=anmeldung" title="Benutzerkonto">
+                        <?php endif; ?>
+                        <img src="images/Icon Nutzer ChatGPT.webp" alt="Benutzerprofil" class="nutzer-icon">
+                    </a>
             </li>
         </ul>
     </div>

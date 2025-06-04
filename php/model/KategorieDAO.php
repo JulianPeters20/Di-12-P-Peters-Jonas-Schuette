@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../data/pdo.php';
+require_once __DIR__ . '/../config.php';
 
 class KategorieDAO {
     private PDO $db;

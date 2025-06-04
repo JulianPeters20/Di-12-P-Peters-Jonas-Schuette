@@ -74,6 +74,7 @@
             </label>
 
             <label for="bild">Neues Bild hochladen (optional):<br>
+                <input type="hidden" name="bestehendesBild" value="<?= htmlspecialchars($rezept['bild']) ?>">
                 <input type="file" id="bild" name="bild" accept="image/*">
             </label>
         </div>

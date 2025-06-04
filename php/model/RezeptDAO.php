@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../data/pdo.php';
+require_once __DIR__ . '/../config.php';
 
 /**
  * DAO-Klasse für den Zugriff auf Rezepte in der Datenbank.
@@ -163,7 +163,6 @@ class RezeptDAO {
             return false;
         }
     }
-
 
     /**
      * Sucht alle Rezepte mit bestimmter Kategorie – inkl. Zutaten & Utensilien.
@@ -354,5 +353,4 @@ class RezeptDAO {
             return false;
         }
     }
-
 }

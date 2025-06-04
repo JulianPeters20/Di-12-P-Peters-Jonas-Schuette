@@ -10,6 +10,18 @@ session_start();
 
 $page = $_GET['page'] ?? 'home';
 
+// Geschützte Seiten zentral absichern
+$geschützteSeiten = [
+    'rezept-neu', 'rezept-bearbeiten', 'rezept-loeschen',
+    'rezept-aktualisieren', 'nutzer', 'nutzerliste', 'nutzer-loeschen'
+];
+
+if (in_array($page, $geschützteSeiten, true) && empty($_SESSION['email'])) {
+    $_SESSION["message"] = "Bitte melde dich zuerst an.";
+    header("Location: index.php?page=anmeldung");
+    exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="de">

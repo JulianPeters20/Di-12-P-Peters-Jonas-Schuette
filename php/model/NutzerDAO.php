@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../data/pdo.php';
-require_once __DIR__ . '/Nutzer.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../view/nutzer.php';
 
 /**
  * DAO-Klasse für den Zugriff auf Nutzer-Datenbank.
