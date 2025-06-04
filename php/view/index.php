@@ -1,24 +1,31 @@
 <main>
+    <?php if (!isset($rezepte) || !is_array($rezepte)) $rezepte = []; ?>
     <h2 class="mb-2 mt-3">Beliebte Rezepte</h2>
 
     <ul class="rezept-galerie">
         <?php foreach ($rezepte as $rezept): ?>
             <li class="rezept-karte">
-                <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="<?= htmlspecialchars($rezept['titel']) ?>">
+                <img src="<?= htmlspecialchars($rezept['BildPfad'] ?? 'images/placeholder.jpg') ?>"
+                     alt="<?= htmlspecialchars($rezept['Titel'] ?? 'Unbekannt') ?>">
                 <div class="inhalt">
                     <h3>
-                        <a href="index.php?page=rezept&id=<?= $rezept['id'] ?>">
-                            <?= htmlspecialchars($rezept['titel']) ?>
+                        <a href="index.php?page=rezept&id=<?= urlencode($rezept['RezeptID'] ?? 0) ?>">
+                            <?= htmlspecialchars($rezept['Titel'] ?? 'Unbekannt') ?>
                         </a>
                     </h3>
                     <div class="meta">
                         <?php
-                        if (is_array($rezept['kategorie'])) {
-                            echo htmlspecialchars(implode(', ', $rezept['kategorie']));
+                        // Kategorien: IDs, solange keine Namen geladen werden
+                        $kategorien = $rezept['kategorien'] ?? [];
+                        if (is_array($kategorien) && count($kategorien) > 0) {
+                            echo 'Kategorien-IDs: ' . htmlspecialchars(implode(', ', $kategorien));
                         } else {
-                            echo htmlspecialchars($rezept['kategorie']);
+                            echo '-';
                         }
-                        ?> · <?= htmlspecialchars($rezept['datum']) ?> · <?= htmlspecialchars($rezept['autor']) ?>
+
+                        echo ' · ' . htmlspecialchars($rezept['Erstellungsdatum'] ?? '-');
+                        echo ' · Autor-ID: ' . htmlspecialchars($rezept['ErstellerID'] ?? '-');
+                        ?>
                     </div>
                 </div>
             </li>

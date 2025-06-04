@@ -8,8 +8,12 @@
     <nav class="haupt-nav">
         <ul>
             <li><a href="index.php?page=rezepte">Rezepte</a></li>
-            <li><a href="index.php?page=nutzerliste">Nutzerliste</a></li>
-            <?php if (isset($_SESSION['email'])): ?>
+
+            <?php if (!empty($_SESSION['istAdmin'])): ?>
+                <li><a href="index.php?page=nutzerliste">Nutzerliste</a></li>
+            <?php endif; ?>
+
+            <?php if (!empty($_SESSION['email'])): ?>
                 <li><a href="index.php?page=rezept-neu">Neues Rezept</a></li>
             <?php endif; ?>
         </ul>
@@ -17,7 +21,7 @@
 
     <div class="nutzer-nav">
         <ul>
-            <?php if (isset($_SESSION['email'])): ?>
+            <?php if (!empty($_SESSION['email']) && !empty($_SESSION['eingeloggt'])): ?>
                 <li><span>Hallo, <?= htmlspecialchars($_SESSION['benutzername']) ?></span></li>
                 <li><a href="index.php?page=abmeldung">Abmelden</a></li>
             <?php else: ?>
@@ -26,10 +30,13 @@
             <?php endif; ?>
 
             <li>
-                <a href="index.php?page=<?= isset($_SESSION['email']) ? 'nutzer&email=' . urlencode($_SESSION['email']) : 'anmeldung' ?>"
-                   title="Benutzerkonto">
-                    <img src="images/Icon Nutzer ChatGPT.webp" alt="Benutzerprofil" class="nutzer-icon">
-                </a>
+                <?php if (!empty($_SESSION['email'])): ?>
+                <a href="index.php?page=nutzer&email=<?= urlencode($_SESSION['email']) ?>" title="Benutzerkonto">
+                    <?php else: ?>
+                    <a href="index.php?page=anmeldung" title="Benutzerkonto">
+                        <?php endif; ?>
+                        <img src="images/Icon Nutzer ChatGPT.webp" alt="Benutzerprofil" class="nutzer-icon">
+                    </a>
             </li>
         </ul>
     </div>
