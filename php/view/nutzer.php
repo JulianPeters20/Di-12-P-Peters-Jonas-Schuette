@@ -1,14 +1,16 @@
 <?php
-require_once 'php/model/NutzerDAO.php';
 require_once 'php/model/RezeptDAO.php';
 
-$nutzerDAO = new NutzerDAO();
-$nutzer = $nutzerDAO->findeNachID((int)$_SESSION['nutzerId']);
 $rezeptDAO = new RezeptDAO();
+// Sicherstellen, dass $nutzer existiert
+$istEigenerAccount = false;
+if (isset($nutzer) && isset($_SESSION['nutzerId'])) {
+    $istEigenerAccount = $_SESSION['nutzerId'] === $nutzer->id;
+}
 ?>
 
 <main>
-    <h2>Mein Profil</h2>
+    <h2>Benutzerprofil</h2>
 
     <?php if ($nutzer): ?>
         <!-- Nutzer-Infos -->
@@ -30,11 +32,12 @@ $rezeptDAO = new RezeptDAO();
         </section>
 
         <!-- Eigene Rezepte -->
+        <?php
+        $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->id);
+        ?>
         <section>
-            <h3>Eigene Rezepte</h3>
-            <?php
-            $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->id);
-            ?>
+            <h3><?= $istEigenerAccount ? 'Meine Rezepte' : 'Rezepte von ' . htmlspecialchars($nutzer->benutzername) ?></h3>
+
             <?php if (!empty($rezepte)): ?>
                 <ul class="rezept-galerie">
                     <?php foreach ($rezepte as $rezept): ?>
@@ -49,31 +52,36 @@ $rezeptDAO = new RezeptDAO();
                                 <div class="meta">
                                     <?= htmlspecialchars($rezept['Kategorie'] ?? '') ?> · <?= htmlspecialchars($rezept['Erstellungsdatum']) ?>
                                 </div>
-                                <div class="rezept-aktion" style="margin-top: 10px;">
-                                    <a href="index.php?page=rezept-bearbeiten&id=<?= $rezept['RezeptID'] ?>" class="btn">Bearbeiten</a>
-                                    <a href="index.php?page=rezept-loeschen&id=<?= $rezept['RezeptID'] ?>" class="btn" onclick="return confirm('Möchtest du dieses Rezept wirklich löschen?');">Löschen</a>
-                                </div>
+                                <?php if ($istEigenerAccount): ?>
+                                    <div class="rezept-aktion" style="margin-top: 10px;">
+                                        <a href="index.php?page=rezept-bearbeiten&id=<?= $rezept['RezeptID'] ?>" class="btn">Bearbeiten</a>
+                                        <a href="index.php?page=rezept-loeschen&id=<?= $rezept['RezeptID'] ?>" class="btn"
+                                           onclick="return confirm('Möchtest du dieses Rezept wirklich löschen?');">Löschen</a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </li>
                     <?php endforeach; ?>
                 </ul>
             <?php else: ?>
-                <p>Keine eigenen Rezepte vorhanden.</p>
+                <p>Keine Rezepte vorhanden.</p>
             <?php endif; ?>
         </section>
 
-        <!-- Gespeicherte Rezepte -->
-        <section>
-            <h3>Gespeicherte Rezepte</h3>
-            <div class="rezept-galerie">
-                <p>(Diese Funktion ist aktuell noch nicht implementiert.)</p>
-            </div>
-        </section>
+        <?php if ($istEigenerAccount): ?>
+            <!-- Gespeicherte Rezepte -->
+            <section>
+                <h3>Gespeicherte Rezepte</h3>
+                <div class="rezept-galerie">
+                    <p>(Diese Funktion ist aktuell noch nicht implementiert.)</p>
+                </div>
+            </section>
 
-        <!-- Abmelde-Button -->
-        <div style="margin-top: 30px;">
-            <a href="index.php?page=abmeldung" class="btn">Abmelden</a>
-        </div>
+            <!-- Abmelde-Button -->
+            <div style="margin-top: 30px;">
+                <a href="index.php?page=abmeldung" class="btn">Abmelden</a>
+            </div>
+        <?php endif; ?>
 
     <?php else: ?>
         <p>Nutzer nicht gefunden.</p>

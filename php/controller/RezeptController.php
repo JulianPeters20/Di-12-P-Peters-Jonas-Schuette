@@ -1,6 +1,5 @@
 <?php
 
-require_once 'php/model/NutzerDAO.php';
 require_once 'php/model/RezeptDAO.php';
 require_once 'php/model/KategorieDAO.php';
 require_once 'php/model/UtensilDAO.php';
