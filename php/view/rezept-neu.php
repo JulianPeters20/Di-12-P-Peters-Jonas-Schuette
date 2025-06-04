@@ -97,19 +97,3 @@
 
     <?php unset($_SESSION["formdata"]); ?>
 </main>
-
-<script>
-    function neueZutat() {
-        const gruppe = document.getElementById('zutaten-gruppe');
-        const div = document.createElement('div');
-        div.className = 'zutaten-paar';
-        div.innerHTML = `<?= addslashes('<select name="zutaten[]" required>') ?>
-        <?= addslashes('<option value="">-- Zutat wählen --</option>') ?>
-        <?php foreach ($_SESSION['zutatenListe'] as $id => $name): ?>
-            <?= addslashes("<option value=\"{$id}\">{$name}</option>") ?>
-        <?php endforeach; ?>
-        <?= addslashes('</select>') ?>
-        <input type="text" name="mengen[]" placeholder="z. B. 100g" required>`;
-        gruppe.appendChild(div);
-    }
-</script>

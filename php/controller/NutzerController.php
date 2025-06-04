@@ -1,7 +1,4 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 require_once __DIR__ . '/../model/NutzerDAO.php';
 require_once __DIR__ . '/../include/form_utils.php';
@@ -10,7 +7,8 @@ require_once __DIR__ . '/../include/form_utils.php';
  * Anmeldung (Login-Formular anzeigen und verarbeiten)
  */
 function showAnmeldeFormular(): void {
-    if (!empty($_SESSION["eingeloggt"])) {
+    // Weiterleitung NUR bei GET-Anfrage
+    if ($_SERVER["REQUEST_METHOD"] === "GET" && !empty($_SESSION["eingeloggt"])) {
         header("Location: index.php");
         exit;
     }

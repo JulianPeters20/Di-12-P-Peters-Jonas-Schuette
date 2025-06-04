@@ -21,7 +21,7 @@
 
     <div class="nutzer-nav">
         <ul>
-            <?php if (!empty($_SESSION['email'])): ?>
+            <?php if (!empty($_SESSION['email']) && !empty($_SESSION['eingeloggt'])): ?>
                 <li><span>Hallo, <?= htmlspecialchars($_SESSION['benutzername']) ?></span></li>
                 <li><a href="index.php?page=abmeldung">Abmelden</a></li>
             <?php else: ?>

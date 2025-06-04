@@ -2,14 +2,6 @@
 require_once 'php/model/NutzerDAO.php';
 require_once 'php/model/RezeptDAO.php';
 
-session_start();
-
-// Prüfen, ob Nutzer eingeloggt ist
-if (!isset($_SESSION['nutzerId'])) {
-    header("Location: index.php?page=anmeldung");
-    exit;
-}
-
 $nutzerDAO = new NutzerDAO();
 $nutzer = $nutzerDAO->findeNachID((int)$_SESSION['nutzerId']);
 $rezeptDAO = new RezeptDAO();

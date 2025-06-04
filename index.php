@@ -1,26 +1,36 @@
 <?php
 declare(strict_types=1);
-
-require_once 'php/include/form_utils.php';
+ob_start();
 
 // Zentrales Router/Dispatcher-File für Broke & Hungry
 // Leitet "page"-Aufrufe an entsprechende Controller bzw. Views weiter
 ini_set('session.cookie_lifetime', '0'); // Session gilt nur solange Browser offen ist
 session_start();
 
-$page = $_GET['page'] ?? 'home';
+error_log('[DEBUG] RAW $_GET: ' . print_r($_GET, true));
+
+if (!isset($_COOKIE[session_name()])) {
+    error_log('[DEBUG] WARNUNG: Session-Cookie wurde nicht gesetzt!');
+}
+
+require_once 'php/include/form_utils.php';
+
+$page = htmlspecialchars($_GET['page'] ?? 'home');
 
 // Geschützte Seiten zentral absichern
-$geschützteSeiten = [
+$geschuetzteSeiten = [
     'rezept-neu', 'rezept-bearbeiten', 'rezept-loeschen',
     'rezept-aktualisieren', 'nutzer', 'nutzerliste', 'nutzer-loeschen'
 ];
 
-if (in_array($page, $geschützteSeiten, true) && empty($_SESSION['email'])) {
+if (in_array($page, $geschuetzteSeiten, true) && empty($_SESSION['email']) && $page !== 'anmeldung') {
     $_SESSION["message"] = "Bitte melde dich zuerst an.";
     header("Location: index.php?page=anmeldung");
     exit;
 }
+error_log('[DEBUG] Angeforderte Seite: ' . ($page ?? 'n/a'));
+error_log('[DEBUG] Geschützte Seite? ' . (in_array($page, $geschuetzteSeiten, true) ? 'ja' : 'nein'));
+error_log('[DEBUG] Eingeloggt? ' . (!empty($_SESSION['email']) ? 'ja' : 'nein'));
 
 ?>
 <!DOCTYPE html>
@@ -157,3 +167,4 @@ switch ($page) {
 
 </body>
 </html>
+<?php ob_end_flush(); ?>
