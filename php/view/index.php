@@ -5,23 +5,26 @@
     <ul class="rezept-galerie">
         <?php foreach ($rezepte as $rezept): ?>
             <li class="rezept-karte">
-                <img src="<?= htmlspecialchars($rezept['bild'] ?? 'images/platzhalter.jpg') ?>" alt="<?= htmlspecialchars($rezept['titel'] ?? 'Unbekannt') ?>">
+                <img src="<?= htmlspecialchars($rezept['BildPfad'] ?? 'images/placeholder.jpg') ?>"
+                     alt="<?= htmlspecialchars($rezept['Titel'] ?? 'Unbekannt') ?>">
                 <div class="inhalt">
                     <h3>
-                        <a href="index.php?page=rezept&id=<?= urlencode($rezept['id'] ?? 0) ?>">
-                            <?= htmlspecialchars($rezept['titel'] ?? 'Unbekannt') ?>
+                        <a href="index.php?page=rezept&id=<?= urlencode($rezept['RezeptID'] ?? 0) ?>">
+                            <?= htmlspecialchars($rezept['Titel'] ?? 'Unbekannt') ?>
                         </a>
                     </h3>
                     <div class="meta">
                         <?php
-                        $kategorie = $rezept['kategorie'] ?? '-';
-                        if (is_array($kategorie)) {
-                            echo htmlspecialchars(implode(', ', $kategorie));
+                        // Kategorien: IDs, solange keine Namen geladen werden
+                        $kategorien = $rezept['kategorien'] ?? [];
+                        if (is_array($kategorien) && count($kategorien) > 0) {
+                            echo 'Kategorien-IDs: ' . htmlspecialchars(implode(', ', $kategorien));
                         } else {
-                            echo htmlspecialchars($kategorie);
+                            echo '-';
                         }
 
-                        echo ' · ' . htmlspecialchars($rezept['datum'] ?? '-') . ' · ' . htmlspecialchars($rezept['autor'] ?? '-');
+                        echo ' · ' . htmlspecialchars($rezept['Erstellungsdatum'] ?? '-');
+                        echo ' · Autor-ID: ' . htmlspecialchars($rezept['ErstellerID'] ?? '-');
                         ?>
                     </div>
                 </div>

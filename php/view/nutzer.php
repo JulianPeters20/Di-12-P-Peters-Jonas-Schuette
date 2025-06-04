@@ -1,30 +1,40 @@
 <?php
+require_once 'php/model/NutzerDAO.php';
 require_once 'php/model/RezeptDAO.php';
 
-$rezeptDAO = new RezeptDAO();
-// Sicherstellen, dass $nutzer existiert
-$istEigenerAccount = false;
-if (isset($nutzer) && isset($_SESSION['nutzerId'])) {
-    $istEigenerAccount = $_SESSION['nutzerId'] === $nutzer->id;
+// Entscheidend: Robust abfangen, falls Session-Wert nicht existiert oder Gast-Nutzer
+$nutzerId = $_SESSION['nutzerId'] ?? null;
+$nutzer = null;
+$rezepte = [];
+
+if ($nutzerId !== null && is_numeric($nutzerId)) {
+    $nutzerDAO = new NutzerDAO();
+    $nutzer = $nutzerDAO->findeNachID((int)$nutzerId);
+    $rezeptDAO = new RezeptDAO();
+    if ($nutzer) {
+        $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->NutzerID ?? $nutzer->id ?? 0);
+    }
 }
 ?>
 
 <main>
     <h2>Benutzerprofil</h2>
 
-    <?php if ($nutzer): ?>
+    <?php if (!empty($nutzer)): ?>
         <!-- Nutzer-Infos -->
         <section class="nutzerprofil" style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
             <img src="images/Icon Nutzer ChatGPT.webp" alt="Profilbild"
                  style="height: 80px; width: 80px; border-radius: 50%; padding: 10px;">
             <dl>
                 <dt>Benutzername:</dt>
-                <dd><?= htmlspecialchars($nutzer->benutzername) ?></dd>
+                <dd><?= htmlspecialchars($nutzer->Benutzername ?? $nutzer->benutzername ?? '-') ?></dd>
                 <dt>E-Mail:</dt>
-                <dd><?= htmlspecialchars($nutzer->email) ?></dd>
+                <dd><?= htmlspecialchars($nutzer->Email ?? $nutzer->email ?? '-') ?></dd>
                 <dt>Registrierungsdatum:</dt>
-                <dd><?= htmlspecialchars($nutzer->registrierungsDatum) ?></dd>
-                <?php if ($nutzer->istAdmin): ?>
+                <dd><?= htmlspecialchars($nutzer->RegistrierungsDatum ?? $nutzer->registrierungsDatum ?? '-') ?></dd>
+                <dt>ID:</dt>
+                <dd><?= htmlspecialchars($nutzer->NutzerID ?? $nutzer->id ?? '-') ?></dd>
+                <?php if (!empty($nutzer->IstAdmin) || !empty($nutzer->istAdmin)): ?>
                     <dt>Rolle:</dt>
                     <dd>Administrator</dd>
                 <?php endif; ?>
@@ -32,33 +42,28 @@ if (isset($nutzer) && isset($_SESSION['nutzerId'])) {
         </section>
 
         <!-- Eigene Rezepte -->
-        <?php
-        $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->id);
-        ?>
         <section>
-            <h3><?= $istEigenerAccount ? 'Meine Rezepte' : 'Rezepte von ' . htmlspecialchars($nutzer->benutzername) ?></h3>
-
+            <h3>Eigene Rezepte</h3>
             <?php if (!empty($rezepte)): ?>
                 <ul class="rezept-galerie">
                     <?php foreach ($rezepte as $rezept): ?>
                         <li class="rezept-karte">
-                            <img src="<?= htmlspecialchars($rezept['BildPfad']) ?>" alt="<?= htmlspecialchars($rezept['Titel']) ?>">
+                            <img src="<?= htmlspecialchars($rezept['BildPfad'] ?? 'images/placeholder.jpg') ?>" alt="<?= htmlspecialchars($rezept['Titel'] ?? '-') ?>">
                             <div class="inhalt">
                                 <h4>
-                                    <a href="index.php?page=rezept&id=<?= $rezept['RezeptID'] ?>">
-                                        <?= htmlspecialchars($rezept['Titel']) ?>
+                                    <a href="index.php?page=rezept&id=<?= $rezept['RezeptID'] ?? 0 ?>">
+                                        <?= htmlspecialchars($rezept['Titel'] ?? '-') ?>
                                     </a>
                                 </h4>
                                 <div class="meta">
-                                    <?= htmlspecialchars($rezept['Kategorie'] ?? '') ?> · <?= htmlspecialchars($rezept['Erstellungsdatum']) ?>
+                                    <!-- Hinweis: Kategorie ist ein Array von IDs, kannst du später auf Name mappen -->
+                                    <?= 'Kategorien-IDs: ' . (isset($rezept['kategorien']) ? htmlspecialchars(implode(', ', $rezept['kategorien'])) : '-') ?>
+                                    · <?= htmlspecialchars($rezept['Erstellungsdatum'] ?? '-') ?>
                                 </div>
-                                <?php if ($istEigenerAccount): ?>
-                                    <div class="rezept-aktion" style="margin-top: 10px;">
-                                        <a href="index.php?page=rezept-bearbeiten&id=<?= $rezept['RezeptID'] ?>" class="btn">Bearbeiten</a>
-                                        <a href="index.php?page=rezept-loeschen&id=<?= $rezept['RezeptID'] ?>" class="btn"
-                                           onclick="return confirm('Möchtest du dieses Rezept wirklich löschen?');">Löschen</a>
-                                    </div>
-                                <?php endif; ?>
+                                <div class="rezept-aktion" style="margin-top: 10px;">
+                                    <a href="index.php?page=rezept-bearbeiten&id=<?= $rezept['RezeptID'] ?? 0 ?>" class="btn">Bearbeiten</a>
+                                    <a href="index.php?page=rezept-loeschen&id=<?= $rezept['RezeptID'] ?? 0 ?>" class="btn" onclick="return confirm('Möchtest du dieses Rezept wirklich löschen?');">Löschen</a>
+                                </div>
                             </div>
                         </li>
                     <?php endforeach; ?>
@@ -68,7 +73,6 @@ if (isset($nutzer) && isset($_SESSION['nutzerId'])) {
             <?php endif; ?>
         </section>
 
-        <?php if ($istEigenerAccount): ?>
             <!-- Gespeicherte Rezepte -->
             <section>
                 <h3>Gespeicherte Rezepte</h3>
@@ -77,11 +81,9 @@ if (isset($nutzer) && isset($_SESSION['nutzerId'])) {
                 </div>
             </section>
 
-            <!-- Abmelde-Button -->
             <div style="margin-top: 30px;">
                 <a href="index.php?page=abmeldung" class="btn">Abmelden</a>
             </div>
-        <?php endif; ?>
 
     <?php else: ?>
         <p>Nutzer nicht gefunden.</p>

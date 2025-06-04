@@ -7,10 +7,7 @@ ob_start();
 ini_set('session.cookie_lifetime', '0'); // Session gilt nur solange Browser offen ist
 session_start();
 
-error_log('[DEBUG] RAW $_GET: ' . print_r($_GET, true));
-
 if (!isset($_COOKIE[session_name()])) {
-    error_log('[DEBUG] WARNUNG: Session-Cookie wurde nicht gesetzt!');
 }
 
 require_once 'php/include/form_utils.php';
@@ -28,9 +25,6 @@ if (in_array($page, $geschuetzteSeiten, true) && empty($_SESSION['email']) && $p
     header("Location: index.php?page=anmeldung");
     exit;
 }
-error_log('[DEBUG] Angeforderte Seite: ' . ($page ?? 'n/a'));
-error_log('[DEBUG] Geschützte Seite? ' . (in_array($page, $geschuetzteSeiten, true) ? 'ja' : 'nein'));
-error_log('[DEBUG] Eingeloggt? ' . (!empty($_SESSION['email']) ? 'ja' : 'nein'));
 
 ?>
 <!DOCTYPE html>

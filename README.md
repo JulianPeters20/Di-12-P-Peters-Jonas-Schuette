@@ -1,6 +1,6 @@
 # README – Broke & Hungry
 
-**Abgabe zu Aufgabenblatt 3 – Webprogrammierung (Di-12-P)**
+**Abgabe zu Aufgabenblatt 4 – Webprogrammierung (Di-12-P)**
 
 ## Projektgruppe
 - Julian Peters
@@ -8,23 +8,19 @@
 
 ---
 
-## Aktuell umgesetzte Funktionen (Stand: Aufgabenblatt 3)
+## Aktuell umgesetzte Funktionen (Stand: Aufgabenblatt 4)
 
-- Rezeptübersicht mit Suchfunktion (nach Titel, Kategorie und Autor)
-- Detailseite für jedes Rezept
-- Erstellung neuer Rezepte durch angemeldete Nutzer
-- Nutzerregistrierung und -anmeldung
-- Nutzerprofil mit Übersicht eigener Rezepte
-- Bearbeiten und Löschen eigener Rezepte
-- Vollständig integrierte Dummy-Daten (inkl. Zutaten, Zubereitung, etc.)
-- Zugriffsschutz: Rezept erstellen und bearbeiten nur mit Login
-- Session-basierte Fehlermeldungen und Statusmeldungen
+- Einbindung von SQLite3 und MySQL
+- Wechsel zwischen SQLite3 und MySQL mit Hilfe der config
+- Überarbeitung der Dummy-Daten zur Einbindung in die Datenbank
+
+- Unser Problem, dass einige Daten nicht richitg eingebunden werden
 
 ---
 
 ## Geplante und in Bearbeitung befindliche Erweiterungen
 
-- Einführung einer Administratorrolle mit exklusivem Zugriff auf die Nutzerliste
+- Einführung einer Administratorrolle mit exklusivem Zugriff auf die Nutzerliste (boolean exisitiert bereits)
 - Mehrfachauswahl von Kategorien beim Erstellen eines Rezepts (z. B. vegan und günstig gleichzeitig)
 - Bewertungssystem: Nutzer können Rezepte mit bis zu 5 Sternen bewerten
 - Erweiterung der Startseite um einen Bereich für die bestbewerteten Rezepte
