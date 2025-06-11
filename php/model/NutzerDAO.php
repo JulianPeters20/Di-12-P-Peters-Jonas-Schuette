@@ -1,98 +1,122 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../view/nutzer.php';
+
 /**
- * Datenzugriffsobjekt (DAO) für Nutzer.
- * Achtung: Alle Daten sind nur temporär und werden NICHT persistent gespeichert!
+ * DAO-Klasse für den Zugriff auf Nutzer-Datenbank.
+ * @author Julian Peters
+ * @since 2025-06-03
  */
 class NutzerDAO {
-    // Dummy-Daten
-    private static $benutzer = [
-        [
-            'benutzername' => 'StudentOne',
-            'email' => 'student@beispiel.de',
-            'passwort' => 'geheim123',
-            'registriert' => '01.01.2024'
-        ],
-        [
-            'benutzername' => 'MaxMustermann',
-            'email' => 'max@uni.de',
-            'passwort' => '12345678',
-            'registriert' => '01.01.2025'
-        ]
-    ];
+    private PDO $db;
 
-    /**
-     * Gibt alle Benutzer zurück.
-     */
-    public static function getAlleBenutzer(): array {
-        return self::$benutzer;
+    public function __construct() {
+        $this->db = Database::getConnection();
     }
 
     /**
-     * Sucht Benutzer anhand von E-Mail und Passwort.
+     * Sucht einen Nutzer anhand seiner ID.
      */
-    public static function findeBenutzer(string $email, string $passwort): ?array {
-        foreach (self::$benutzer as $nutzer) {
-            if ($nutzer['email'] === $email && $nutzer['passwort'] === $passwort) {
-                return $nutzer;
+    public function findeNachID(int $id): ?Nutzer {
+        $stmt = $this->db->prepare("SELECT * FROM Nutzer WHERE NutzerID = ?");
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ? new Nutzer(
+            (int)$row['NutzerID'],
+            $row['Benutzername'],
+            $row['Email'],
+            $row['PasswortHash'],
+            $row['RegistrierungsDatum'],
+            $row['IstAdmin'] == 1
+        ) : null;
+    }
+
+    /**
+     * Sucht einen Nutzer anhand seiner E-Mail-Adresse.
+     */
+    public function findeNachEmail(string $email): ?Nutzer {
+        $stmt = $this->db->prepare("SELECT * FROM Nutzer WHERE Email = ?");
+        $stmt->execute([$email]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ? new Nutzer(
+            (int)$row['NutzerID'],
+            $row['Benutzername'],
+            $row['Email'],
+            $row['PasswortHash'],
+            $row['RegistrierungsDatum'],
+            (bool)$row['IstAdmin']
+        ) : null;
+    }
+
+    /**
+     * Führt die Registrierung eines neuen Nutzers durch.
+     * Rückgabe: true bei Erfolg, false bei Fehler oder vorhandener E-Mail.
+     */
+    public function registrieren(string $benutzername, string $email, string $passwort): bool {
+        try {
+            $this->db->beginTransaction();
+
+            // Duplikat vermeiden
+            if ($this->findeNachEmail($email) !== null) {
+                $this->db->rollBack();
+                return false;
             }
+
+            $stmt = $this->db->prepare("
+                INSERT INTO Nutzer (Benutzername, Email, PasswortHash, RegistrierungsDatum)
+                VALUES (?, ?, ?, ?)
+            ");
+            $stmt->execute([
+                $benutzername,
+                $email,
+                password_hash($passwort, PASSWORD_DEFAULT),
+                date('Y-m-d')
+            ]);
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+    /**
+     * Führt einen Login-Versuch durch (Email + Passwort).
+     * Rückgabe: Nutzerobjekt bei Erfolg, null bei Fehlschlag.
+     */
+    public function findeBenutzer(string $email, string $passwort): ?Nutzer {
+        $nutzer = $this->findeNachEmail($email);
+        if ($nutzer && password_verify($passwort, $nutzer->passwortHash)) {
+            return $nutzer;
         }
         return null;
     }
 
     /**
-     * Gibt Benutzer anhand E-Mail zurück.
+     * Gibt alle Nutzer aus der Datenbank zurück.
+     * @return Nutzer[] Liste aller Nutzer als Objekte.
      */
-    public static function findeBenutzerNachEmail(string $email): ?array {
-        foreach (self::$benutzer as $nutzer) {
-            if ($nutzer['email'] === $email) {
-                return $nutzer;
-            }
+    public function findeAlle(): array {
+        $stmt = $this->db->query("SELECT * FROM Nutzer ORDER BY RegistrierungsDatum DESC");
+        $nutzer = [];
+
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $nutzer[] = new Nutzer(
+                (int)$row['NutzerID'],
+                $row['Benutzername'],
+                $row['Email'],
+                $row['PasswortHash'],
+                $row['RegistrierungsDatum'],
+                (bool)$row['IstAdmin']
+            );
         }
-        return null;
+
+        return $nutzer;
     }
 
-    /**
-     * Fügt einen neuen Benutzer hinzu.
-     */
-    public static function addBenutzer(string $benutzername, string $email, string $passwort): void {
-        self::$benutzer[] = [
-            'benutzername' => $benutzername,
-            'email' => $email,
-            'passwort' => $passwort,
-            'registriert' => date('d.m.Y')
-        ];
-    }
-
-    /**
-     * Löscht Benutzer anhand E-Mail.
-     */
-    public static function loescheBenutzer(string $email): bool {
-        foreach (self::$benutzer as $key => $nutzer) {
-            if ($nutzer['email'] === $email) {
-                unset(self::$benutzer[$key]);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Aktualisiert Nutzer-Daten.
-     */
-    public static function aktualisiereBenutzer(string $email, ?string $benutzername = null, ?string $passwort = null): bool {
-        foreach (self::$benutzer as $key => $nutzer) {
-            if ($nutzer['email'] === $email) {
-                if ($benutzername !== null) {
-                    self::$benutzer[$key]['benutzername'] = $benutzername;
-                }
-                if ($passwort !== null) {
-                    self::$benutzer[$key]['passwort'] = $passwort;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
 }

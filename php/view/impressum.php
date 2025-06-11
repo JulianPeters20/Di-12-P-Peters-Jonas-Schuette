@@ -16,6 +16,7 @@
         <h3>Quellenangaben für verwendete Medien</h3>
         <ul class="ohne-punkte">
             <li><strong>Icon Nutzer.webp:</strong> KI-generiert mit ChatGPT (DALL·E)</li>
+            <li><strong>placeholder.jpg:</strong> KI-generiert mit ChatGPT (DALL·E)</li>
             <li>
                 <strong>pesto.jpg:</strong> Bild von
                 <a href="https://pixabay.com/de/users/ekologiskt_skafferi-1159164/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=1556974" target="_blank" rel="noopener noreferrer">T Caesar</a>

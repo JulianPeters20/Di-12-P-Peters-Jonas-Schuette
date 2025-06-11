@@ -1,42 +1,30 @@
 <?php
 declare(strict_types=1);
+ob_start();
 
 // Zentrales Router/Dispatcher-File für Broke & Hungry
 // Leitet "page"-Aufrufe an entsprechende Controller bzw. Views weiter
 ini_set('session.cookie_lifetime', '0'); // Session gilt nur solange Browser offen ist
 session_start();
 
-/**
- * Validiert die ID aus dem GET-Parameter.
- * Liefert int oder null (bei ungültiger Eingabe).
- *
- * @param mixed $idRaw
- * @return int|null
- */
-function validateId($idRaw): ?int
-{
-    if (isset($idRaw) && ctype_digit((string)$idRaw)) {
-        return (int)$idRaw;
-    }
-    return null;
+if (!isset($_COOKIE[session_name()])) {
 }
 
-/**
- * Validiert eine E-Mail-Adresse aus GET-Parameter.
- * Liefert String oder null.
- *
- * @param mixed $emailRaw
- * @return string|null
- */
-function validateEmail($emailRaw): ?string
-{
-    if (isset($emailRaw) && filter_var($emailRaw, FILTER_VALIDATE_EMAIL)) {
-        return $emailRaw;
-    }
-    return null;
-}
+require_once 'php/include/form_utils.php';
 
-$page = $_GET['page'] ?? 'home';
+$page = htmlspecialchars($_GET['page'] ?? 'home');
+
+// Geschützte Seiten zentral absichern
+$geschuetzteSeiten = [
+    'rezept-neu', 'rezept-bearbeiten', 'rezept-loeschen',
+    'rezept-aktualisieren', 'nutzer', 'nutzerliste', 'nutzer-loeschen'
+];
+
+if (in_array($page, $geschuetzteSeiten, true) && empty($_SESSION['email']) && $page !== 'anmeldung') {
+    $_SESSION["message"] = "Bitte melde dich zuerst an.";
+    header("Location: index.php?page=anmeldung");
+    exit;
+}
 
 ?>
 <!DOCTYPE html>
@@ -124,6 +112,32 @@ switch ($page) {
         showNutzerProfil($email);
         break;
 
+    case 'nutzer-loeschen':
+        require_once 'php/controller/NutzerController.php';
+
+        if (!istAdmin()) {
+            $_SESSION["message"] = "Nur Administratoren dürfen Nutzer löschen.";
+            header("Location: index.php?page=nutzerliste");
+            exit;
+        }
+
+        $id = validateId($_GET['id'] ?? null);
+        if ($id === null) {
+            $_SESSION["message"] = "Ungültige Nutzer-ID.";
+            header("Location: index.php?page=nutzerliste");
+            exit;
+        }
+
+        // Schutz: Admin darf sich selbst nicht löschen
+        if (isset($_SESSION['nutzerId']) && (int)$_SESSION['nutzerId'] === $id) {
+            $_SESSION["message"] = "Du kannst deinen eigenen Account nicht löschen.";
+            header("Location: index.php?page=nutzerliste");
+            exit;
+        }
+
+        loescheNutzer($id);
+        break;
+
     case 'impressum':
         require_once 'php/view/impressum.php';
         break;
@@ -189,3 +203,4 @@ switch ($page) {
 
 </body>
 </html>
+<?php ob_end_flush(); ?>
