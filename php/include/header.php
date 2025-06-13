@@ -42,10 +42,10 @@
     </div>
 </header>
 
-<!-- 💬 Session Message anzeigen -->
-<?php if (isset($_SESSION["message"])): ?>
-    <div class="message-box">
-        <?= htmlspecialchars($_SESSION["message"]) ?>
+<?php if (!empty($_SESSION["flash"])): ?>
+    <?php $type = $_SESSION["flash"]["type"] ?? 'info'; ?>
+    <div class="flash <?= htmlspecialchars($type) ?>">
+        <?= htmlspecialchars($_SESSION["flash"]["message"] ?? '') ?>
     </div>
-    <?php unset($_SESSION["message"]); ?>
+    <?php unset($_SESSION["flash"]); ?>
 <?php endif; ?>

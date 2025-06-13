@@ -93,3 +93,14 @@ function build_zutaten_array(array $namen, array $mengen, array $einheiten): arr
 
     return $zutaten;
 }
+
+/**
+ * Speichert eine Flash-Nachricht in der Session.
+ * Wird verwendet, um Nachrichten zwischen Requests anzuzeigen.
+ */
+function flash(string $type, string $message): void {
+    $_SESSION["flash"] = [
+        "type" => $type,  // z. B. success, error, warning
+        "message" => $message
+    ];
+}

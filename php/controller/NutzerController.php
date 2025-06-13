@@ -7,7 +7,6 @@ require_once __DIR__ . '/../include/form_utils.php';
  * Anmeldung (Login-Formular anzeigen und verarbeiten)
  */
 function showAnmeldeFormular(): void {
-    // Weiterleitung NUR bei GET-Anfrage
     if ($_SERVER["REQUEST_METHOD"] === "GET" && !empty($_SESSION["eingeloggt"])) {
         header("Location: index.php");
         exit;
@@ -21,10 +20,21 @@ function showAnmeldeFormular(): void {
         $passwort = sanitize_text($_POST["passwort"] ?? '');
 
         if ($email === '' || $passwort === '') {
-            $fehler = "Bitte alle Felder ausfüllen.";
+            flash("warning","Bitte fülle alle Felder aus.");
+            header("Location: index.php?page=anmeldung");
+            exit;
         } else {
-            $nutzer = $dao->findeBenutzer($email, $passwort);
-            if ($nutzer) {
+            $nutzer = $dao->findeNachEmail($email);
+
+            if (!$nutzer) {
+                flash("warning","Es existiert kein Konto mit dieser E-Mail-Adresse.");
+                header("Location: index.php?page=anmeldung");
+                exit;
+            } elseif (!password_verify($passwort, $nutzer->passwortHash)) {
+                flash("warning","Das Passwort ist falsch.");
+                header("Location: index.php?page=anmeldung");
+                exit;
+            } else {
                 $_SESSION["benutzername"] = $nutzer->benutzername;
                 $_SESSION["email"] = $nutzer->email;
                 $_SESSION["nutzerId"] = $nutzer->id;
@@ -33,13 +43,11 @@ function showAnmeldeFormular(): void {
 
                 header("Location: index.php");
                 exit;
-            } else {
-                $fehler = "Falsche E-Mail oder falsches Passwort.";
             }
         }
     }
 
-    require 'php/view/anmeldung.php';
+    require_once 'php/view/anmeldung.php';
 }
 
 /**
@@ -61,27 +69,33 @@ function showRegistrierungsFormular(): void {
         $passwort_wdh = sanitize_text($_POST["passwort-wdh"] ?? '');
 
         if ($benutzername === '' || $email === '' || $passwort === '' || $passwort_wdh === '') {
-            $fehler = "Bitte alle Felder ausfüllen.";
+            flash("warning","Bitte alle Felder ausfüllen.");
+            header("Location: index.php?page=registrierung");
+            exit;
         } elseif ($passwort !== $passwort_wdh) {
-            $fehler = "Die Passwörter stimmen nicht überein.";
+            flash("warning","Die Passwörter stimmen nicht überein.");
+            header("Location: index.php?page=registrierung");
+            exit;
         } elseif ($dao->findeNachEmail($email)) {
-            $fehler = "E-Mail ist bereits registriert.";
+            flash("warning","Diese E-Mail ist bereits registriert.");
+            header("Location: index.php?page=registrierung");
+            exit;
         } else {
             $erfolg = $dao->registrieren($benutzername, $email, $passwort);
+
             if ($erfolg) {
-                $_SESSION["benutzername"] = $benutzername;
-                $_SESSION["email"] = $email;
-                $_SESSION["eingeloggt"] = true;
-                $_SESSION["message"] = "Registrierung erfolgreich.";
-                header("Location: index.php");
+                flash("success","Registrierung erfolgreich. Bitte melde dich nun an.");
+                header("Location: index.php?page=anmeldung");
                 exit;
             } else {
-                $fehler = "Fehler bei der Registrierung.";
+                flash("error","Fehler bei der Registrierung");
+                header("Location: index.php?page=registrierung");
+                exit;
             }
         }
     }
 
-    require 'php/view/registrierung.php';
+    require_once 'php/view/registrierung.php';
 }
 
 /**
@@ -90,7 +104,7 @@ function showRegistrierungsFormular(): void {
 function logoutUser(): void {
     session_unset();
     session_destroy();
-    require 'php/view/abmeldung.php';
+    require_once 'php/view/abmeldung.php';
 }
 
 /**
@@ -114,7 +128,7 @@ function showNutzerProfil(?string $email = null): void {
         exit;
     }
 
-    require 'php/view/nutzer.php';
+    require_once 'php/view/nutzer.php';
 }
 
 /**
@@ -130,7 +144,7 @@ function showNutzerListe(): void {
     $dao = new NutzerDAO();
     $nutzer = $dao->findeAlle();
 
-    require 'php/view/nutzerliste.php';
+    require_once 'php/view/nutzerliste.php';
 }
 
 /**
