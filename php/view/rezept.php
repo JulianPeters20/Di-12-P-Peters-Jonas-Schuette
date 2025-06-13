@@ -1,9 +1,10 @@
 <main>
     <?php if (!empty($rezept)): ?>
-        <article>
+        <article class="rezept-detail">
             <header>
-                <h2><?= htmlspecialchars($rezept['Titel'] ?? 'Unbekannt') ?></h2>
+                <h2 class="rezept-titel"><?= htmlspecialchars($rezept['Titel'] ?? 'Unbekannt') ?></h2>
             </header>
+            <div class="rezept-detail-content">
             <?php
             $bildPfad = !empty($rezept['BildPfad']) && file_exists($rezept['BildPfad'])
                 ? $rezept['BildPfad']
@@ -28,8 +29,9 @@
                 <dt>Autor-ID:</dt>
                 <dd><?= htmlspecialchars($rezept['ErstellerID'] ?? '-') ?></dd>
             </dl>
+            </div>
 
-            <section>
+            <section class="rezept-block">
                 <h3>Zutaten</h3>
                 <?php if (!empty($rezept['zutaten']) && is_array($rezept['zutaten'])): ?>
                     <ul>
@@ -47,8 +49,15 @@
             </section>
 
             <section>
+            <?php if (!empty($rezept['utensilien'])): ?>
+                <section class="rezept-block">
+                    <h3>Küchenutensilien</h3>
+                    <pre class="rezept-pre"><?= htmlspecialchars($rezept['utensilien']) ?></pre>
+                </section>
+            <?php endif; ?>
+            <section class="rezept-block">
                 <h3>Zubereitung</h3>
-                <pre><?= htmlspecialchars($rezept['Zubereitung'] ?? 'Keine Angabe.') ?></pre>
+                <pre  class="rezept-pre"><?= htmlspecialchars($rezept['Zubereitung'] ?? 'Keine Angabe.') ?></pre>
             </section>
 
             <?php
@@ -73,8 +82,10 @@
             <?php endif; ?>
         </article>
     <?php else: ?>
-        <div>Rezept nicht gefunden.</div>
+        <div class="message-box">Rezept nicht gefunden.</div>
     <?php endif; ?>
 
-    <a href="index.php?page=rezepte">Zurück zur Übersicht</a>
+    <div style="margin-top: 30px; text-align:center;">
+        <a href="index.php?page=rezepte" class="btn">Zurück zur Übersicht</a>
+    </div>
 </main>

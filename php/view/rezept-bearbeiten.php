@@ -7,16 +7,11 @@
     <?php endif; ?>
 
     <form action="index.php?page=rezept-aktualisieren&id=<?= urlencode($rezept['id']) ?>" method="post" enctype="multipart/form-data">
-        <div class="form-row">
-            <label for="titel">Titel:<br>
+        <div>
+            <label for="titel">
+                Titel:
                 <input type="text" id="titel" name="titel" required
                        value="<?= htmlspecialchars($_SESSION["formdata"]["titel"] ?? $rezept['titel']) ?>">
-            </label>
-        </div>
-
-        <div class="form-row">
-            <label for="zubereitung">Zubereitung:<br>
-                <textarea id="zubereitung" name="zubereitung" rows="6" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? $rezept['zubereitung']) ?></textarea>
             </label>
         </div>
 
@@ -51,6 +46,18 @@
         </div>
 
         <div class="form-row">
+            <label for="zubereitung">Zubereitung:<br>
+                <textarea id="zubereitung" name="zubereitung" rows="6" cols="50" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? $rezept['zubereitung']) ?></textarea>
+            </label>
+        </div>
+
+        <div>
+            <label for="utensilien">Küchenutensilien (optional):<br>
+                <textarea id="utensilien" name="utensilien" rows="4"><?= htmlspecialchars($_SESSION["formdata"]["utensilien"] ?? $rezept['utensilien']) ?></textarea>
+            </label>
+        </div>
+
+        <div class="form-row">
             <label>Kategorien:<br>
                 <?php foreach ($_SESSION['kategorienListe'] as $id => $label):
                     $checked = in_array($id, $_SESSION["formdata"]["kategorien"] ?? $rezept['kategorien'] ?? []) ? "checked" : "";
@@ -68,20 +75,46 @@
             </label>
         </div>
 
-        <div class="form-row">
-            <label>Aktuelles Bild:<br>
-                <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="Rezeptbild" style="max-width:200px; display:block; margin-bottom: 8px;">
+        <div>
+            <label for="portionsgroesse">Portionsgröße:<br>
+                <input type="number" id="portionsgroesse" name="portionsgroesse" min="1"
+                       value="<?= htmlspecialchars($_SESSION["formdata"]["portionsgroesse"] ?? $rezept['portionsgroesse']) ?>" required>
             </label>
+        </div>
 
-            <label for="bild">Neues Bild hochladen (optional):<br>
-                <input type="hidden" name="bestehendesBild" value="<?= htmlspecialchars($rezept['bild']) ?>">
-                <input type="file" id="bild" name="bild" accept="image/*">
+        <div>
+            <label for="preis">Kosten für Zutaten:<br>
+                <input type="number" id="preis" name="preis" min="1"
+                       value="<?= htmlspecialchars($_SESSION["formdata"]["preis"] ?? $rezept['preis']) ?>" required>
             </label>
         </div>
 
         <div class="form-row">
-            <input type="submit" value="Änderungen speichern">
-            <input type="reset" value="Zurücksetzen">
+            <label for="bild">Aktuelles Bild:<br>
+                <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="Rezeptbild" style="max-width:200px; display:block; margin-bottom: 8px;">
+            </label>
+
+            <div class="form-row bild-upload">
+                <label for="bild">Bild ändern:</label>
+            </div>
+
+            <label for="bild">Neues Bild hochladen (optional):<br>
+                <input type="hidden" name="bestehendesBild" value="<?= htmlspecialchars($rezept['bild']) ?>">
+            </label>
+            <div class="custom-file-upload">
+                <button type="button" id="btn-select-file" class="btn">Datei auswählen</button>
+                <span id="selected-file-name">Keine ausgewählt</span>
+                <input type="file" id="bild" name="bild" accept="image/*" hidden>
+            </div>
+        </div>
+
+        <div id="preview-container" style="display:none; border-radius:6px; margin-top: 10px; overflow: visible;">
+            <img id="img-preview" src="" alt="Bildvorschau" style="border-radius:6px; display:none; width:auto; max-width:100%; height:auto; object-fit:contain;">
+        </div>
+
+        <div class="form-row justify-center">
+            <input type="submit" value="Änderungen speichern" class="btn">
+            <input type="reset" value="Zurücksetzen" class="btn">
         </div>
     </form>
 

@@ -22,7 +22,7 @@ if ($nutzerId !== null && is_numeric($nutzerId)) {
 
     <?php if (!empty($nutzer)): ?>
         <!-- Nutzer-Infos -->
-        <section class="nutzerprofil" style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+        <section class="nutzerprofil" style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px; background-color: #f7f5f2;">
             <img src="images/Icon Nutzer ChatGPT.webp" alt="Profilbild"
                  style="height: 80px; width: 80px; border-radius: 50%; padding: 10px;">
             <dl>
@@ -69,7 +69,7 @@ if ($nutzerId !== null && is_numeric($nutzerId)) {
                     <?php endforeach; ?>
                 </ul>
             <?php else: ?>
-                <p>Keine Rezepte vorhanden.</p>
+                <p>Keine eigenen Rezepte vorhanden.</p>
             <?php endif; ?>
         </section>
 
@@ -81,9 +81,10 @@ if ($nutzerId !== null && is_numeric($nutzerId)) {
                 </div>
             </section>
 
-            <div style="margin-top: 30px;">
-                <a href="index.php?page=abmeldung" class="btn">Abmelden</a>
-            </div>
+        <!-- Abmelde-Button -->
+        <div style="margin-top: 30px;">
+            <a href="index.php?page=abmeldung" class="btn">Abmelden</a>
+        </div>
 
     <?php else: ?>
         <p>Nutzer nicht gefunden.</p>
