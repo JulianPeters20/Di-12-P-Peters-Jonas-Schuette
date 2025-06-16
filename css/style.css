@@ -546,7 +546,137 @@ a:focus {
   border: 0;
 }
 
+.zutaten-bereich {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+select,
+textarea {
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+button.btn,
+input[type="submit"],
+input[type="reset"] {
+  max-width: 200px;
+}
+
+.form-row label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="number"],
+select {
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.dropdown-multiselect {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between; /* Text links, Pfeil rechts */
+  align-items: center;            /* Vertikal zentriert */
+  padding: 8px 10px;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  min-height: 42px;
+}
+
+.dropdown-arrow {
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-multiselect.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown-list {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 999;
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--border, #ccc);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  padding: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  max-height: 200px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.dropdown-multiselect.open .dropdown-list {
+  display: block;
+}
+
+.dropdown-list label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: normal;
+  font-size: 1rem;
+}
+
+.dropdown-list li {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.dropdown-list li:hover {
+  background-color: #f0f0f0;
+}
+
+.dropdown-list li.selected {
+  background-color: #e0e0e0;
+  font-weight: bold;
+}
+
+.form-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
 /* ======= Media Queries (Responsiv) ======= */
+@media (max-width: 640px) {
+  .form-container {
+    padding: 0 10px;
+  }
+}
+
 @media (max-width: 800px) {
   .kopfzeile {
     flex-direction: column;
