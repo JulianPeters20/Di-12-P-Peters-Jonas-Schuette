@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../view/nutzer.php';
+require_once __DIR__ . '/../model/Nutzer.php';
 
 /**
  * DAO-Klasse für den Zugriff auf Nutzer-Datenbank.
@@ -41,6 +41,8 @@ class NutzerDAO {
         $stmt = $this->db->prepare("SELECT * FROM Nutzer WHERE Email = ?");
         $stmt->execute([$email]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        error_log("[DEBUG] Suche nach Email: " . $email);
+
 
         return $row ? new Nutzer(
             (int)$row['NutzerID'],

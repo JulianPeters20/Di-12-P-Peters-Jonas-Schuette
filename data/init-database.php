@@ -131,13 +131,35 @@ try {
 
     // Beispieldaten
     $nutzerStmt = $db->prepare("
-        INSERT INTO Nutzer (Benutzername, Email, PasswortHash, RegistrierungsDatum)
-        VALUES (?, ?, ?, ?)
-    ");
+    INSERT INTO Nutzer (Benutzername, Email, PasswortHash, RegistrierungsDatum, IstAdmin)
+    VALUES (?, ?, ?, ?, ?)
+");
+
+// Admin 1
     $nutzerStmt->execute([
-        'max_muster', 'max@example.com',
-        password_hash('geheim', PASSWORD_DEFAULT),
-        date('Y-m-d')
+        'admin1',
+        'admin1@example.com',
+        password_hash('adminpass1', PASSWORD_DEFAULT),
+        date('Y-m-d'),
+        1 // istAdmin = true
+    ]);
+
+// Admin 2
+    $nutzerStmt->execute([
+        'admin2',
+        'admin2@example.com',
+        password_hash('adminpass2', PASSWORD_DEFAULT),
+        date('Y-m-d'),
+        1 // istAdmin = true
+    ]);
+
+// Normaler Nutzer
+    $nutzerStmt->execute([
+        'max_muster',
+        'max@example.com',
+        password_hash('geheim123', PASSWORD_DEFAULT),
+        date('Y-m-d'),
+        0 // istAdmin = false
     ]);
 
     $db->exec("INSERT INTO Preisklasse (Preisspanne) VALUES ('unter 5€'), ('5–10€')");
