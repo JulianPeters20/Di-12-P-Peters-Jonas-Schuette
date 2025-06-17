@@ -202,7 +202,7 @@ try {
     $rezeptStmt->execute([
         'Nudeln mit Pesto',
         'Pasta kochen, Pesto herstellen und unterheben.',
-        '/images/pesto.jpg',
+        'images/pesto.jpg',
         1, // admin1
         2, // 5-10€
         2, // 2 Personen
