@@ -4,11 +4,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../model/Nutzer.php';
 
-/**
- * DAO-Klasse für den Zugriff auf Nutzer-Datenbank.
- * @author Julian Peters
- * @since 2025-06-03
- */
 class NutzerDAO {
     private PDO $db;
 

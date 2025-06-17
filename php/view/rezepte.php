@@ -23,10 +23,20 @@
                         </h3>
                         <div class="meta">
                             <?php
-                            // Kategorien sind IDs – du könntest sie noch auf Namen mappen
-                            echo 'Kategorien-IDs: ' . htmlspecialchars(implode(', ', $rezept['kategorien'] ?? []));
+                            $kategorien = $rezept['kategorien'] ?? [];
+                            if (is_array($kategorien) && count($kategorien) > 0) {
+                                echo 'Kategorien: ' . htmlspecialchars(implode(', ', $kategorien));
+                            } else {
+                                echo 'Kategorien: -';
+                            }
                             echo ' · ' . htmlspecialchars($rezept['Erstellungsdatum'] ?? '-');
-                            echo ' · Autor-ID: ' . htmlspecialchars($rezept['ErstellerID'] ?? '-');
+
+                            $autorName = $rezept['erstellerName'] ?? null;
+                            if ($autorName) {
+                                echo ' · Autor: ' . htmlspecialchars($autorName);
+                            } else {
+                                echo ' · Autor-ID: ' . htmlspecialchars($rezept['ErstellerID'] ?? '-');
+                            }
                             ?>
                         </div>
                     </div>
