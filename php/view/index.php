@@ -14,17 +14,23 @@
                         </a>
                     </h3>
                     <div class="meta">
+                        Kategorien:
                         <?php
-                        // Kategorien: IDs, solange keine Namen geladen werden
                         $kategorien = $rezept['kategorien'] ?? [];
                         if (is_array($kategorien) && count($kategorien) > 0) {
-                            echo 'Kategorien-IDs: ' . htmlspecialchars(implode(', ', $kategorien));
+                            echo htmlspecialchars(implode(', ', $kategorien));
                         } else {
                             echo '-';
                         }
 
                         echo ' · ' . htmlspecialchars($rezept['Erstellungsdatum'] ?? '-');
-                        echo ' · Autor-ID: ' . htmlspecialchars($rezept['ErstellerID'] ?? '-');
+
+                        $autorName = $rezept['erstellerName'] ?? null;
+                        if ($autorName) {
+                            echo ' · Autor: ' . htmlspecialchars($autorName);
+                        } else {
+                            echo ' · Autor-ID: ' . htmlspecialchars($rezept['ErstellerID'] ?? '-');
+                        }
                         ?>
                     </div>
                 </div>

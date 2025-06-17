@@ -2,34 +2,58 @@
     <?php if (!empty($rezept)): ?>
         <article class="rezept-detail">
             <header>
-                <h2 class="rezept-titel"><?= htmlspecialchars($rezept['Titel'] ?? 'Unbekannt') ?></h2>
+                <h2 class="rezept-titel"><?= htmlspecialchars($rezept['titel'] ?? 'Unbekannt') ?></h2>
             </header>
-            <div class="rezept-detail-content">
+
             <?php
-            $bildPfad = !empty($rezept['BildPfad']) && file_exists($rezept['BildPfad'])
-                ? $rezept['BildPfad']
-                : 'images/placeholder.jpg'; // Standardbild verwenden, wenn kein Bild vorhanden ist
-            ?>
-            <img src="<?= htmlspecialchars($bildPfad) ?>"
-                 alt="<?= htmlspecialchars($rezept['Titel'] ?? 'Rezeptbild') ?>"
-                 style="max-width:300px;">
-            <?php
-            $kats = $rezept['kategorien'] ?? [];
-            if (is_array($kats) && count($kats) > 0) {
-                $katText = implode(', ', array_map('htmlspecialchars', $kats));
+            $projektRoot = realpath(__DIR__ . '/images/'); // Pfad zum Projektstamm, ggf. anpassen
+            $bildDatei = $projektRoot . ($rezept['bild'] ?? '');
+
+            if (!empty($rezept['bild']) && file_exists($bildDatei)) {
+                $bildUrl = $rezept['bild'];
             } else {
-                $katText = '-';
+                echo "<p>Datei existiert NICHT am erwarteten Pfad: " . htmlspecialchars($bildDatei) . "</p>";
+                $bildUrl = '/images/placeholder.jpg';
             }
             ?>
-            <dl>
-                <dt>Kategorien-IDs:</dt>
-                <dd><?= $katText ?></dd>
-                <dt>Datum:</dt>
-                <dd><?= htmlspecialchars($rezept['Erstellungsdatum'] ?? '-') ?></dd>
-                <dt>Autor-ID:</dt>
-                <dd><?= htmlspecialchars($rezept['ErstellerID'] ?? '-') ?></dd>
-            </dl>
-            </div>
+
+            <img src="<?= htmlspecialchars($bildUrl) ?>"
+                 alt="<?= htmlspecialchars($rezept['titel'] ?? 'Rezeptbild') ?>"
+                 style="max-width:300px;">
+
+            <section class="rezept-block">
+                <h3>Kategorien</h3>
+                <?php if (!empty($rezept['kategorien'])): ?>
+                    <ul>
+                        <?php foreach ($rezept['kategorien'] as $kat): ?>
+                            <li><?= htmlspecialchars($kat) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+
+                <?php else: ?>
+                    <p>Keine Kategorien</p>
+                <?php endif; ?>
+            </section>
+
+            <section class="rezept-block">
+                <h3>Datum</h3>
+                <p><?= htmlspecialchars($rezept['datum'] ?? '-') ?></p>
+            </section>
+
+            <section class="rezept-block">
+                <h3>Autor</h3>
+                <p><?= htmlspecialchars($rezept['erstellerName'] ?? '-') ?> (<?= htmlspecialchars($rezept['erstellerEmail'] ?? '-') ?>)</p>
+            </section>
+
+            <section class="rezept-block">
+                <h3>Preisklasse</h3>
+                <p><?= htmlspecialchars($rezept['preisklasseName'] ?? '-') ?></p>
+            </section>
+
+            <section class="rezept-block">
+                <h3>Portionsgröße</h3>
+                <p><?= htmlspecialchars($rezept['portionsgroesseName'] ?? '-') ?></p>
+            </section>
 
             <section class="rezept-block">
                 <h3>Zutaten</h3>
@@ -48,23 +72,27 @@
                 <?php endif; ?>
             </section>
 
-            <section>
             <?php if (!empty($rezept['utensilien'])): ?>
                 <section class="rezept-block">
                     <h3>Küchenutensilien</h3>
-                    <pre class="rezept-pre"><?= htmlspecialchars($rezept['utensilien']) ?></pre>
+                    <ul>
+                        <?php foreach ($rezept['utensilien'] as $utensil): ?>
+                            <li><?= htmlspecialchars($utensil['Name']) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
                 </section>
             <?php endif; ?>
+
             <section class="rezept-block">
                 <h3>Zubereitung</h3>
-                <pre  class="rezept-pre"><?= htmlspecialchars($rezept['Zubereitung'] ?? 'Keine Angabe.') ?></pre>
+                <pre class="rezept-pre"><?= htmlspecialchars($rezept['zubereitung'] ?? 'Keine Angabe.') ?></pre>
             </section>
 
             <?php
             $darfBearbeiten = false;
             if (isset($_SESSION['nutzerId'])) {
                 $darfBearbeiten = (
-                    (int)$_SESSION['nutzerId'] === (int)($rezept['ErstellerID'] ?? 0)
+                    (int)$_SESSION['nutzerId'] === (int)($rezept['erstellerId'] ?? 0)
                     || !empty($_SESSION['istAdmin'])
                 );
             }
@@ -72,8 +100,8 @@
 
             <?php if ($darfBearbeiten): ?>
                 <div class="rezept-aktion" style="margin-top: 16px;">
-                    <a href="index.php?page=rezept-bearbeiten&id=<?= urlencode($rezept['RezeptID']) ?>" class="btn">Bearbeiten</a>
-                    <a href="index.php?page=rezept-loeschen&id=<?= urlencode($rezept['RezeptID']) ?>"
+                    <a href="index.php?page=rezept-bearbeiten&id=<?= urlencode($rezept['id']) ?>" class="btn">Bearbeiten</a>
+                    <a href="index.php?page=rezept-loeschen&id=<?= urlencode($rezept['id']) ?>"
                        class="btn"
                        onclick="return confirm('Möchtest du dieses Rezept wirklich löschen?');">
                         Löschen

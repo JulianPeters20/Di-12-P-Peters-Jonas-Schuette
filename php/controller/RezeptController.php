@@ -3,6 +3,8 @@
 require_once 'php/model/RezeptDAO.php';
 require_once 'php/model/KategorieDAO.php';
 require_once 'php/model/UtensilDAO.php';
+require_once 'php/model/PortionsgroesseDAO.php';
+require_once 'php/model/PreisklasseDAO.php';
 require_once 'php/include/form_utils.php';
 
 function showRezepte(): void {
@@ -14,7 +16,7 @@ function showRezepte(): void {
         $suchbegriff = mb_strtolower($suche);
         $alleRezepte = array_filter($alleRezepte, function ($rezept) use ($suchbegriff) {
             return mb_stripos($rezept['titel'] ?? '', $suchbegriff) !== false
-                || mb_stripos($rezept['kategorie'] ?? '', $suchbegriff) !== false;
+                || mb_stripos(implode(', ', array_column($rezept['kategorien'] ?? [], 'Bezeichnung')), $suchbegriff) !== false;
         });
     }
 
@@ -25,9 +27,36 @@ function showRezepte(): void {
 function showRezeptNeu(): void {
     $katDAO = new KategorieDAO();
     $utenDAO = new UtensilDAO();
+    $portDAO = new PortionsgroesseDAO();
+    $preisDAO = new PreisklasseDAO();
 
-    $_SESSION['kategorienListe'] = $katDAO->findeAlle();
-    $_SESSION['utensilienListe'] = $utenDAO->findeAlle();
+    $kategorienListeRaw = $katDAO->findeAlle();
+    $kategorienListe = [];
+    foreach ($kategorienListeRaw as $kat) {
+        $kategorienListe[$kat->KategorieID] = $kat;
+    }
+    $_SESSION['kategorienListe'] = $kategorienListe;
+
+    $utensilienListeRaw = $utenDAO->findeAlle();
+    $utensilienListe = [];
+    foreach ($utensilienListeRaw as $uten) {
+        $utensilienListe[$uten->UtensilID] = $uten;
+    }
+    $_SESSION['utensilienListe'] = $utensilienListe;
+
+    $portionsgroesseListeRaw = $portDAO->findeAlle();
+    $portionsgroesseListe = [];
+    foreach ($portionsgroesseListeRaw as $pg) {
+        $portionsgroesseListe[$pg->PortionsgroesseID] = $pg;
+    }
+    $_SESSION['portionsgroesseListe'] = $portionsgroesseListe;
+
+    $preisklasseListeRaw = $preisDAO->findeAlle();
+    $preisklasseListe = [];
+    foreach ($preisklasseListeRaw as $pl) {
+        $preisklasseListe[$pl->PreisklasseID] = $pl;
+    }
+    $_SESSION['preisklasseListe'] = $preisklasseListe;
 
     require 'php/view/rezept-neu.php';
 }
@@ -229,6 +258,46 @@ function showRezeptBearbeitenFormular($id): void {
         header("Location: index.php?page=rezepte");
         exit;
     }
+
+    // Kategorien mit IDs laden (für Vorauswahl der Checkboxes)
+    $kategorienMitIds = $dao->findeKategorienMitIdsNachRezeptId($id);
+    $rezept['kategorienMitIds'] = $kategorienMitIds;
+
+    // Kategorien-Liste für Dropdown/Checkboxen vorbereiten (ID => Objekt)
+    $katDAO = new KategorieDAO();
+    $kategorienListeRaw = $katDAO->findeAlle();
+    $kategorienListe = [];
+    foreach ($kategorienListeRaw as $kat) {
+        $kategorienListe[$kat->KategorieID] = $kat;
+    }
+    $_SESSION['kategorienListe'] = $kategorienListe;
+
+    // Utensilien vorbereiten
+    $utenDAO = new UtensilDAO();
+    $utensilienListeRaw = $utenDAO->findeAlle();
+    $utensilienListe = [];
+    foreach ($utensilienListeRaw as $uten) {
+        $utensilienListe[$uten->UtensilID] = $uten;
+    }
+    $_SESSION['utensilienListe'] = $utensilienListe;
+
+    // Portionsgrößen vorbereiten
+    $portDAO = new PortionsgroesseDAO();
+    $portionsgroesseListeRaw = $portDAO->findeAlle();
+    $portionsgroesseListe = [];
+    foreach ($portionsgroesseListeRaw as $pg) {
+        $portionsgroesseListe[$pg->PortionsgroesseID] = $pg;
+    }
+    $_SESSION['portionsgroesseListe'] = $portionsgroesseListe;
+
+    // Preisklassen vorbereiten
+    $preisDAO = new PreisklasseDAO();
+    $preisklasseListeRaw = $preisDAO->findeAlle();
+    $preisklasseListe = [];
+    foreach ($preisklasseListeRaw as $pl) {
+        $preisklasseListe[$pl->PreisklasseID] = $pl;
+    }
+    $_SESSION['preisklasseListe'] = $preisklasseListe;
 
     require 'php/view/rezept-bearbeiten.php';
 }
