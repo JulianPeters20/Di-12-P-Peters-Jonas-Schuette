@@ -155,6 +155,8 @@
 
     <?php unset($_SESSION["formdata"]); ?>
 
+</main>
+
     <script>
         function createZutatenZeile(disabled = false) {
             const einheitenListe = ["g", "kg", "ml", "l", "Msp", "TL", "EL", "Stück"];
@@ -313,5 +315,3 @@
             }
         });
     </script>
-
-</main>
