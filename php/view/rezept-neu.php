@@ -13,8 +13,14 @@
                 <label for="titel">Titel:</label>
             </div>
             <div class="form-row">
-                <input type="text" id="titel" name="titel" required
-                       value="<?= htmlspecialchars($_SESSION["formdata"]["titel"] ?? "") ?>">
+                <input
+                        type="text"
+                        id="titel"
+                        name="titel"
+                        maxlength="50"
+                        required
+                        value="<?= htmlspecialchars($_SESSION["formdata"]["titel"] ?? "") ?>"
+                >
             </div>
 
             <div class="form-row">
@@ -31,10 +37,8 @@
                     $count = max(count($zutatennamen), count($mengen), count($einheiten));
                     for ($i = 0; $i < $count; $i++): ?>
                         <div class="zutaten-paar" style="display: flex; gap: 8px; margin-bottom: 6px; align-items:center;">
-                            <input type="text" name="zutatennamen[]" placeholder="Zutat"
-                                   value="<?= htmlspecialchars($zutatennamen[$i]) ?>">
-                            <input type="text" name="mengen[]" placeholder="Menge"
-                                   value="<?= htmlspecialchars($mengen[$i]) ?>">
+                            <input type="text" name="zutatennamen[]" placeholder="Zutat" value="<?= htmlspecialchars($zutatennamen[$i]) ?>">
+                            <input type="text" name="mengen[]" placeholder="Menge" value="<?= htmlspecialchars($mengen[$i]) ?>">
                             <select name="einheiten[]">
                                 <option value="">Einheit</option>
                                 <?php foreach ($einheitenListe as $einheit):
@@ -56,9 +60,16 @@
                 <label for="zubereitung">Zubereitung:</label>
             </div>
             <div class="form-row">
-                <textarea id="zubereitung" name="zubereitung" rows="6" required><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? "") ?></textarea>
+                <textarea
+                        id="zubereitung"
+                        name="zubereitung"
+                        rows="6"
+                        maxlength="2000"
+                        required
+                ><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? "") ?></textarea>
             </div>
 
+            <!-- Rest des Formulars unverändert -->
             <div class="form-row">
                 <label for="utensilien">Utensilien:</label>
                 <div class="dropdown-multiselect">
@@ -172,8 +183,16 @@
     <?php unset($_SESSION["formdata"]); ?>
 
     <script>
+        const maxZutaten = 20;
+
         function createZutatenZeile(disabled = false) {
             const einheitenListe = ["g", "kg", "ml", "l", "Msp", "TL", "EL", "Stück"];
+
+            const container = document.getElementById("zutaten-container");
+            if (container.children.length >= maxZutaten) {
+                alert("Es können maximal " + maxZutaten + " Zutaten hinzugefügt werden.");
+                return null;
+            }
 
             const div = document.createElement("div");
             div.className = "zutaten-paar";
@@ -194,8 +213,6 @@
             einheitSelect.innerHTML = `<option value="">Einheit</option>` +
                 einheitenListe.map(e => `<option value="${e}">${e}</option>`).join('');
 
-            // Kein Entfernen-Button mehr
-
             div.appendChild(zutatInput);
             div.appendChild(mengeInput);
             div.appendChild(einheitSelect);
@@ -208,14 +225,16 @@
             const removeBtn = document.getElementById("btn-remove-zutat");
             if (!container || !removeBtn) return;
 
-            // Entfernen nur erlauben, wenn mehr als eine Zutat da ist
             removeBtn.disabled = container.children.length < 2;
         }
 
         function neueZutat() {
             const container = document.getElementById("zutaten-container");
-            container.appendChild(createZutatenZeile(false));
-            updateRemoveButtonState();
+            const neueZeile = createZutatenZeile(false);
+            if (neueZeile) {
+                container.appendChild(neueZeile);
+                updateRemoveButtonState();
+            }
         }
 
         function entferneZutat() {
@@ -278,7 +297,6 @@
                 const hiddenInput = dropdown.querySelector("input[type=hidden]");
                 const options = dropdown.querySelectorAll(".dropdown-list > div.dropdown-option");
 
-                // Status initial übernehmen
                 const initialValue = hiddenInput.value;
                 if (initialValue) {
                     const selectedOption = Array.from(options).find(o => o.getAttribute("data-value") === initialValue);
