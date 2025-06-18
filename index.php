@@ -118,8 +118,7 @@ switch ($page) {
 
     case 'nutzer':
         require_once 'php/controller/NutzerController.php';
-        $email = validateEmail($_GET['email'] ?? null);
-        showNutzerProfil($email);
+        showNutzerProfil(); // ohne Parameter
         break;
 
     case 'nutzer-loeschen':
