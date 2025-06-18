@@ -100,7 +100,7 @@ function build_zutaten_array(array $namen, array $mengen, array $einheiten): arr
  */
 function flash(string $type, string $message): void {
     $_SESSION["flash"] = [
-        "type" => $type,  // z. B. success, error, warning
+        "type" => $type,  // z.B. success, error, warning
         "message" => $message
     ];
 }

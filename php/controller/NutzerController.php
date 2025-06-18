@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../model/NutzerDAO.php';
 require_once __DIR__ . '/../include/form_utils.php';
+require_once __DIR__ . '/../model/RezeptDAO.php';
 
 /**
  * Anmeldung (Login-Formular anzeigen und verarbeiten)
@@ -110,25 +111,28 @@ function logoutUser(): void {
 /**
  * Nutzerprofil anzeigen
  */
-function showNutzerProfil(?string $email = null): void {
-    $dao = new NutzerDAO();
-    $nutzer = null;
-
-    $email = sanitize_email($email);
-    if ($email === '') {
-        $_SESSION["message"] = "Ungültige E-Mail-Adresse.";
-        header("Location: index.php");
+function showNutzerProfil(): void {
+    if (empty($_SESSION['nutzerId']) || !is_numeric($_SESSION['nutzerId'])) {
+        $_SESSION["message"] = "Du bist nicht eingeloggt.";
+        header("Location: index.php?page=anmeldung");
         exit;
     }
 
-    $nutzer = $dao->findeNachEmail($email);
+    $nutzerDAO = new NutzerDAO();
+    $nutzer = $nutzerDAO->findeNachID((int)$_SESSION['nutzerId']);
+
     if (!$nutzer) {
-        $_SESSION["message"] = "Nutzer nicht gefunden.";
+        $_SESSION["message"] = "Nutzerprofil konnte nicht geladen werden.";
         header("Location: index.php");
         exit;
     }
 
-    require_once 'php/view/nutzer.php';
+    // Eigene Rezepte laden
+    $rezeptDAO = new RezeptDAO();
+    $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->id);
+
+    // Sichtbar machen für View
+    require 'php/view/nutzer.php';
 }
 
 /**

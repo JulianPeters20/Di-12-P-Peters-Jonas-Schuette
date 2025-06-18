@@ -170,6 +170,19 @@
         <a href="index.php?page=rezepte" class="btn">Zurück zur Übersicht</a>
     </div>
 
+    <div id="loesch-modal" class="modal-overlay" hidden>
+        <div class="modal-box">
+            <h3>Rezept löschen</h3>
+            <p id="loesch-text">Möchtest du dieses Rezept wirklich löschen?</p>
+            <div class="modal-actions">
+                <button class="btn" id="btn-abbrechen">Abbrechen</button>
+                <button class="btn" id="btn-bestaetigen">Löschen</button>
+            </div>
+        </div>
+    </div>
+
+</main>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const stars = document.querySelectorAll('#star-rating .star');
@@ -210,4 +223,51 @@
             });
         });
     </script>
-</main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const modal = document.getElementById("loesch-modal");
+            const loeschText = document.getElementById("loesch-text");
+            const abbrechenBtn = document.getElementById("btn-abbrechen");
+            const bestaetigenBtn = document.getElementById("btn-bestaetigen");
+
+            let aktiveButton = null;
+
+            document.querySelectorAll(".rezept-loeschen-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    aktiveButton = btn;
+                    const titel = btn.closest(".rezept-karte").querySelector("h4")?.innerText || "dieses Rezept";
+                    loeschText.textContent = `Möchtest du „${titel}“ wirklich löschen?`;
+                    modal.removeAttribute("hidden");
+                });
+            });
+
+            abbrechenBtn.addEventListener("click", () => {
+                modal.setAttribute("hidden", true);
+                aktiveButton = null;
+            });
+
+            bestaetigenBtn.addEventListener("click", async () => {
+                if (!aktiveButton) return;
+
+                const id = aktiveButton.dataset.id;
+                const formData = new FormData();
+                formData.append("id", id);
+
+                const res = await fetch("api/rezept-loeschen.php", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const json = await res.json();
+                if (json.success) {
+                    aktiveButton.closest(".rezept-karte").remove();
+                } else {
+                    alert("Fehler: " + json.message);
+                }
+
+                modal.setAttribute("hidden", true);
+                aktiveButton = null;
+            });
+        });
+    </script>

@@ -1,13 +1,12 @@
 <main>
 
     <!-- Suchformular -->
-    <form method="get" action="index.php" class="suchleiste">
-        <input type="hidden" name="page" value="rezepte">
-        <input type="search" name="suche" class="suchfeld"
-               placeholder="Suchbegriff eingeben..."
-               value="<?= htmlspecialchars($_GET["suche"] ?? "") ?>" aria-label="Suchbegriff eingeben">
+    <form id="suchformular" class="suchleiste" onsubmit="return false;">
+        <input type="search" id="suchfeld" class="suchfeld" placeholder="Suchbegriff eingeben..." aria-label="Suchbegriff">
         <button type="submit" class="btn suchen-btn">Suchen</button>
     </form>
+
+    <div id="such-ergebnisse" class="rezept-galerie"></div>
 
     <h2 class="mb-2 mt-3">Beliebte Rezepte</h2>
     <ul class="rezept-galerie">
@@ -51,3 +50,32 @@
     <a href="index.php?page=rezept-neu" class="btn neuer-rezept-btn">Neues Rezept hinzufügen</a>
 
 </main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("suchformular");
+        const feld = document.getElementById("suchfeld");
+        const ergebnisContainer = document.getElementById("such-ergebnisse");
+
+        async function sucheAusfuehren() {
+            const begriff = feld.value.trim();
+            if (begriff.length < 2) {
+                ergebnisContainer.innerHTML = "<p>Bitte mindestens 2 Zeichen eingeben.</p>";
+                return;
+            }
+
+            try {
+                const res = await fetch(`api/rezepte-suche.php?query=${encodeURIComponent(begriff)}`);
+                const html = await res.text();
+                ergebnisContainer.innerHTML = html;
+            } catch (err) {
+                ergebnisContainer.innerHTML = "<p>Fehler beim Laden.</p>";
+            }
+        }
+
+        form.addEventListener("submit", sucheAusfuehren);
+        feld.addEventListener("input", () => {
+            if (feld.value.length > 2) sucheAusfuehren();
+        });
+    });
+</script>
