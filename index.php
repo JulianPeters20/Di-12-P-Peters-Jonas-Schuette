@@ -56,6 +56,11 @@ switch ($page) {
         showRegistrierungsFormular();
         break;
 
+    case 'pruefeBenutzername':
+        require_once 'php/controller/NutzerController.php';
+        pruefeBenutzername();
+        exit;
+
     case 'rezepte':
         require_once 'php/controller/RezeptController.php';
         showRezepte();

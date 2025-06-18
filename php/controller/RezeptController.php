@@ -16,15 +16,16 @@ function showRezepte(): void {
     $dao = new RezeptDAO();
     $alleRezepte = $dao->findeAlle();
 
-    $suche = trim($_GET['suche'] ?? '');
-    if ($suche !== '') {
-        $suchbegriff = mb_strtolower($suche);
-        // Filtert Rezepte nach Titel oder Kategorie (Groß-/Kleinschreibung ignoriert)
-        $alleRezepte = array_filter($alleRezepte, function ($rezept) use ($suchbegriff) {
-            return mb_stripos($rezept['titel'] ?? '', $suchbegriff) !== false
-                || mb_stripos(implode(', ', array_column($rezept['kategorien'] ?? [], 'Bezeichnung')), $suchbegriff) !== false;
-        });
+    $bewertungDAO = new BewertungDAO();
+
+    foreach ($alleRezepte as &$rezept) {
+        $rezeptID = $rezept['RezeptID'] ?? 0;
+        $rezept['durchschnitt'] = $bewertungDAO->berechneDurchschnittRating($rezeptID);
+        $rezept['anzahlBewertungen'] = $bewertungDAO->zaehleBewertungen($rezeptID);
     }
+    unset($rezept);
+
+    // Filter je nach Suche etc.
 
     $rezepte = $alleRezepte;
     require 'php/view/rezepte.php';

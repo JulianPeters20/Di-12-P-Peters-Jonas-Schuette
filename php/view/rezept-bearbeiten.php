@@ -14,9 +14,7 @@
             <!-- TITEL -->
             <div class="form-row">
                 <label for="titel">Titel:</label>
-            </div>
-            <div class="form-row">
-                <input type="text" id="titel" name="titel" required value="<?= htmlspecialchars($_SESSION['formdata']['titel'] ?? $rezept['titel']) ?>">
+                <input type="text" id="titel" name="titel" maxlength="50" value="<?= htmlspecialchars($_SESSION['formdata']['titel'] ?? $rezept['titel'] ?? '') ?>" required>
             </div>
 
             <!-- ZUTATEN -->
@@ -29,24 +27,24 @@
                     $zutaten = $_SESSION['formdata']['zutaten'] ?? $rezept['zutaten'] ?? [];
                     if (empty($zutaten)) $zutaten[] = ['zutat' => '', 'menge' => '', 'einheit' => ''];
                     $einheitenListe = ["g", "kg", "ml", "l", "Msp", "TL", "EL", "Stück"];
-                    foreach ($zutaten as $index => $z):
-                        $disableRemove = $index === 0;
+                    foreach ($zutaten as $zutat):
                         ?>
                         <div class="zutaten-paar" style="display: flex; gap: 8px; margin-bottom: 6px; align-items:center;">
-                            <input type="text" name="zutatennamen[]" placeholder="Zutat" value="<?= htmlspecialchars($z['zutat']) ?>">
-                            <input type="text" name="mengen[]" placeholder="Menge" value="<?= htmlspecialchars($z['menge']) ?>">
+                            <input type="text" name="zutatennamen[]" placeholder="Zutat" value="<?= htmlspecialchars($zutat['zutat']) ?>" required>
+                            <input type="text" name="mengen[]" placeholder="Menge" value="<?= htmlspecialchars($zutat['menge']) ?>" required>
                             <select name="einheiten[]">
                                 <option value="">Einheit</option>
-                                <?php foreach ($einheitenListe as $e):
-                                    $selected = $z['einheit'] === $e ? "selected" : "";
-                                    echo "<option value='$e' $selected>$e</option>";
-                                endforeach; ?>
+                                <?php foreach ($einheitenListe as $einheit): ?>
+                                    <option value="<?= $einheit ?>" <?= $zutat['einheit'] === $einheit ? "selected" : "" ?>><?= $einheit ?></option>
+                                <?php endforeach; ?>
                             </select>
-                            <button type="button" class="remove-zutat" <?= $disableRemove ? 'disabled style="opacity:0.4;cursor:default;"' : '' ?> onclick="if(!this.disabled)this.parentElement.remove();">&#x2715;</button>
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <button type="button" class="btn" style="margin-top: 8px;" onclick="neueZutat()">+ Neue Zutat</button>
+                <div style="display: flex; gap: 10px; margin-top: 8px;">
+                    <button type="button" class="btn" onclick="neueZutat()">+ Neue Zutat</button>
+                    <button type="button" class="btn" onclick="letztesZutatEntfernen()">− Zutat entfernen</button>
+                </div>
             </div>
 
             <!-- ZUBEREITUNG -->
@@ -236,71 +234,46 @@
 </script>
 
 <script>
-    function toggleDropdown(headerElement) {
-        const currentDropdown = headerElement.parentElement;
+    function createZutatenZeile() {
+        const einheitenListe = ["g", "kg", "ml", "l", "Msp", "TL", "EL", "Stück"];
+        const div = document.createElement("div");
+        div.className = "zutaten-paar";
+        div.style.cssText = "display:flex; gap:8px; margin-bottom:6px; align-items:center;";
 
-        // Schließe alle anderen Dropdowns
-        document.querySelectorAll(".dropdown-multiselect.open").forEach(dropdown => {
-            if (dropdown !== currentDropdown) {
-                dropdown.classList.remove("open");
-            }
-        });
+        const zutatInput = document.createElement("input");
+        zutatInput.type = "text";
+        zutatInput.name = "zutatennamen[]";
+        zutatInput.placeholder = "Zutat";
+        zutatInput.required = true;
 
-        // Aktuelles Dropdown öffnen/schließen
-        currentDropdown.classList.toggle("open");
+        const mengeInput = document.createElement("input");
+        mengeInput.type = "text";
+        mengeInput.name = "mengen[]";
+        mengeInput.placeholder = "Menge";
+        mengeInput.required = true;
+
+        const einheitSelect = document.createElement("select");
+        einheitSelect.name = "einheiten[]";
+        einheitSelect.innerHTML = `<option value="">Einheit</option>` +
+            einheitenListe.map(e => `<option value="${e}">${e}</option>`).join('');
+
+        div.appendChild(zutatInput);
+        div.appendChild(mengeInput);
+        div.appendChild(einheitSelect);
+
+        return div;
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        // Zähler-Label bei Multiselect aktualisieren
-        document.querySelectorAll(".dropdown-multiselect").forEach(dropdown => {
-            const labelSpan = dropdown.querySelector(".dropdown-label");
-            const checkboxes = dropdown.querySelectorAll("input[type='checkbox']");
+    function neueZutat() {
+        const container = document.getElementById("zutaten-container");
+        container.appendChild(createZutatenZeile());
+    }
 
-            const updateLabel = () => {
-                const count = Array.from(checkboxes).filter(cb => cb.checked).length;
-                labelSpan.textContent = count === 0 ? "-- auswählen --" : `${count} ausgewählt`;
-            };
-
-            checkboxes.forEach(cb => cb.addEventListener("change", updateLabel));
-            updateLabel();
-        });
-
-        // Klick außerhalb schließt offene Dropdowns
-        document.addEventListener("click", (event) => {
-            document.querySelectorAll(".dropdown-multiselect.open").forEach(dropdown => {
-                if (!dropdown.contains(event.target)) {
-                    dropdown.classList.remove("open");
-                }
-            });
-        });
-    });
-    document.addEventListener("DOMContentLoaded", () => {
-        // Single-Select Dropdowns
-        document.querySelectorAll(".single-select").forEach(dropdown => {
-            const label = dropdown.querySelector(".dropdown-label");
-            const hiddenInput = dropdown.querySelector("input[type=hidden]");
-            const options = dropdown.querySelectorAll("li");
-
-            options.forEach(option => {
-                option.addEventListener("click", () => {
-                    const value = option.getAttribute("data-value");
-                    const text = option.textContent;
-
-                    hiddenInput.value = value;
-                    label.textContent = text;
-
-                    // Entferne alte Auswahl-Styles
-                    options.forEach(o => o.classList.remove("selected"));
-                    option.classList.add("selected");
-
-                    dropdown.classList.remove("open");
-                });
-            });
-            // Initialisiere Label mit bereits ausgewähltem Wert
-            const selected = dropdown.querySelector("li.selected");
-            if (selected) {
-                label.textContent = selected.textContent;
-            }
-        });
-    });
+    function letztesZutatEntfernen() {
+        const container = document.getElementById("zutaten-container");
+        const zutaten = container.getElementsByClassName("zutaten-paar");
+        if (zutaten.length > 1) {
+            container.removeChild(zutaten[zutaten.length - 1]);
+        }
+    }
 </script>
