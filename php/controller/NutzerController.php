@@ -4,16 +4,12 @@ require_once __DIR__ . '/../model/NutzerDAO.php';
 require_once __DIR__ . '/../include/form_utils.php';
 require_once __DIR__ . '/../model/RezeptDAO.php';
 
-/**
- * Anmeldung (Login-Formular anzeigen und verarbeiten)
- */
 function showAnmeldeFormular(): void {
     if ($_SERVER["REQUEST_METHOD"] === "GET" && !empty($_SESSION["eingeloggt"])) {
         header("Location: index.php");
         exit;
     }
 
-    $fehler = "";
     $dao = new NutzerDAO();
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -24,43 +20,39 @@ function showAnmeldeFormular(): void {
             flash("warning","Bitte fülle alle Felder aus.");
             header("Location: index.php?page=anmeldung");
             exit;
+        }
+
+        $nutzer = $dao->findeNachEmail($email);
+
+        if (!$nutzer) {
+            flash("warning","Es existiert kein Konto mit dieser E-Mail-Adresse.");
+            header("Location: index.php?page=anmeldung");
+            exit;
+        } elseif (!password_verify($passwort, $nutzer->passwortHash)) {
+            flash("warning","Das Passwort ist falsch.");
+            header("Location: index.php?page=anmeldung");
+            exit;
         } else {
-            $nutzer = $dao->findeNachEmail($email);
+            $_SESSION["benutzername"] = $nutzer->benutzername;
+            $_SESSION["email"] = $nutzer->email;
+            $_SESSION["nutzerId"] = $nutzer->id;
+            $_SESSION["istAdmin"] = $nutzer->istAdmin;
+            $_SESSION["eingeloggt"] = true;
 
-            if (!$nutzer) {
-                flash("warning","Es existiert kein Konto mit dieser E-Mail-Adresse.");
-                header("Location: index.php?page=anmeldung");
-                exit;
-            } elseif (!password_verify($passwort, $nutzer->passwortHash)) {
-                flash("warning","Das Passwort ist falsch.");
-                header("Location: index.php?page=anmeldung");
-                exit;
-            } else {
-                $_SESSION["benutzername"] = $nutzer->benutzername;
-                $_SESSION["email"] = $nutzer->email;
-                $_SESSION["nutzerId"] = $nutzer->id;
-                $_SESSION["istAdmin"] = $nutzer->istAdmin;
-                $_SESSION["eingeloggt"] = true;
-
-                header("Location: index.php");
-                exit;
-            }
+            header("Location: index.php");
+            exit;
         }
     }
 
     require_once 'php/view/anmeldung.php';
 }
 
-/**
- * Registrierung (Formular anzeigen und verarbeiten)
- */
 function showRegistrierungsFormular(): void {
     if (!empty($_SESSION["eingeloggt"])) {
         header("Location: index.php");
         exit;
     }
 
-    $fehler = "";
     $dao = new NutzerDAO();
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -99,13 +91,39 @@ function showRegistrierungsFormular(): void {
     require_once 'php/view/registrierung.php';
 }
 
-/**
- * Logout
- */
+function pruefeBenutzername(): void {
+    // Da sonst html mit übergeben wird, was zum Fehler führt
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    header('Content-Type: application/json');
+
+    // Überprüfung, ob aufgerufen wird
+    error_log("AJAX Prüfe Benutzername wurde aufgerufen");
+
+    $benutzername = trim($_GET['benutzername'] ?? '');
+    if ($benutzername === '') {
+        echo json_encode(['status' => 'error', 'message' => 'Benutzername fehlt']);
+        exit;
+    }
+
+    $dao = new NutzerDAO();
+    $existiert = $dao->existiertBenutzername($benutzername);
+
+    echo json_encode(['exists' => $existiert]);
+    exit;
+}
+
 function logoutUser(): void {
     session_unset();
     session_destroy();
-    require_once 'php/view/abmeldung.php';
+
+    session_start();
+    flash('success', 'Du wurdest erfolgreich abgemeldet.');
+
+    header("Location: index.php");
+    exit;
 }
 
 /**
@@ -161,7 +179,7 @@ function loescheNutzer(int $id): void {
         exit;
     }
 
-    if ((int)$_SESSION['nutzerId'] === $id) {
+    if (isset($_SESSION['nutzerId']) && (int)$_SESSION['nutzerId'] === $id) {
         $_SESSION["message"] = "Du kannst deinen eigenen Account nicht löschen.";
         header("Location: index.php?page=nutzerliste");
         exit;

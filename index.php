@@ -56,6 +56,11 @@ switch ($page) {
         showRegistrierungsFormular();
         break;
 
+    case 'pruefeBenutzername':
+        require_once 'php/controller/NutzerController.php';
+        pruefeBenutzername();
+        exit;
+
     case 'rezepte':
         require_once 'php/controller/RezeptController.php';
         showRezepte();
@@ -113,7 +118,8 @@ switch ($page) {
 
     case 'nutzer':
         require_once 'php/controller/NutzerController.php';
-        showNutzerProfil(); // ohne Parameter
+        $email = validateEmail($_GET['email'] ?? null);
+        showNutzerProfil($email);
         break;
 
     case 'nutzer-loeschen':

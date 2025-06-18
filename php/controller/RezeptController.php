@@ -16,15 +16,16 @@ function showRezepte(): void {
     $dao = new RezeptDAO();
     $alleRezepte = $dao->findeAlle();
 
-    $suche = trim($_GET['suche'] ?? '');
-    if ($suche !== '') {
-        $suchbegriff = mb_strtolower($suche);
-        // Filtert Rezepte nach Titel oder Kategorie (Groß-/Kleinschreibung ignoriert)
-        $alleRezepte = array_filter($alleRezepte, function ($rezept) use ($suchbegriff) {
-            return mb_stripos($rezept['titel'] ?? '', $suchbegriff) !== false
-                || mb_stripos(implode(', ', array_column($rezept['kategorien'] ?? [], 'Bezeichnung')), $suchbegriff) !== false;
-        });
+    $bewertungDAO = new BewertungDAO();
+
+    foreach ($alleRezepte as &$rezept) {
+        $rezeptID = $rezept['RezeptID'] ?? 0;
+        $rezept['durchschnitt'] = $bewertungDAO->berechneDurchschnittRating($rezeptID);
+        $rezept['anzahlBewertungen'] = $bewertungDAO->zaehleBewertungen($rezeptID);
     }
+    unset($rezept);
+
+    // Filter je nach Suche etc.
 
     $rezepte = $alleRezepte;
     require 'php/view/rezepte.php';
@@ -83,7 +84,7 @@ function showRezeptNeu(): void {
 function showRezeptDetails($id): void {
     $id = validateId($id);
     if ($id === null) {
-        flash("error", "Ungültige Rezept-ID.");
+        $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
@@ -92,15 +93,18 @@ function showRezeptDetails($id): void {
     $rezept = $dao->findeNachId($id);
 
     if (!$rezept) {
-        flash("error", "Rezept nicht gefunden.");
+        $_SESSION["message"] = "Rezept nicht gefunden.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
     $bewertungDAO = new BewertungDAO();
+    // Durchschnittsbewertung berechnen
     $durchschnitt = $bewertungDAO->berechneDurchschnittRating($id);
+    // Anzahl Bewertungen holen
     $anzahlBewertungen = $bewertungDAO->zaehleBewertungen($id);
 
+    // Eigene Bewertung laden, falls Nutzer angemeldet ist
     $nutzerBewertung = null;
     $istEigenerErsteller = false;
     if (!empty($_SESSION['nutzerId'])) {
@@ -108,6 +112,7 @@ function showRezeptDetails($id): void {
         $istEigenerErsteller = (int)$rezept['erstellerId'] === (int)$_SESSION['nutzerId'];
     }
 
+    // Variablen für das Template bereitstellen
     require 'php/view/rezept.php';
 }
 
@@ -116,10 +121,8 @@ function showRezeptDetails($id): void {
  * Speicherung von Bild, Zutaten, Kategorien und Utensilien
  */
 function speichereRezept(): void {
-    require_once 'php/include/form_utils.php'; // sicherstellen, dass flash() verfügbar ist
-
     if (empty($_SESSION['nutzerId'])) {
-        flash("error", "Nur angemeldete Nutzer können Rezepte speichern.");
+        $_SESSION["message"] = "Nur angemeldete Nutzer können Rezepte speichern.";
         header("Location: index.php?page=anmeldung");
         exit;
     }
@@ -131,14 +134,16 @@ function speichereRezept(): void {
     $utensilien = sanitize_int_array($_POST['utensilien'] ?? []);
     $bildPfad = validate_and_store_image($_FILES['bild'] ?? []);
 
+    // Pflichtfelder prüfen
     if ($titel === '' || $zubereitung === '' || empty($zutaten) || !$bildPfad) {
-        flash("warning", "Bitte alle Pflichtfelder ausfüllen.");
+        $_SESSION["message"] = "Bitte alle Pflichtfelder ausfüllen.";
         $_SESSION["formdata"] = $_POST;
         header("Location: index.php?page=rezept-neu");
         exit;
     }
 
     $dao = new RezeptDAO();
+    // Rezept anlegen
     $rezeptID = $dao->addRezept(
         $titel,
         $zubereitung,
@@ -151,14 +156,12 @@ function speichereRezept(): void {
         $utensilien
     );
 
-    if ($rezeptID) {
-        flash("success", "Rezept erfolgreich gespeichert.");
-        header("Location: index.php?page=rezepte");
-    } else {
-        flash("error", "Fehler beim Speichern.");
-        $_SESSION["formdata"] = $_POST;
-        header("Location: index.php?page=rezept-neu");
-    }
+    // Erfolgsmeldung setzen und weiterleiten
+    $_SESSION["message"] = $rezeptID
+        ? "Rezept erfolgreich gespeichert."
+        : "Fehler beim Speichern.";
+
+    header("Location: index.php?page=" . ($rezeptID ? "rezepte" : "rezept-neu"));
     exit;
 }
 
@@ -167,17 +170,15 @@ function speichereRezept(): void {
  * nur erlaubt für Admins oder Ersteller des Rezepts
  */
 function loescheRezept($id): void {
-    require_once 'php/include/form_utils.php'; // sicherstellen, dass flash() verfügbar ist
-
     $id = validateId($id);
     if ($id === null) {
-        flash("error", "Ungültige Rezept-ID.");
+        $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
     if (!isset($_SESSION['nutzerId'])) {
-        flash("error", "Bitte melde dich an.");
+        $_SESSION["message"] = "Bitte melde dich an.";
         header("Location: index.php?page=anmeldung");
         exit;
     }
@@ -186,7 +187,7 @@ function loescheRezept($id): void {
     $rezept = $dao->findeNachId($id);
 
     if (!$rezept) {
-        flash("error", "Rezept nicht gefunden.");
+        $_SESSION["message"] = "Rezept nicht gefunden.";
         header("Location: index.php?page=rezepte");
         exit;
     }
@@ -195,16 +196,16 @@ function loescheRezept($id): void {
     $istErsteller = (int)$rezept['erstellerId'] === (int)$_SESSION['nutzerId'];
 
     if (!$istAdmin && !$istErsteller) {
-        flash("warning", "Du darfst dieses Rezept nicht löschen.");
+        $_SESSION["message"] = "Du darfst dieses Rezept nicht löschen.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
+    // Rezept löschen
     $ok = $dao->loesche($id);
-    flash(
-        $ok ? "success" : "error",
-        $ok ? "Rezept erfolgreich gelöscht." : "Fehler beim Löschen."
-    );
+    $_SESSION["message"] = $ok
+        ? "Rezept erfolgreich gelöscht."
+        : "Fehler beim Löschen.";
 
     header("Location: index.php?page=rezepte");
     exit;
@@ -216,16 +217,15 @@ function loescheRezept($id): void {
  * optional Bild aktualisieren
  */
 function aktualisiereRezept($id): void {
-    require_once 'php/include/form_utils.php';
     $id = validateId($id);
     if ($id === null) {
-        flash("error", "Ungültige Rezept-ID.");
+        $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
     if (!isset($_SESSION['nutzerId'])) {
-        flash("warning", "Bitte melde dich an.");
+        $_SESSION["message"] = "Bitte melde dich an.";
         header("Location: index.php?page=anmeldung");
         exit;
     }
@@ -233,7 +233,7 @@ function aktualisiereRezept($id): void {
     $dao = new RezeptDAO();
     $rezept = $dao->findeNachId($id);
     if (!$rezept || ((int)$rezept['erstellerId'] !== (int)$_SESSION['nutzerId'] && empty($_SESSION['istAdmin']))) {
-        flash("error", "Du darfst dieses Rezept nicht bearbeiten.");
+        $_SESSION["message"] = "Du darfst dieses Rezept nicht bearbeiten.";
         header("Location: index.php?page=rezepte");
         exit;
     }
@@ -243,50 +243,48 @@ function aktualisiereRezept($id): void {
     $zutaten = build_zutaten_array($_POST['zutatennamen'] ?? [], $_POST['mengen'] ?? [], $_POST['einheiten'] ?? []);
     $kategorien = sanitize_int_array($_POST['kategorien'] ?? []);
     $utensilien = sanitize_int_array($_POST['utensilien'] ?? []);
-    $preisklasseID = (int)($_POST['preisklasse'] ?? 1);
-    $portionsgroesseID = (int)($_POST['portionsgroesse'] ?? 1);
 
-    // Validierung
+    // Validation prüfen
     if ($titel === '' || $zubereitung === '') {
-        flash("warning", "Titel und Zubereitung dürfen nicht leer sein.");
+        $_SESSION["message"] = "Titel und Zubereitung dürfen nicht leer sein.";
         $_SESSION["formdata"] = $_POST;
         header("Location: index.php?page=rezept-bearbeiten&id=" . urlencode($id));
         exit;
     }
 
     if (empty($zutaten)) {
-        flash("warning", "Mindestens eine vollständige Zutat muss angegeben werden.");
+        $_SESSION["message"] = "Mindestens eine vollständige Zutat muss angegeben werden.";
         $_SESSION["formdata"] = $_POST;
         header("Location: index.php?page=rezept-bearbeiten&id=" . urlencode($id));
         exit;
     }
 
     $bildPfad = null;
+    // Optional: neues Bild validieren und speichern
     if (!empty($_FILES['bild']) && $_FILES['bild']['error'] === UPLOAD_ERR_OK) {
         $bildPfad = validate_and_store_image($_FILES['bild']);
         if ($bildPfad === null) {
-            flash("warning", "Ungültiges Bildformat.");
+            $_SESSION["message"] = "Ungültiges Bildformat.";
             $_SESSION["formdata"] = $_POST;
             header("Location: index.php?page=rezept-bearbeiten&id=" . urlencode($id));
             exit;
         }
     }
 
+    // Rezept aktualisieren
     $ok = $dao->aktualisiere(
         $id,
         $titel,
         $zubereitung,
         $bildPfad,
-        $preisklasseID,
-        $portionsgroesseID,
         $kategorien,
         $zutaten,
         $utensilien
     );
 
-    flash($ok ? "success" : "error", $ok
+    $_SESSION["message"] = $ok
         ? "Rezept erfolgreich aktualisiert."
-        : "Fehler beim Aktualisieren des Rezepts.");
+        : "Fehler beim Aktualisieren des Rezepts.";
 
     header("Location: index.php?page=rezept&id=" . urlencode($id));
     exit;
@@ -296,11 +294,9 @@ function aktualisiereRezept($id): void {
  * Formular zum Bearbeiten eines Rezepts (inkl. Laden aller notwendigen Listen)
  */
 function showRezeptBearbeitenFormular($id): void {
-    require_once 'php/include/form_utils.php'; // sicherstellen, dass flash() verfügbar ist
-
     $id = validateId($id);
     if ($id === null) {
-        flash("error", "Ungültige Rezept-ID.");
+        $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
@@ -309,20 +305,21 @@ function showRezeptBearbeitenFormular($id): void {
     $rezept = $dao->findeNachId($id);
 
     if (!$rezept) {
-        flash("error", "Rezept nicht gefunden.");
+        $_SESSION["message"] = "Rezept nicht gefunden.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
     if (!isset($_SESSION['nutzerId']) ||
         ((int)$_SESSION['nutzerId'] !== (int)$rezept['erstellerId'] && empty($_SESSION['istAdmin']))) {
-        flash("warning", "Du darfst dieses Rezept nicht bearbeiten.");
+        $_SESSION["message"] = "Du darfst dieses Rezept nicht bearbeiten.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
     // Kategorien mit IDs laden (für Vorauswahl der Checkboxes)
-    $rezept['kategorienMitIds'] = $dao->findeKategorienMitIdsNachRezeptId($id);
+    $kategorienMitIds = $dao->findeKategorienMitIdsNachRezeptId($id);
+    $rezept['kategorienMitIds'] = $kategorienMitIds;
 
     // Kategorien-Liste vorbereiten (ID => Objekt)
     $katDAO = new KategorieDAO();
@@ -335,24 +332,27 @@ function showRezeptBearbeitenFormular($id): void {
 
     // Utensilien vorbereiten
     $utenDAO = new UtensilDAO();
+    $utensilienListeRaw = $utenDAO->findeAlle();
     $utensilienListe = [];
-    foreach ($utenDAO->findeAlle() as $uten) {
+    foreach ($utensilienListeRaw as $uten) {
         $utensilienListe[$uten->UtensilID] = $uten;
     }
     $_SESSION['utensilienListe'] = $utensilienListe;
 
     // Portionsgrößen vorbereiten
     $portDAO = new PortionsgroesseDAO();
+    $portionsgroesseListeRaw = $portDAO->findeAlle();
     $portionsgroesseListe = [];
-    foreach ($portDAO->findeAlle() as $pg) {
+    foreach ($portionsgroesseListeRaw as $pg) {
         $portionsgroesseListe[$pg->PortionsgroesseID] = $pg;
     }
     $_SESSION['portionsgroesseListe'] = $portionsgroesseListe;
 
     // Preisklassen vorbereiten
     $preisDAO = new PreisklasseDAO();
+    $preisklasseListeRaw = $preisDAO->findeAlle();
     $preisklasseListe = [];
-    foreach ($preisDAO->findeAlle() as $pl) {
+    foreach ($preisklasseListeRaw as $pl) {
         $preisklasseListe[$pl->PreisklasseID] = $pl;
     }
     $_SESSION['preisklasseListe'] = $preisklasseListe;
@@ -366,10 +366,9 @@ function showRezeptBearbeitenFormular($id): void {
  * Validiert Eingaben und verhindert Selbstevaluation
  */
 function bewerteRezept(): void {
-    require_once 'php/include/form_utils.php'; // sicherstellen, dass flash() verfügbar ist
-
+    // Nur angemeldete Nutzer dürfen bewerten
     if (empty($_SESSION['nutzerId'])) {
-        flash("warning", "Bitte melde dich an, um zu bewerten.");
+        $_SESSION["message"] = "Bitte melde dich an, um zu bewerten.";
         header("Location: index.php?page=anmeldung");
         exit;
     }
@@ -378,14 +377,16 @@ function bewerteRezept(): void {
     $rezeptId = validateId($_POST['rezeptId'] ?? null);
     $punkte = (int)($_POST['punkte'] ?? 0);
 
+    // Rezept-ID prüfen
     if ($rezeptId === null) {
-        flash("error", "Ungültige Rezept-ID.");
+        $_SESSION["message"] = "Ungültige Rezept-ID.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
+    // Bewertungswert validieren (1-5 Sterne)
     if ($punkte < 1 || $punkte > 5) {
-        flash("warning", "Bitte eine Bewertung zwischen 1 und 5 Sternen abgeben.");
+        $_SESSION["message"] = "Bitte eine Bewertung zwischen 1 und 5 Sternen abgeben.";
         header("Location: index.php?page=rezept&id=" . urlencode($rezeptId));
         exit;
     }
@@ -393,22 +394,27 @@ function bewerteRezept(): void {
     $rezeptDAO = new RezeptDAO();
     $rezept = $rezeptDAO->findeNachId($rezeptId);
 
+    // Prüfen, ob Rezept existiert
     if (!$rezept) {
-        flash("error", "Rezept existiert nicht.");
+        $_SESSION["message"] = "Rezept existiert nicht.";
         header("Location: index.php?page=rezepte");
         exit;
     }
 
+    // Eigenbewertung verhindern
     if ((int)$rezept['erstellerId'] === $nutzerId) {
-        flash("warning", "Du kannst dein eigenes Rezept nicht bewerten.");
+        $_SESSION["message"] = "Du kannst dein eigenes Rezept nicht bewerten.";
         header("Location: index.php?page=rezept&id=" . urlencode($rezeptId));
         exit;
     }
 
     $bewertungDAO = new BewertungDAO();
+    // Prüfen, ob bereits Bewertung existiert
     $bestehendeBewertung = $bewertungDAO->findeNachRezeptUndNutzer($rezeptId, $nutzerId);
+
     $heute = date('Y-m-d');
 
+    // Entsprechend updaten oder neu anlegen
     if ($bestehendeBewertung) {
         $bestehendeBewertung->Punkte = $punkte;
         $bestehendeBewertung->Bewertungsdatum = $heute;
@@ -418,7 +424,7 @@ function bewerteRezept(): void {
         $ok = $bewertungDAO->fuegeBewertungHinzu($neu);
     }
 
-    flash($ok ? "success" : "error", $ok ? "Bewertung gespeichert." : "Fehler beim Speichern der Bewertung.");
+    $_SESSION["message"] = $ok ? "Bewertung gespeichert." : "Fehler beim Speichern der Bewertung.";
     header("Location: index.php?page=rezept&id=" . urlencode($rezeptId));
     exit;
 }

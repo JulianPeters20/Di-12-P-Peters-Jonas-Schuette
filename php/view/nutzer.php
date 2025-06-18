@@ -56,11 +56,47 @@
                                         <?= htmlspecialchars($rezept->Titel ?? '-') ?>
                                     </a>
                                 </h4>
+
+                                <div class="meta" style="font-size: 0.9rem; color: #666; margin-bottom: 6px;">
+                                    <?php
+                                    $durchschnitt = $rezept['durchschnitt'] ?? null;
+                                    $anzahlBewertungen = $rezept['anzahlBewertungen'] ?? 0;
+
+                                    if ($durchschnitt !== null && $anzahlBewertungen > 0) {
+                                        $sterne = round($durchschnitt);
+                                        for ($i = 1; $i <= 5; $i++) {
+                                            echo $i <= $sterne ? '★' : '☆';
+                                        }
+                                        echo ' (' . number_format($durchschnitt, 2) . ' aus ' . $anzahlBewertungen . ' Bewertung' . ($anzahlBewertungen > 1 ? 'en' : '') . ')';
+                                    } else {
+                                        echo '(Keine Bewertungen)';
+                                    }
+                                    ?>
+                                </div>
+
+                                <div class="meta" style="margin-bottom: 6px;">
+                                    <?php
+                                    $kategorien = $rezept['kategorien'] ?? [];
+                                    if (is_array($kategorien) && count($kategorien) > 0) {
+                                        $anzeigeKategorien = array_slice($kategorien, 0, 3);
+                                        echo htmlspecialchars(implode(', ', $anzeigeKategorien));
+                                        if (count($kategorien) > 3) {
+                                            echo ', ...';
+                                        }
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </div>
+
+                                <div class="meta" style="font-size: 0.9rem; color: #666; margin-top: 4px;">
+                                    <?= htmlspecialchars($rezept['Erstellungsdatum'] ?? '-') ?>
                                 <div class="meta">
                                     Kategorien:
                                     <?= !empty($rezept->Kategorien) ? implode(', ', $rezept->Kategorien) : '-' ?>
                                     · <?= htmlspecialchars($rezept->Erstellungsdatum ?? '-') ?>
                                 </div>
+
                                 <div class="rezept-aktion" style="margin-top: 10px;">
                                     <a href="index.php?page=rezept-bearbeiten&id=<?= (int)($rezept->RezeptID ?? 0) ?>" class="btn">Bearbeiten</a>
                                     <button type="button" class="btn rezept-loeschen-btn" data-id="<?= $rezept->RezeptID ?>">Löschen</button>
