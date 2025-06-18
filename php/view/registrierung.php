@@ -1,10 +1,11 @@
 <main>
     <h2>Registrierung</h2>
-    <form action="index.php?page=registrierung" method="post" autocomplete="off">
+    <form action="index.php?page=registrierung" method="post" autocomplete="off" novalidate>
 
         <div class="form-row">
             <label for="benutzername">Benutzername:</label>
             <input type="text" id="benutzername" name="benutzername" required autocomplete="username">
+            <div id="benutzername-fehler" style="color: red; margin-bottom: 6px; font-size: 0.9rem;"></div>
         </div>
 
         <div class="form-row">
@@ -35,3 +36,54 @@
         </form>
     </div>
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const benutzernameInput = document.getElementById('benutzername');
+        const errorMsg = document.getElementById('benutzername-fehler');
+        const form = benutzernameInput.closest('form');
+
+        let timeout = null;
+
+        benutzernameInput.addEventListener('input', () => {
+            clearTimeout(timeout);
+            const name = benutzernameInput.value.trim();
+
+            if (name.length === 0) {
+                errorMsg.textContent = '';
+                benutzernameInput.setCustomValidity('');
+                return;
+            }
+
+            timeout = setTimeout(() => {
+                fetch(`index.php?page=pruefeBenutzername&benutzername=` + encodeURIComponent(name))
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Netzwerk-Antwort war nicht ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.exists) {
+                            errorMsg.textContent = 'Dieser Benutzername ist bereits vergeben.';
+                            benutzernameInput.setCustomValidity('Dieser Benutzername ist bereits vergeben.');
+                        } else {
+                            errorMsg.textContent = '';
+                            benutzernameInput.setCustomValidity('');
+                        }
+                    })
+                    .catch(() => {
+                        errorMsg.textContent = 'Fehler bei der Prüfung.';
+                        benutzernameInput.setCustomValidity('Fehler bei der Prüfung.');
+                    });
+            }, 500);
+        });
+
+        form.addEventListener('submit', (e) => {
+            if (!benutzernameInput.checkValidity()) {
+                e.preventDefault();
+                benutzernameInput.reportValidity();
+            }
+        });
+    });
+</script>

@@ -5,7 +5,13 @@
         </a>
     </div>
 
-    <nav class="haupt-nav">
+    <button class="burger-btn" aria-label="Menü öffnen" aria-expanded="false" aria-controls="haupt-navigation nutzer-navigation">
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+    </button>
+
+    <nav class="haupt-nav" id="haupt-navigation">
         <ul>
             <li><a href="index.php?page=rezepte">Rezepte</a></li>
 
@@ -19,10 +25,10 @@
         </ul>
     </nav>
 
-    <div class="nutzer-nav">
+    <div class="nutzer-nav" id="nutzer-navigation">
         <ul>
-            <?php if (!empty($_SESSION['email']) && !empty($_SESSION['eingeloggt'])): ?>
-                <li><span>Hallo, <?= htmlspecialchars($_SESSION['benutzername']) ?></span></li>
+            <?php if (!empty($_SESSION['nutzerId'])): ?>
+                <li><span>Hallo, <?= htmlspecialchars($_SESSION['benutzername'] ?? 'Nutzer') ?></span></li>
                 <li><a href="index.php?page=abmeldung">Abmelden</a></li>
             <?php else: ?>
                 <li><a href="index.php?page=anmeldung">Anmelden</a></li>
@@ -30,8 +36,8 @@
             <?php endif; ?>
 
             <li>
-                <?php if (!empty($_SESSION['email'])): ?>
-                <a href="index.php?page=nutzer&email=<?= urlencode($_SESSION['email']) ?>" title="Benutzerkonto">
+                <?php if (!empty($_SESSION['nutzerId'])): ?>
+                <a href="index.php?page=nutzer&email=<?= urlencode($_SESSION['email'] ?? '') ?>" title="Benutzerkonto">
                     <?php else: ?>
                     <a href="index.php?page=anmeldung" title="Benutzerkonto">
                         <?php endif; ?>
@@ -42,10 +48,16 @@
     </div>
 </header>
 
-<?php if (!empty($_SESSION["flash"])): ?>
-    <?php $type = $_SESSION["flash"]["type"] ?? 'info'; ?>
-    <div class="flash <?= htmlspecialchars($type) ?>">
-        <?= htmlspecialchars($_SESSION["flash"]["message"] ?? '') ?>
-    </div>
-    <?php unset($_SESSION["flash"]); ?>
-<?php endif; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const burgerBtn = document.querySelector('.burger-btn');
+        const hauptNav = document.querySelector('.haupt-nav');
+
+        burgerBtn.addEventListener('click', () => {
+            const expanded = burgerBtn.getAttribute('aria-expanded') === 'true';
+            burgerBtn.setAttribute('aria-expanded', !expanded);
+            hauptNav.classList.toggle('active');
+        });
+    });
+</script>

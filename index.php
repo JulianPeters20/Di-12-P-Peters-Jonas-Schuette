@@ -56,6 +56,11 @@ switch ($page) {
         showRegistrierungsFormular();
         break;
 
+    case 'pruefeBenutzername':
+        require_once 'php/controller/NutzerController.php';
+        pruefeBenutzername();
+        exit;
+
     case 'rezepte':
         require_once 'php/controller/RezeptController.php';
         showRezepte();
@@ -65,6 +70,11 @@ switch ($page) {
         require_once 'php/controller/RezeptController.php';
         $id = validateId($_GET['id'] ?? null);
         showRezeptDetails($id);
+        break;
+
+    case 'bewerteRezept':
+        require_once 'php/controller/RezeptController.php';
+        bewerteRezept();
         break;
 
     case 'rezept-bearbeiten':
