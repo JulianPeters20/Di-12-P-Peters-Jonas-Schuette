@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../model/NutzerDAO.php';
 require_once __DIR__ . '/../include/form_utils.php';
+require_once __DIR__ . '/../model/RezeptDAO.php';
 
 function showAnmeldeFormular(): void {
     if ($_SERVER["REQUEST_METHOD"] === "GET" && !empty($_SESSION["eingeloggt"])) {
@@ -125,25 +126,36 @@ function logoutUser(): void {
     exit;
 }
 
-function showNutzerProfil(?string $email = null): void {
-    $dao = new NutzerDAO();
-    $email = sanitize_email($email);
-    if ($email === '') {
-        $_SESSION["message"] = "Ungültige E-Mail-Adresse.";
-        header("Location: index.php");
+/**
+ * Nutzerprofil anzeigen
+ */
+function showNutzerProfil(): void {
+    if (empty($_SESSION['nutzerId']) || !is_numeric($_SESSION['nutzerId'])) {
+        $_SESSION["message"] = "Du bist nicht eingeloggt.";
+        header("Location: index.php?page=anmeldung");
         exit;
     }
 
-    $nutzer = $dao->findeNachEmail($email);
+    $nutzerDAO = new NutzerDAO();
+    $nutzer = $nutzerDAO->findeNachID((int)$_SESSION['nutzerId']);
+
     if (!$nutzer) {
-        $_SESSION["message"] = "Nutzer nicht gefunden.";
+        $_SESSION["message"] = "Nutzerprofil konnte nicht geladen werden.";
         header("Location: index.php");
         exit;
     }
 
-    require_once 'php/view/nutzer.php';
+    // Eigene Rezepte laden
+    $rezeptDAO = new RezeptDAO();
+    $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->id);
+
+    // Sichtbar machen für View
+    require 'php/view/nutzer.php';
 }
 
+/**
+ * Nutzerliste anzeigen (nur Admin)
+ */
 function showNutzerListe(): void {
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
         $_SESSION["message"] = "Nur Administratoren dürfen die Nutzerliste sehen.";
@@ -157,6 +169,9 @@ function showNutzerListe(): void {
     require_once 'php/view/nutzerliste.php';
 }
 
+/**
+ * Löscht einen Nutzer anhand seiner ID (nur Admin)
+ */
 function loescheNutzer(int $id): void {
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
         $_SESSION["message"] = "Nur Administratoren dürfen Nutzer löschen.";

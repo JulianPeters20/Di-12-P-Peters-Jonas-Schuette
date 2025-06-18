@@ -4,11 +4,6 @@
 <main>
     <h2>Rezept bearbeiten</h2>
 
-    <?php if (isset($_SESSION["message"])): ?>
-        <div class="message-box"><?= htmlspecialchars($_SESSION["message"]) ?></div>
-        <?php unset($_SESSION["message"]); ?>
-    <?php endif; ?>
-
     <div class="form-container">
         <form action="index.php?page=rezept-aktualisieren&id=<?= urlencode($rezept['id']) ?>" method="post" enctype="multipart/form-data">
             <!-- TITEL -->
@@ -176,6 +171,16 @@
     <?php unset($_SESSION['formdata']); ?>
 </main>
 
+<?php if (!empty($_SESSION['flash'])): ?>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            zeigeFlash("<?= $_SESSION['flash']['type'] ?>", "<?= htmlspecialchars($_SESSION['flash']['message']) ?>");
+        });
+    </script>
+    <?php unset($_SESSION['flash']); ?>
+<?php endif; ?>
+
+
 <script>
     function createZutatenZeile(disabled = false) {
         const einheitenListe = ["g", "kg", "ml", "l", "Msp", "TL", "EL", "Stück"];
@@ -275,5 +280,24 @@
         if (zutaten.length > 1) {
             container.removeChild(zutaten[zutaten.length - 1]);
         }
+    }
+</script>
+
+<script>
+    function zeigeFlash(typ, nachricht) {
+        // Alte entfernen
+        document.querySelectorAll(".flash-toast").forEach(e => e.remove());
+
+        // Neue erstellen
+        const box = document.createElement("div");
+        box.className = "flash-toast " + typ;
+        box.textContent = nachricht;
+
+        document.body.appendChild(box);
+
+        // Automatisch nach Animation entfernen
+        setTimeout(() => {
+            box.remove();
+        }, 4600); // etwas mehr als fadeout-delay
     }
 </script>
