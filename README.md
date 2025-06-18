@@ -10,13 +10,13 @@
 
 ## Aktuell umgesetzte Funktionen (Stand: Aufgabenblatt 5)
 
--a
--a
--a
--a
--a
--a
--a
+- Es können nun mehrere Zutaten beim Dropdown 
+- (Bildvorschau und Drag and Drop)
+- Die Suchleiste im "Rezepte"-Fenster funktioniert aktiv
+-
+-
+-
+- Mit AJAX wird geprüft ob der Benutzername bereits existiert
 
 ---
 
