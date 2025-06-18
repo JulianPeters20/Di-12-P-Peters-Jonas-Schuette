@@ -182,6 +182,8 @@
 
     <?php unset($_SESSION["formdata"]); ?>
 
+</main>
+
     <script>
         const maxZutaten = 20;
 
@@ -361,5 +363,3 @@
             }
         });
     </script>
-
-</main>
