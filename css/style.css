@@ -810,3 +810,14 @@ select {
   color: #856404;
   border: 1px solid #ffeeba;
 }
+
+/* Sternebewertung */
+#star-rating .star {
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+#star-rating .star.selected {
+  color: #f5c518;
+}

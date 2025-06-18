@@ -63,8 +63,8 @@ try {
         CREATE TABLE Bewertung (
             RezeptID INTEGER,
             NutzerID INTEGER,
-            Punkte INTEGER NOT NULL,
-            Bewertungsdatum TEXT NOT NULL,
+            Punkte INTEGER NOT NULL CHECK (Punkte BETWEEN 1 AND 5),
+            Bewertungsdatum TEXT NOT NULL DEFAULT CURRENT_DATE,
             PRIMARY KEY (RezeptID, NutzerID),
             FOREIGN KEY (RezeptID) REFERENCES Rezept(RezeptID) ON DELETE CASCADE,
             FOREIGN KEY (NutzerID) REFERENCES Nutzer(NutzerID) ON DELETE CASCADE
