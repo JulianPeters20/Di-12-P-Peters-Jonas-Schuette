@@ -1,12 +1,17 @@
 <?php
 
+// Modellklassen einbinden
 require_once 'php/model/RezeptDAO.php';
 require_once 'php/model/KategorieDAO.php';
 require_once 'php/model/UtensilDAO.php';
 require_once 'php/model/PortionsgroesseDAO.php';
 require_once 'php/model/PreisklasseDAO.php';
+require_once 'php/model/BewertungDAO.php';
 require_once 'php/include/form_utils.php';
 
+/**
+ * Alle Rezepte anzeigen, optional mit Suchfilter
+ */
 function showRezepte(): void {
     $dao = new RezeptDAO();
     $alleRezepte = $dao->findeAlle();
@@ -14,6 +19,7 @@ function showRezepte(): void {
     $suche = trim($_GET['suche'] ?? '');
     if ($suche !== '') {
         $suchbegriff = mb_strtolower($suche);
+        // Filtert Rezepte nach Titel oder Kategorie (Groß-/Kleinschreibung ignoriert)
         $alleRezepte = array_filter($alleRezepte, function ($rezept) use ($suchbegriff) {
             return mb_stripos($rezept['titel'] ?? '', $suchbegriff) !== false
                 || mb_stripos(implode(', ', array_column($rezept['kategorien'] ?? [], 'Bezeichnung')), $suchbegriff) !== false;
@@ -24,12 +30,17 @@ function showRezepte(): void {
     require 'php/view/rezepte.php';
 }
 
+/**
+ * Formular zum Anlegen eines neuen Rezepts anzeigen,
+ * inkl. Laden aller Listen wie Kategorien, Utensilien, etc. in Sessions
+ */
 function showRezeptNeu(): void {
     $katDAO = new KategorieDAO();
     $utenDAO = new UtensilDAO();
     $portDAO = new PortionsgroesseDAO();
     $preisDAO = new PreisklasseDAO();
 
+    // Kategorien laden und in assoziatives Array speichern (ID => Objekt)
     $kategorienListeRaw = $katDAO->findeAlle();
     $kategorienListe = [];
     foreach ($kategorienListeRaw as $kat) {
@@ -37,6 +48,7 @@ function showRezeptNeu(): void {
     }
     $_SESSION['kategorienListe'] = $kategorienListe;
 
+    // Utensilien laden
     $utensilienListeRaw = $utenDAO->findeAlle();
     $utensilienListe = [];
     foreach ($utensilienListeRaw as $uten) {
@@ -44,6 +56,7 @@ function showRezeptNeu(): void {
     }
     $_SESSION['utensilienListe'] = $utensilienListe;
 
+    // Portionsgrößen laden
     $portionsgroesseListeRaw = $portDAO->findeAlle();
     $portionsgroesseListe = [];
     foreach ($portionsgroesseListeRaw as $pg) {
@@ -51,6 +64,7 @@ function showRezeptNeu(): void {
     }
     $_SESSION['portionsgroesseListe'] = $portionsgroesseListe;
 
+    // Preisklassen laden
     $preisklasseListeRaw = $preisDAO->findeAlle();
     $preisklasseListe = [];
     foreach ($preisklasseListeRaw as $pl) {
@@ -61,6 +75,11 @@ function showRezeptNeu(): void {
     require 'php/view/rezept-neu.php';
 }
 
+/**
+ * Details zu einem Rezept anzeigen,
+ * inkl. Durchschnittsbewertung, Nutzerbewertung (falls angemeldet)
+ * und Prüfung, ob der angemeldete Nutzer der Ersteller ist (für UI-Entscheidungen)
+ */
 function showRezeptDetails($id): void {
     $id = validateId($id);
     if ($id === null) {
@@ -78,9 +97,28 @@ function showRezeptDetails($id): void {
         exit;
     }
 
+    $bewertungDAO = new BewertungDAO();
+    // Durchschnittsbewertung berechnen
+    $durchschnitt = $bewertungDAO->berechneDurchschnittRating($id);
+    // Anzahl Bewertungen holen
+    $anzahlBewertungen = $bewertungDAO->zaehleBewertungen($id);
+
+    // Eigene Bewertung laden, falls Nutzer angemeldet ist
+    $nutzerBewertung = null;
+    $istEigenerErsteller = false;
+    if (!empty($_SESSION['nutzerId'])) {
+        $nutzerBewertung = $bewertungDAO->findeNachRezeptUndNutzer($id, (int)$_SESSION['nutzerId']);
+        $istEigenerErsteller = (int)$rezept['erstellerId'] === (int)$_SESSION['nutzerId'];
+    }
+
+    // Variablen für das Template bereitstellen
     require 'php/view/rezept.php';
 }
 
+/**
+ * Neues Rezept speichern, mit Validierung,
+ * Speicherung von Bild, Zutaten, Kategorien und Utensilien
+ */
 function speichereRezept(): void {
     if (empty($_SESSION['nutzerId'])) {
         $_SESSION["message"] = "Nur angemeldete Nutzer können Rezepte speichern.";
@@ -95,6 +133,7 @@ function speichereRezept(): void {
     $utensilien = sanitize_int_array($_POST['utensilien'] ?? []);
     $bildPfad = validate_and_store_image($_FILES['bild'] ?? []);
 
+    // Pflichtfelder prüfen
     if ($titel === '' || $zubereitung === '' || empty($zutaten) || !$bildPfad) {
         $_SESSION["message"] = "Bitte alle Pflichtfelder ausfüllen.";
         $_SESSION["formdata"] = $_POST;
@@ -103,6 +142,7 @@ function speichereRezept(): void {
     }
 
     $dao = new RezeptDAO();
+    // Rezept anlegen
     $rezeptID = $dao->addRezept(
         $titel,
         $zubereitung,
@@ -115,6 +155,7 @@ function speichereRezept(): void {
         $utensilien
     );
 
+    // Erfolgsmeldung setzen und weiterleiten
     $_SESSION["message"] = $rezeptID
         ? "Rezept erfolgreich gespeichert."
         : "Fehler beim Speichern.";
@@ -123,6 +164,10 @@ function speichereRezept(): void {
     exit;
 }
 
+/**
+ * Rezept löschen,
+ * nur erlaubt für Admins oder Ersteller des Rezepts
+ */
 function loescheRezept($id): void {
     $id = validateId($id);
     if ($id === null) {
@@ -155,6 +200,7 @@ function loescheRezept($id): void {
         exit;
     }
 
+    // Rezept löschen
     $ok = $dao->loesche($id);
     $_SESSION["message"] = $ok
         ? "Rezept erfolgreich gelöscht."
@@ -164,6 +210,11 @@ function loescheRezept($id): void {
     exit;
 }
 
+/**
+ * Rezept aktualisieren,
+ * mit Validierung und Berechtigung prüfen (Admin oder Ersteller),
+ * optional Bild aktualisieren
+ */
 function aktualisiereRezept($id): void {
     $id = validateId($id);
     if ($id === null) {
@@ -192,6 +243,7 @@ function aktualisiereRezept($id): void {
     $kategorien = sanitize_int_array($_POST['kategorien'] ?? []);
     $utensilien = sanitize_int_array($_POST['utensilien'] ?? []);
 
+    // Validation prüfen
     if ($titel === '' || $zubereitung === '') {
         $_SESSION["message"] = "Titel und Zubereitung dürfen nicht leer sein.";
         $_SESSION["formdata"] = $_POST;
@@ -207,6 +259,7 @@ function aktualisiereRezept($id): void {
     }
 
     $bildPfad = null;
+    // Optional: neues Bild validieren und speichern
     if (!empty($_FILES['bild']) && $_FILES['bild']['error'] === UPLOAD_ERR_OK) {
         $bildPfad = validate_and_store_image($_FILES['bild']);
         if ($bildPfad === null) {
@@ -217,6 +270,7 @@ function aktualisiereRezept($id): void {
         }
     }
 
+    // Rezept aktualisieren
     $ok = $dao->aktualisiere(
         $id,
         $titel,
@@ -235,6 +289,9 @@ function aktualisiereRezept($id): void {
     exit;
 }
 
+/**
+ * Formular zum Bearbeiten eines Rezepts (inkl. Laden aller notwendigen Listen)
+ */
 function showRezeptBearbeitenFormular($id): void {
     $id = validateId($id);
     if ($id === null) {
@@ -263,7 +320,7 @@ function showRezeptBearbeitenFormular($id): void {
     $kategorienMitIds = $dao->findeKategorienMitIdsNachRezeptId($id);
     $rezept['kategorienMitIds'] = $kategorienMitIds;
 
-    // Kategorien-Liste für Dropdown/Checkboxen vorbereiten (ID => Objekt)
+    // Kategorien-Liste vorbereiten (ID => Objekt)
     $katDAO = new KategorieDAO();
     $kategorienListeRaw = $katDAO->findeAlle();
     $kategorienListe = [];
@@ -300,4 +357,73 @@ function showRezeptBearbeitenFormular($id): void {
     $_SESSION['preisklasseListe'] = $preisklasseListe;
 
     require 'php/view/rezept-bearbeiten.php';
+}
+
+/**
+ * Bewertungsfunktion:
+ * Ermöglicht angemeldeten Nutzern, ein Rezept zu bewerten (einmalig oder Update)
+ * Validiert Eingaben und verhindert Selbstevaluation
+ */
+function bewerteRezept(): void {
+    // Nur angemeldete Nutzer dürfen bewerten
+    if (empty($_SESSION['nutzerId'])) {
+        $_SESSION["message"] = "Bitte melde dich an, um zu bewerten.";
+        header("Location: index.php?page=anmeldung");
+        exit;
+    }
+
+    $nutzerId = (int)$_SESSION['nutzerId'];
+    $rezeptId = validateId($_POST['rezeptId'] ?? null);
+    $punkte = (int)($_POST['punkte'] ?? 0);
+
+    // Rezept-ID prüfen
+    if ($rezeptId === null) {
+        $_SESSION["message"] = "Ungültige Rezept-ID.";
+        header("Location: index.php?page=rezepte");
+        exit;
+    }
+
+    // Bewertungswert validieren (1-5 Sterne)
+    if ($punkte < 1 || $punkte > 5) {
+        $_SESSION["message"] = "Bitte eine Bewertung zwischen 1 und 5 Sternen abgeben.";
+        header("Location: index.php?page=rezept&id=" . urlencode($rezeptId));
+        exit;
+    }
+
+    $rezeptDAO = new RezeptDAO();
+    $rezept = $rezeptDAO->findeNachId($rezeptId);
+
+    // Prüfen, ob Rezept existiert
+    if (!$rezept) {
+        $_SESSION["message"] = "Rezept existiert nicht.";
+        header("Location: index.php?page=rezepte");
+        exit;
+    }
+
+    // Eigenbewertung verhindern
+    if ((int)$rezept['erstellerId'] === $nutzerId) {
+        $_SESSION["message"] = "Du kannst dein eigenes Rezept nicht bewerten.";
+        header("Location: index.php?page=rezept&id=" . urlencode($rezeptId));
+        exit;
+    }
+
+    $bewertungDAO = new BewertungDAO();
+    // Prüfen, ob bereits Bewertung existiert
+    $bestehendeBewertung = $bewertungDAO->findeNachRezeptUndNutzer($rezeptId, $nutzerId);
+
+    $heute = date('Y-m-d');
+
+    // Entsprechend updaten oder neu anlegen
+    if ($bestehendeBewertung) {
+        $bestehendeBewertung->Punkte = $punkte;
+        $bestehendeBewertung->Bewertungsdatum = $heute;
+        $ok = $bewertungDAO->aktualisiereBewertung($bestehendeBewertung);
+    } else {
+        $neu = new Bewertung($rezeptId, $nutzerId, $punkte, $heute);
+        $ok = $bewertungDAO->fuegeBewertungHinzu($neu);
+    }
+
+    $_SESSION["message"] = $ok ? "Bewertung gespeichert." : "Fehler beim Speichern der Bewertung.";
+    header("Location: index.php?page=rezept&id=" . urlencode($rezeptId));
+    exit;
 }

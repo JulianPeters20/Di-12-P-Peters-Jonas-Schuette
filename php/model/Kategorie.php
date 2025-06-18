@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Repräsentiert eine Kategorie.
- */
 class Kategorie {
     public int $KategorieID;
     public string $Bezeichnung;

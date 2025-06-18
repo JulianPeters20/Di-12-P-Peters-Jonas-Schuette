@@ -67,6 +67,11 @@ switch ($page) {
         showRezeptDetails($id);
         break;
 
+    case 'bewerteRezept':
+        require_once 'php/controller/RezeptController.php';
+        bewerteRezept();
+        break;
+
     case 'rezept-bearbeiten':
         require_once 'php/controller/RezeptController.php';
         $id = validateId($_GET['id'] ?? null);
