@@ -92,20 +92,52 @@ select:focus {
   background-color: #fff;
 }
 
-/* Formular Layout: Zeilen */
 .form-row {
   display: flex;
-  align-items: baseline;
-  gap: 16px;
-  margin-bottom: 16px;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
 }
-.form-row.justify-center {
-  justify-content: center;
-}
+
 .form-row label {
-  min-width: 170px;
+  min-width: 175px;
   flex-shrink: 0;
   font-weight: 500;
+  text-align: right;
+}
+
+.form-row input[type="text"],
+.form-row input[type="email"],
+.form-row input[type="password"] {
+  flex: 1 1 240px;    /* Eingabefelder nehmen den restlichen Platz */
+  max-width: 320px;   /* z.B. damit sie optisch ähnlich wirken */
+}
+
+.form-row input[type="checkbox"] {
+  min-width: 22px;
+  margin-right: 7px;
+  margin-top: 4px;
+}
+
+.form-row label[for="agb"],
+.form-row label[for="datenschutz"] {
+  flex: unset;           /* überschreibt Breiten-Default */
+  min-width: unset;
+  text-align: left;
+  font-weight: normal;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .form-row label {
+    min-width: unset;
+    text-align: left;
+    margin-bottom: 2px;
+  }
 }
 
 /* ======= Button Styles ======= */
@@ -577,12 +609,6 @@ input[type="reset"] {
   max-width: 200px;
 }
 
-.form-row label {
-  display: block;
-  margin-bottom: 4px;
-  font-weight: bold;
-}
-
 textarea,
 input[type="text"],
 input[type="email"],
@@ -616,6 +642,17 @@ select {
   box-sizing: border-box;
   cursor: pointer;
   min-height: 42px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dropdown-header:hover {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.dropdown-multiselect.open .dropdown-header {
+  border-color: #007bff;
+  border-radius: 6px 6px 0 0;
 }
 
 .dropdown-arrow {
@@ -1126,4 +1163,123 @@ select {
   color: #cc0000;
   font-size: 0.9rem;
   margin-top: 4px;
+}
+
+.hinweis {
+    color: #666;
+    font-size: 0.95em;
+    font-weight: normal;
+    margin-left: 8px;
+    white-space: nowrap;
+}
+
+/* ======= Nährwerte-Styling ======= */
+.naehrwerte-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.naehrwert-item {
+  background: var(--card-bg);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.naehrwert-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.naehrwert-wert {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--accent-dark);
+  display: block;
+  margin-top: 5px;
+}
+
+.consent-info {
+  background: #f0f8ff;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid var(--accent);
+  margin-bottom: 20px;
+}
+
+.consent-info h4 {
+  color: var(--accent-dark);
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.consent-info p {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.consent-info label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 15px 0;
+  cursor: pointer;
+}
+
+.consent-info input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.loading-spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#naehrwerte-loading {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+#naehrwerte-error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #c62828;
+  margin-top: 15px;
+}
+
+/* Responsive Nährwerte */
+@media (max-width: 768px) {
+  .naehrwerte-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .naehrwert-item {
+    padding: 12px;
+  }
+
+  .naehrwert-wert {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .naehrwerte-grid {
+    grid-template-columns: 1fr;
+  }
 }

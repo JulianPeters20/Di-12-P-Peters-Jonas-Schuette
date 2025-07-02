@@ -1,3 +1,7 @@
+<?php
+// Optional: Session sicherstellen, wenn nicht schon gestartet
+if (session_status() === PHP_SESSION_NONE) session_start();
+?>
 <header class="kopfzeile">
     <div class="logo">
         <a href="index.php">
@@ -17,6 +21,7 @@
 
             <?php if (!empty($_SESSION['istAdmin'])): ?>
                 <li><a href="index.php?page=nutzerliste">Nutzerliste</a></li>
+                <li><a href="index.php?page=api-monitor">API-Monitor</a></li>
             <?php endif; ?>
 
             <?php if (!empty($_SESSION['email'])): ?>
@@ -37,7 +42,7 @@
 
             <li>
                 <?php if (!empty($_SESSION['nutzerId'])): ?>
-                <a href="index.php?page=nutzer&email=<?= urlencode($_SESSION['email'] ?? '') ?>" title="Benutzerkonto">
+                <a href="index.php?page=nutzer" title="Benutzerkonto">
                     <?php else: ?>
                     <a href="index.php?page=anmeldung" title="Benutzerkonto">
                         <?php endif; ?>
@@ -48,16 +53,17 @@
     </div>
 </header>
 
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const burgerBtn = document.querySelector('.burger-btn');
         const hauptNav = document.querySelector('.haupt-nav');
 
-        burgerBtn.addEventListener('click', () => {
-            const expanded = burgerBtn.getAttribute('aria-expanded') === 'true';
-            burgerBtn.setAttribute('aria-expanded', !expanded);
-            hauptNav.classList.toggle('active');
-        });
+        if (burgerBtn && hauptNav) {
+            burgerBtn.addEventListener('click', () => {
+                const expanded = burgerBtn.getAttribute('aria-expanded') === 'true';
+                burgerBtn.setAttribute('aria-expanded', !expanded);
+                hauptNav.classList.toggle('active');
+            });
+        }
     });
 </script>

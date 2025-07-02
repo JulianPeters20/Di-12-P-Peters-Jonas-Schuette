@@ -285,9 +285,40 @@ function aktualisiereRezept($id): void {
         $utensilien
     );
 
-    flash($ok ? "success" : "error", $ok
-        ? "Rezept erfolgreich aktualisiert."
-        : "Fehler beim Aktualisieren des Rezepts.");
+    // Nährwerte löschen, da sich die Zutaten geändert haben könnten
+    if ($ok) {
+        try {
+            require_once 'php/model/NaehrwerteDAO.php';
+            $naehrwerteDAO = new NaehrwerteDAO();
+
+            // Prüfen ob Nährwerte vorhanden waren
+            $hatteNaehrwerte = $naehrwerteDAO->hatNaehrwerte($id);
+
+            if ($hatteNaehrwerte) {
+                $naehrwerteGeloescht = $naehrwerteDAO->loescheNaehrwerte($id);
+
+                // Flag setzen, wenn Nährwerte tatsächlich gelöscht wurden
+                if ($naehrwerteGeloescht) {
+                    $_SESSION['naehrwerte_zurueckgesetzt'] = true;
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Fehler beim Löschen der Nährwerte nach Rezept-Update: " . $e->getMessage());
+        }
+    }
+
+    if ($ok) {
+        $nachricht = "Rezept erfolgreich aktualisiert.";
+
+        // Zusätzlicher Hinweis wenn Nährwerte zurückgesetzt wurden
+        if (isset($_SESSION['naehrwerte_zurueckgesetzt']) && $_SESSION['naehrwerte_zurueckgesetzt'] === true) {
+            $nachricht .= " Nährwerte wurden zurückgesetzt und müssen neu berechnet werden.";
+        }
+
+        flash("success", $nachricht);
+    } else {
+        flash("error", "Fehler beim Aktualisieren des Rezepts.");
+    }
 
     header("Location: index.php?page=rezept&id=" . urlencode($id));
     exit;
@@ -421,5 +452,141 @@ function bewerteRezept(): void {
 
     flash($ok ? "success" : "error", $ok ? "Bewertung gespeichert." : "Fehler beim Speichern der Bewertung.");
     header("Location: index.php?page=rezept&id=" . urlencode($rezeptId));
+    exit;
+}
+
+/**
+ * Berechnet Nährwerte für ein Rezept über die Spoonacular API
+ */
+function berechneNaehrwerte(): void {
+    // Output Buffer leeren und JSON-Header setzen
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    // Fehlerausgabe für API-Calls unterdrücken
+    $originalErrorReporting = error_reporting(0);
+    ini_set('display_errors', '0');
+
+    header('Content-Type: application/json');
+
+    // Hilfsfunktion für saubere JSON-Antwort mit Error Reporting Reset
+    $sendJsonAndExit = function($data) use ($originalErrorReporting) {
+        error_reporting($originalErrorReporting);
+        echo json_encode($data);
+        exit;
+    };
+
+    // DSGVO-konforme Prüfung: Nur mit Einwilligung
+    if (empty($_SESSION['naehrwerte_einwilligung'])) {
+        $sendJsonAndExit([
+            'success' => false,
+            'error' => 'Bitte stimme der Datenübertragung an Spoonacular zu.',
+            'consent_required' => true
+        ]);
+    }
+
+    $rezeptId = validateId($_POST['rezeptId'] ?? null);
+    if ($rezeptId === null) {
+        $sendJsonAndExit(['success' => false, 'error' => 'Ungültige Rezept-ID']);
+    }
+
+    require_once 'php/model/SpoonacularAPI.php';
+    require_once 'php/model/NaehrwerteDAO.php';
+    require_once 'php/config/api-config.php';
+
+    // API-Konfiguration prüfen
+    if (!isApiConfigured()) {
+        $sendJsonAndExit([
+            'success' => false,
+            'error' => 'Spoonacular API ist nicht konfiguriert. Bitte kontaktiere den Administrator.'
+        ]);
+    }
+
+    $dao = new RezeptDAO();
+    $rezept = $dao->findeNachId($rezeptId);
+
+    if (!$rezept) {
+        $sendJsonAndExit(['success' => false, 'error' => 'Rezept nicht gefunden']);
+    }
+
+    // Prüfen ob bereits Nährwerte vorhanden sind
+    $naehrwerteDAO = new NaehrwerteDAO();
+    $vorhandeneNaehrwerte = $naehrwerteDAO->holeNaehrwerte($rezeptId);
+
+    if ($vorhandeneNaehrwerte) {
+        $sendJsonAndExit([
+            'success' => true,
+            'naehrwerte' => $vorhandeneNaehrwerte,
+            'cached' => true
+        ]);
+    }
+
+    // API-Key aus Konfiguration holen
+    $apiKey = getSpoonacularApiKey();
+
+    $spoonacularAPI = new SpoonacularAPI($apiKey);
+
+    // Prüfen ob API verfügbar ist
+    if (!$spoonacularAPI->istAPIVerfuegbar()) {
+        $sendJsonAndExit([
+            'success' => false,
+            'error' => 'Spoonacular API ist momentan nicht verfügbar. Bitte versuche es später erneut.'
+        ]);
+    }
+
+    // Portionsgröße ermitteln (Standard: 1)
+    $portionen = 1;
+    if (!empty($rezept['portionsgroesseName'])) {
+        // Versuche Zahl aus Portionsgröße zu extrahieren
+        preg_match('/(\d+)/', $rezept['portionsgroesseName'], $matches);
+        if (!empty($matches[1])) {
+            $portionen = (int)$matches[1];
+        }
+    }
+
+    $naehrwerte = $spoonacularAPI->berechneNaehrwerte($rezept['zutaten'], $portionen);
+
+    if ($naehrwerte === null) {
+        $sendJsonAndExit([
+            'success' => false,
+            'error' => 'Nährwerte konnten nicht berechnet werden. Möglicherweise sind die Zutaten nicht erkennbar oder das API-Limit wurde erreicht.'
+        ]);
+    }
+
+    // Nährwerte in Datenbank speichern
+    $gespeichert = $naehrwerteDAO->speichereNaehrwerte($rezeptId, $naehrwerte);
+
+    // Erfolgreiche Antwort senden
+    $sendJsonAndExit([
+        'success' => true,
+        'naehrwerte' => $naehrwerte,
+        'saved' => $gespeichert
+    ]);
+}
+
+
+
+/**
+ * Setzt die Einwilligung für Nährwert-Berechnung
+ */
+function setzeNaehrwerteEinwilligung(): void {
+    // Output Buffer leeren und JSON-Header setzen
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    header('Content-Type: application/json');
+
+    $einwilligung = filter_var($_POST['einwilligung'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+    if ($einwilligung) {
+        $_SESSION['naehrwerte_einwilligung'] = true;
+        $_SESSION['naehrwerte_einwilligung_datum'] = date('Y-m-d H:i:s');
+    } else {
+        unset($_SESSION['naehrwerte_einwilligung']);
+        unset($_SESSION['naehrwerte_einwilligung_datum']);
+    }
+
+    echo json_encode(['success' => true, 'einwilligung' => $einwilligung]);
     exit;
 }

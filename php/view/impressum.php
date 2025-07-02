@@ -1,7 +1,7 @@
 <main>
     <h2>Impressum</h2>
     <section>
-        <div>Angaben gemäß § 5 TMG</div>
+        <div>Angaben gemäß § 5 TMG (Telemediengesetz):</div>
         <address>
             Broke &amp; Hungry<br>
             Julian Peters, Leon Jonas<br>
@@ -10,7 +10,16 @@
             26129 Oldenburg
         </address>
         <div><strong>Kontakt:</strong><br>
-            E-Mail: <a href="mailto:info@brokeandhungry.de">info@brokeandhungry.de</a></div>
+            E-Mail: <a href="mailto:info@brokeandhungry.de">info@brokeandhungry.de</a>
+        </div>
+    </section>
+    <section>
+        <h3>Haftungsausschluss (Disclaimer)</h3>
+        <p>
+            Dieses Webprojekt ist ein Studienprojekt und dient ausschließlich zu Lehrzwecken.
+            Es besteht kein kommerzielles Interesse.<br>
+            Verantwortlich für die Inhalte gemäß § 55 Abs. 2 RStV: Julian Peters, Leon Jonas.
+        </p>
     </section>
     <section>
         <h3>Quellenangaben für verwendete Medien</h3>
@@ -19,15 +28,19 @@
             <li><strong>placeholder.jpg:</strong> KI-generiert mit ChatGPT (DALL·E)</li>
             <li>
                 <strong>pesto.jpg:</strong> Bild von
-                <a href="https://pixabay.com/de/users/ekologiskt_skafferi-1159164/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=1556974" target="_blank" rel="noopener noreferrer">T Caesar</a>
+                <a href="https://pixabay.com/de/users/ekologiskt_skafferi-1159164/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=1556974"
+                   target="_blank" rel="noopener noreferrer">T Caesar</a>
                 auf
-                <a href="https://pixabay.com/de//?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=1556974" target="_blank" rel="noopener noreferrer">Pixabay</a>
+                <a href="https://pixabay.com/de//?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=1556974"
+                   target="_blank" rel="noopener noreferrer">Pixabay</a>
             </li>
             <li>
                 <strong>reis mit curry.jpg:</strong> Bild von
-                <a href="https://pixabay.com/de/users/joannawielgosz-168212/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=7249247" target="_blank" rel="noopener noreferrer">Joanna Wielgosz</a>
+                <a href="https://pixabay.com/de/users/joannawielgosz-168212/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=7249247"
+                   target="_blank" rel="noopener noreferrer">Joanna Wielgosz</a>
                 auf
-                <a href="https://pixabay.com/de//?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=7249247" target="_blank" rel="noopener noreferrer">Pixabay</a>
+                <a href="https://pixabay.com/de//?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=7249247"
+                   target="_blank" rel="noopener noreferrer">Pixabay</a>
             </li>
         </ul>
     </section>

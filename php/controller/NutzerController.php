@@ -4,6 +4,159 @@ require_once __DIR__ . '/../model/NutzerDAO.php';
 require_once __DIR__ . '/../include/form_utils.php';
 require_once __DIR__ . '/../model/RezeptDAO.php';
 
+// Einmal zu Beginn definieren – HIER bitte ggf. später bei Änderung anderer Pfade anpassen!!
+$baseUrl = "http://localhost/Di-12-P-Peters-Jonas-Schuette/"; // Absolute URL für simulierte Mails
+
+/**
+ * Hilfsfunktion: Stellt sicher, dass mails-Verzeichnis existiert.
+ */
+function ensureMailDir() {
+    $dir = __DIR__ . '/../../data/mails/';
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
+}
+
+/**
+ * Temporäre JSON für Vorregistrierung speichern
+ */
+function speichereVorregistrierung(string $benutzername, string $email, string $passwort): string {
+    ensureMailDir();
+    $code = bin2hex(random_bytes(16));
+    $jsonFile = __DIR__ . "/../../data/mails/registrierung_" . $code . ".json";
+    $data = [
+        'benutzername' => $benutzername,
+        'email' => $email,
+        'passwort' => $passwort,
+        'created' => time()
+    ];
+    file_put_contents($jsonFile, json_encode($data, JSON_THROW_ON_ERROR));
+    return $code;
+}
+
+/**
+ * Anzeige und Verarbeitung des (angepassten) Registrierungsformulars
+ */
+function showRegistrierungsFormular(): void {
+    global $baseUrl; // Für den Link
+    if (!empty($_SESSION["eingeloggt"])) {
+        header("Location: index.php");
+        exit;
+    }
+
+    $error = ""; // Fehler-Variable für die View
+
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        // Sticky: Formularwerte bereitstellen
+        $benutzername = sanitize_text($_POST["benutzername"] ?? '');
+        $email = sanitize_email($_POST["email"] ?? '');
+        $passwort = sanitize_text($_POST["passwort"] ?? '');
+        $passwort_wdh = sanitize_text($_POST["passwort-wdh"] ?? '');
+        $agb = isset($_POST['agb']);
+        $datenschutz = isset($_POST['datenschutz']);
+
+        if ($email === '' || $passwort === '' || $passwort_wdh === '') {
+            $error = "Bitte alle Pflichtfelder ausfüllen.";
+        } elseif ($passwort !== $passwort_wdh) {
+            $error = "Die Passwörter stimmen nicht überein.";
+        } elseif (!$agb || !$datenschutz) {
+            $error = "Du musst die Nutzungsbedingungen und Datenschutzerklärung akzeptieren.";
+        }
+
+        if (!empty($error)) {
+            // Fehler: Lade die View direkt, damit Werte erhalten bleiben
+            require 'php/view/registrierung.php';
+            exit;
+        }
+
+        $dao = new NutzerDAO();
+        $nutzer = $dao->findeNachEmail($email);
+
+        $code = speichereVorregistrierung($benutzername, $email, $passwort);
+        $mailDatei = "data/mails/registrierung_" . $code . ".html";
+        $bestaetigungsLink = $baseUrl . "index.php?page=bestaetigeRegistrierung&code=" . urlencode($code);
+
+        if ($nutzer) {
+            $pwResetLink = $baseUrl . "index.php?page=passwortVergessen";
+            $inhalt = <<<MAIL
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Registrierung bei Broke & Hungry</title>
+</head>
+<body>
+<p>Jemand hat versucht, diese E-Mail für ein neues Konto zu nutzen.<br>
+Du bist jedoch bereits registriert.</p>
+<p>Solltest du dein Passwort vergessen haben, klicke hier:<br>
+<a href="{$pwResetLink}">Passwort zurücksetzen</a>
+</p>
+</body>
+</html>
+MAIL;
+        } else {
+            $inhalt = <<<MAIL
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Registrierung bei Broke & Hungry</title>
+</head>
+<body>
+<p>Um deine Registrierung bei Broke &amp; Hungry abzuschließen, klicke folgenden Link:<br>
+<a href="{$bestaetigungsLink}">Registrierung bestätigen</a>
+</p>
+<p>Falls du das nicht wolltest, ignoriere diese Nachricht.</p>
+</body>
+</html>
+MAIL;
+        }
+        file_put_contents(__DIR__ . "/../../" . $mailDatei, $inhalt);
+
+        echo '<main><div>Weitere Infos findest du in der Datei <a href="' . htmlspecialchars($mailDatei) . '" target="_blank">' . htmlspecialchars($mailDatei) . '</a></div></main>';
+        return;
+    }
+
+    // GET-Request oder erstmaliger Aufruf
+    $benutzername = $email = "";
+    require_once 'php/view/registrierung.php';
+}
+
+/**
+ * Bestätigungslink aus der simulierten E-Mail verarbeiten (Registrierung final!)
+ */
+function bestaetigeRegistrierung(string $code): void {
+    $filePath = __DIR__ . "/../../data/mails/registrierung_" . $code . ".json";
+    if (!is_file($filePath)) {
+        echo "<main><div>Ungültiger oder bereits genutzter Bestätigungslink.</div></main>";
+        return;
+    }
+    $data = json_decode(file_get_contents($filePath), true);
+    if (!$data || empty($data['email']) || empty($data['passwort'])) {
+        echo "<main><div>Ungültige Daten - keine Registrierung möglich.</div></main>";
+        return;
+    }
+
+    $dao = new NutzerDAO();
+    if ($dao->findeNachEmail($data['email'])) {
+        unlink($filePath);
+        echo "<main><div>Diese E-Mail ist bereits registriert.</div></main>";
+        return;
+    }
+
+    $res = $dao->registrieren($data['benutzername'] ?? '', $data['email'], $data['passwort']);
+    unlink($filePath);
+
+    if ($res) {
+        echo "<main><div>Registrierung abgeschlossen! Du kannst dich jetzt <a href='index.php?page=anmeldung'>anmelden</a>.</div></main>";
+    } else {
+        echo "<main><div>Registrierung fehlgeschlagen.</div></main>";
+    }
+}
+
+/**
+ * Anmeldung
+ */
 function showAnmeldeFormular(): void {
     if ($_SERVER["REQUEST_METHOD"] === "GET" && !empty($_SESSION["eingeloggt"])) {
         header("Location: index.php");
@@ -47,60 +200,15 @@ function showAnmeldeFormular(): void {
     require_once 'php/view/anmeldung.php';
 }
 
-function showRegistrierungsFormular(): void {
-    if (!empty($_SESSION["eingeloggt"])) {
-        header("Location: index.php");
-        exit;
-    }
-
-    $dao = new NutzerDAO();
-
-    if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $benutzername = sanitize_text($_POST["benutzername"] ?? '');
-        $email = sanitize_email($_POST["email"] ?? '');
-        $passwort = sanitize_text($_POST["passwort"] ?? '');
-        $passwort_wdh = sanitize_text($_POST["passwort-wdh"] ?? '');
-
-        if ($benutzername === '' || $email === '' || $passwort === '' || $passwort_wdh === '') {
-            flash("warning","Bitte alle Felder ausfüllen.");
-            header("Location: index.php?page=registrierung");
-            exit;
-        } elseif ($passwort !== $passwort_wdh) {
-            flash("warning","Die Passwörter stimmen nicht überein.");
-            header("Location: index.php?page=registrierung");
-            exit;
-        } elseif ($dao->findeNachEmail($email)) {
-            flash("warning","Diese E-Mail ist bereits registriert.");
-            header("Location: index.php?page=registrierung");
-            exit;
-        } else {
-            $erfolg = $dao->registrieren($benutzername, $email, $passwort);
-
-            if ($erfolg) {
-                flash("success","Registrierung erfolgreich. Bitte melde dich nun an.");
-                header("Location: index.php?page=anmeldung");
-                exit;
-            } else {
-                flash("error","Fehler bei der Registrierung");
-                header("Location: index.php?page=registrierung");
-                exit;
-            }
-        }
-    }
-
-    require_once 'php/view/registrierung.php';
-}
-
+/**
+ * AJAX-Prüfung Benutzername
+ */
 function pruefeBenutzername(): void {
-    // Da sonst html mit übergeben wird, was zum Fehler führt
     if (ob_get_level()) {
         ob_end_clean();
     }
 
     header('Content-Type: application/json');
-
-    // Überprüfung, ob aufgerufen wird
-    error_log("AJAX Prüfe Benutzername wurde aufgerufen");
 
     $benutzername = trim($_GET['benutzername'] ?? '');
     if ($benutzername === '') {
@@ -115,6 +223,9 @@ function pruefeBenutzername(): void {
     exit;
 }
 
+/**
+ * Nutzer ausloggen
+ */
 function logoutUser(): void {
     session_unset();
     session_destroy();
@@ -145,16 +256,14 @@ function showNutzerProfil(): void {
         exit;
     }
 
-    // Eigene Rezepte laden
     $rezeptDAO = new RezeptDAO();
     $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->id);
 
-    // Sichtbar machen für View
     require 'php/view/nutzer.php';
 }
 
 /**
- * Nutzerliste anzeigen (nur Admin)
+ * Nutzerliste (nur Admin)
  */
 function showNutzerListe(): void {
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
@@ -170,7 +279,7 @@ function showNutzerListe(): void {
 }
 
 /**
- * Löscht einen Nutzer anhand seiner ID (nur Admin)
+ * Löscht Nutzer (nur Admin)
  */
 function loescheNutzer(int $id): void {
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {

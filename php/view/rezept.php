@@ -1,5 +1,38 @@
 <main>
     <?php if (!empty($rezept)): ?>
+        <!-- Flash-Toast anzeigen -->
+        <?php if (!empty($_SESSION['flash'])): ?>
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    // Flash-Toast erstellen
+                    const toast = document.createElement("div");
+                    toast.className = "flash-toast <?= $_SESSION['flash']['type'] ?>";
+                    toast.textContent = "<?= htmlspecialchars($_SESSION['flash']['message']) ?>";
+
+                    // Längere Anzeigedauer für Nährwerte-Nachrichten
+                    const message = "<?= $_SESSION['flash']['message'] ?>";
+                    const isNutritionMessage = message.includes("Nährwerte");
+                    const displayDuration = isNutritionMessage ? 6000 : 4600; // 6s für Nährwerte, 4.6s für andere
+
+                    // Custom Animation für längere Anzeige
+                    if (isNutritionMessage) {
+                        toast.style.animation = "fadein 0.3s forwards, fadeout 0.4s forwards 5.5s";
+                    }
+
+                    // Toast zum Body hinzufügen
+                    document.body.appendChild(toast);
+
+                    // Toast nach Animation automatisch entfernen
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, displayDuration);
+                });
+            </script>
+            <?php unset($_SESSION['flash']); ?>
+        <?php endif; ?>
+
         <article class="rezept-detail">
             <header>
                 <h2 class="rezept-titel"><?= htmlspecialchars($rezept['titel'] ?? 'Unbekannt') ?></h2>
@@ -102,6 +135,103 @@
             <section class="rezept-block">
                 <h3>Zubereitung</h3>
                 <pre class="rezept-pre"><?= htmlspecialchars($rezept['zubereitung'] ?? 'Keine Angabe.') ?></pre>
+            </section>
+
+            <!-- Nährwerte-Bereich -->
+            <section class="rezept-block" id="naehrwerte-section">
+                <h3>Nährwerte pro Portion</h3>
+
+                <!-- Einwilligungsbereich (wird nur angezeigt wenn noch keine Einwilligung) -->
+                <div id="consent-area" style="<?= !empty($_SESSION['naehrwerte_einwilligung']) ? 'display: none;' : '' ?>">
+                    <div class="consent-info" style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <h4>Datenschutzhinweis</h4>
+                        <p>Zur Berechnung der Nährwerte werden die Zutaten dieses Rezepts an den externen Dienst <strong>Spoonacular</strong> übertragen. Es werden keine personenbezogenen Daten übermittelt.</p>
+                        <p>Weitere Informationen findest du in unserer <a href="index.php?page=datenschutz" target="_blank">Datenschutzerklärung</a>.</p>
+
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" id="consent-checkbox">
+                            Ich stimme der Übertragung der Rezeptdaten zur Nährwertberechnung zu.
+                        </label>
+
+                        <button type="button" id="consent-btn" class="btn" disabled>Einwilligung speichern</button>
+                    </div>
+                </div>
+
+                <!-- Nährwerte-Anzeige -->
+                <div id="naehrwerte-content">
+                    <?php
+                    // Prüfen ob bereits Nährwerte vorhanden sind
+                    $vorhandeneNaehrwerte = null;
+                    try {
+                        require_once 'php/model/NaehrwerteDAO.php';
+                        $naehrwerteDAO = new NaehrwerteDAO();
+                        $vorhandeneNaehrwerte = $naehrwerteDAO->holeNaehrwerte($rezept['id']);
+                    } catch (Exception $e) {
+                        // Fehler beim Laden der Nährwerte - ignorieren und ohne Nährwerte fortfahren
+                        error_log("Fehler beim Laden der Nährwerte: " . $e->getMessage());
+                    }
+                    ?>
+
+                    <?php if ($vorhandeneNaehrwerte): ?>
+                        <div id="naehrwerte-display">
+                            <div class="naehrwerte-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 15px 0;">
+                                <div class="naehrwert-item">
+                                    <strong>Kalorien:</strong><br>
+                                    <span class="naehrwert-wert"><?= number_format($vorhandeneNaehrwerte['kalorien'], 0) ?> kcal</span>
+                                </div>
+                                <div class="naehrwert-item">
+                                    <strong>Protein:</strong><br>
+                                    <span class="naehrwert-wert"><?= number_format($vorhandeneNaehrwerte['protein'], 1) ?> g</span>
+                                </div>
+                                <div class="naehrwert-item">
+                                    <strong>Kohlenhydrate:</strong><br>
+                                    <span class="naehrwert-wert"><?= number_format($vorhandeneNaehrwerte['kohlenhydrate'], 1) ?> g</span>
+                                </div>
+                                <div class="naehrwert-item">
+                                    <strong>Fett:</strong><br>
+                                    <span class="naehrwert-wert"><?= number_format($vorhandeneNaehrwerte['fett'], 1) ?> g</span>
+                                </div>
+                                <div class="naehrwert-item">
+                                    <strong>Ballaststoffe:</strong><br>
+                                    <span class="naehrwert-wert"><?= number_format($vorhandeneNaehrwerte['ballaststoffe'], 1) ?> g</span>
+                                </div>
+                                <div class="naehrwert-item">
+                                    <strong>Zucker:</strong><br>
+                                    <span class="naehrwert-wert"><?= number_format($vorhandeneNaehrwerte['zucker'], 1) ?> g</span>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                                Berechnet am: <?= date('d.m.Y', strtotime($vorhandeneNaehrwerte['berechnet_am'])) ?>
+                            </p>
+                        </div>
+                    <?php else: ?>
+                        <div id="naehrwerte-placeholder">
+                            <?php
+                            // Prüfen ob die Nachricht vom Rezept-Update kommt (nicht vom Bearbeiten-Link)
+                            if (isset($_SESSION['naehrwerte_zurueckgesetzt']) && $_SESSION['naehrwerte_zurueckgesetzt'] === true):
+                                // Flag zurücksetzen, damit Nachricht nur einmal angezeigt wird
+                                unset($_SESSION['naehrwerte_zurueckgesetzt']);
+                            ?>
+                                <div class="info-box" style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                                    <strong>ℹ️ Hinweis:</strong> Das Rezept wurde bearbeitet. Die Nährwerte müssen neu berechnet werden.
+                                </div>
+                            <?php endif; ?>
+
+                            <p>Für dieses Rezept wurden noch keine Nährwerte berechnet.</p>
+                            <button type="button" id="berechne-naehrwerte-btn" class="btn"
+                                    style="<?= empty($_SESSION['naehrwerte_einwilligung']) ? 'display: none;' : '' ?>">
+                                Nährwerte berechnen
+                            </button>
+                        </div>
+                        <div id="naehrwerte-display" style="display: none;"></div>
+                    <?php endif; ?>
+
+                    <div id="naehrwerte-loading" style="display: none;">
+                        <p>Nährwerte werden berechnet... <span class="loading-spinner">⏳</span></p>
+                    </div>
+
+                    <div id="naehrwerte-error" style="display: none; color: #d32f2f; margin-top: 10px;"></div>
+                </div>
             </section>
 
             <!-- Bewertungsformular nur, wenn angemeldet und nicht Ersteller -->

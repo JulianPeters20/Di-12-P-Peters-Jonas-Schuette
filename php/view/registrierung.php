@@ -1,16 +1,28 @@
 <main>
     <h2>Registrierung</h2>
+
+    <?php if (!empty($error)) : ?>
+        <div class="error-msg" style="color:#b30000; background:#ffe6e6; padding:0.7em; margin-bottom:1em; border-radius:6px;">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
+
     <form action="index.php?page=registrierung" method="post" autocomplete="off" novalidate>
 
         <div class="form-row">
             <label for="benutzername">Benutzername:</label>
-            <input type="text" id="benutzername" name="benutzername" required autocomplete="username">
-            <div id="benutzername-fehler" style="color: red; margin-bottom: 6px; font-size: 0.9rem;"></div>
+            <div style="display: flex; align-items: center; gap: 10px; flex:1;">
+                <input type="text" id="benutzername" name="benutzername" maxlength="30"
+                       autocomplete="username"
+                       value="<?= isset($benutzername) ? htmlspecialchars($benutzername) : (isset($_POST['benutzername']) ? htmlspecialchars($_POST['benutzername']) : '') ?>">
+                <span class="hinweis">(öffentlich sichtbar, optional)</span>
+            </div>
         </div>
 
         <div class="form-row">
             <label for="email">E-Mail-Adresse:</label>
-            <input type="email" id="email" name="email" required autocomplete="email">
+            <input type="email" id="email" name="email" required autocomplete="email"
+                   value="<?= isset($email) ? htmlspecialchars($email) : (isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '') ?>">
         </div>
 
         <div class="form-row">
@@ -21,6 +33,19 @@
         <div class="form-row">
             <label for="passwort-wdh">Passwort wiederholen:</label>
             <input type="password" id="passwort-wdh" name="passwort-wdh" required minlength="8" autocomplete="new-password">
+        </div>
+
+        <div class="form-row">
+            <input type="checkbox" id="agb" name="agb" required <?= (isset($_POST['agb']) ? 'checked' : '') ?>>
+            <label for="agb">
+                Ich akzeptiere die <a href="index.php?page=nutzungsbedingungen" target="_blank">Nutzungsbedingungen</a>.
+            </label>
+        </div>
+        <div class="form-row">
+            <input type="checkbox" id="datenschutz" name="datenschutz" required <?= (isset($_POST['datenschutz']) ? 'checked' : '') ?>>
+            <label for="datenschutz">
+                Ich habe die <a href="index.php?page=datenschutz" target="_blank">Datenschutzerklärung</a> gelesen und akzeptiere sie.
+            </label>
         </div>
 
         <div class="form-row justify-center">
