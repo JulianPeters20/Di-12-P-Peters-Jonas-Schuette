@@ -21,7 +21,7 @@
         </div>
         
         <div class="actions" style="margin-left: auto;">
-            <button onclick="testeAPI()" class="btn" style="margin-right: 10px;">API testen</button>
+            <a href="#" onclick="testeAPI(); return false;" class="btn" style="margin-right: 10px;">API testen</a>
             <a href="index.php?page=api-cache-leeren" class="btn" onclick="return confirm('Cache wirklich leeren?')">Cache leeren</a>
         </div>
     </div>
@@ -182,26 +182,60 @@ function testeAPI() {
     const button = event.target;
     const originalText = button.textContent;
     button.textContent = 'Teste...';
-    button.disabled = true;
-    
+    button.style.pointerEvents = 'none'; // Verhindert weitere Klicks
+
     fetch('index.php?page=api-test', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        // Prüfen ob Response wirklich JSON ist
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server antwortete nicht mit JSON (möglicherweise PHP-Fehler)');
+        }
+        return response.json();
+    })
     .then(data => {
-        const message = data.success 
+        const message = data.success
             ? `✅ ${data.message} (${data.response_time}ms)`
             : `❌ ${data.error}`;
-        
-        alert(message);
-        
+
+        // Schönere Anzeige mit Flash-Toast statt Alert
+        showFlashToast(data.success ? 'success' : 'error', message);
+
         button.textContent = originalText;
-        button.disabled = false;
+        button.style.pointerEvents = 'auto';
+
+        // Seite nach erfolgreichem Test aktualisieren
+        if (data.success) {
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
     })
     .catch(error => {
-        alert('❌ Fehler beim API-Test: ' + error.message);
+        console.error('API-Test Fehler:', error);
+        showFlashToast('error', '❌ Fehler beim API-Test: ' + error.message);
         button.textContent = originalText;
-        button.disabled = false;
+        button.style.pointerEvents = 'auto';
     });
+}
+
+// Flash-Toast Funktion für bessere UX
+function showFlashToast(type, message) {
+    const toast = document.createElement('div');
+    toast.className = `flash-toast ${type}`;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 4600);
 }
 </script>

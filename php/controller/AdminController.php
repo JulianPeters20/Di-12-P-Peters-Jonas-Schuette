@@ -112,47 +112,58 @@ function bereinigeApiLogs(): void {
  * API-Test durchführen (nur Admin)
  */
 function testeApi(): void {
+    // Output Buffer leeren und JSON-Header setzen
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    // Fehlerausgabe für API-Calls unterdrücken
+    $originalErrorReporting = error_reporting(0);
+    ini_set('display_errors', '0');
+
+    header('Content-Type: application/json');
+
+    // Hilfsfunktion für saubere JSON-Antwort
+    $sendJsonAndExit = function($data) use ($originalErrorReporting) {
+        error_reporting($originalErrorReporting);
+        echo json_encode($data);
+        exit;
+    };
+
     // Zugriffskontrolle
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
-        echo json_encode(['success' => false, 'error' => 'Keine Berechtigung']);
-        exit;
+        $sendJsonAndExit(['success' => false, 'error' => 'Keine Berechtigung']);
     }
-    
-    // JSON-Header setzen
-    header('Content-Type: application/json');
-    
+
     try {
         require_once 'php/model/SpoonacularAPI.php';
         require_once 'php/config/api-config.php';
-        
+
         if (!isApiConfigured()) {
-            echo json_encode(['success' => false, 'error' => 'API nicht konfiguriert']);
-            exit;
+            $sendJsonAndExit(['success' => false, 'error' => 'API nicht konfiguriert']);
         }
-        
+
         $startTime = microtime(true);
         $api = new SpoonacularAPI(getSpoonacularApiKey());
         $verfuegbar = $api->istAPIVerfuegbar();
         $responseTime = round((microtime(true) - $startTime) * 1000, 2);
-        
+
         // Test-Ergebnis loggen
         $apiMonitorDAO = new ApiMonitorDAO();
         $apiMonitorDAO->loggeApiAufruf(
-            'test-endpoint', 
-            $verfuegbar ? 'success' : 'error', 
+            'test-endpoint',
+            $verfuegbar ? 'success' : 'error',
             $responseTime,
             $verfuegbar ? null : 'API nicht erreichbar'
         );
-        
-        echo json_encode([
+
+        $sendJsonAndExit([
             'success' => $verfuegbar,
             'response_time' => $responseTime,
             'message' => $verfuegbar ? 'API ist erreichbar' : 'API ist nicht erreichbar'
         ]);
-        
+
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        $sendJsonAndExit(['success' => false, 'error' => $e->getMessage()]);
     }
-    
-    exit;
 }

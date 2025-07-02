@@ -94,50 +94,135 @@ class SpoonacularAPI {
     }
     
     /**
-     * Formatiert Zutaten für die Spoonacular API
+     * Formatiert Zutaten für die Spoonacular API mit präziser Einheiten-Konvertierung
      */
     private function formatiereZutatenFuerAPI(array $zutaten): array {
         $ingredientList = [];
 
-        // Deutsche -> Englische Übersetzung für häufige Zutaten
-        $uebersetzung = [
+        // Erweiterte Deutsche -> Englische Übersetzung für Zutaten
+        $zutatUebersetzung = [
+            // Grundnahrungsmittel
             'pasta' => 'pasta',
             'nudeln' => 'pasta',
             'spaghetti' => 'spaghetti',
-            'basilikum' => 'basil',
-            'olivenöl' => 'olive oil',
-            'parmesan' => 'parmesan cheese',
-            'knoblauch' => 'garlic',
-            'zwiebel' => 'onion',
-            'tomaten' => 'tomatoes',
-            'salz' => 'salt',
-            'pfeffer' => 'pepper',
-            'butter' => 'butter',
-            'milch' => 'milk',
-            'eier' => 'eggs',
-            'mehl' => 'flour',
-            'zucker' => 'sugar',
+            'penne' => 'penne pasta',
+            'fusilli' => 'fusilli pasta',
             'reis' => 'rice',
-            'kartoffeln' => 'potatoes',
-            'karotten' => 'carrots',
-            'paprika' => 'bell pepper',
-            'hähnchen' => 'chicken',
-            'rindfleisch' => 'beef',
-            'schweinefleisch' => 'pork'
-        ];
+            'basmati reis' => 'basmati rice',
+            'jasmin reis' => 'jasmine rice',
+            'vollkornreis' => 'brown rice',
+            'quinoa' => 'quinoa',
+            'couscous' => 'couscous',
+            'bulgur' => 'bulgur',
 
-        // Deutsche Einheiten -> Englische Einheiten
-        $einheitenUebersetzung = [
-            'g' => 'g',
-            'kg' => 'kg',
-            'ml' => 'ml',
-            'l' => 'l',
-            'tl' => 'tsp',
-            'el' => 'tbsp',
-            'teelöffel' => 'tsp',
-            'esslöffel' => 'tbsp',
-            'tasse' => 'cup',
-            'stück' => 'piece'
+            // Gemüse
+            'tomaten' => 'tomatoes',
+            'cherry tomaten' => 'cherry tomatoes',
+            'zwiebel' => 'onion',
+            'zwiebeln' => 'onions',
+            'rote zwiebel' => 'red onion',
+            'schalotten' => 'shallots',
+            'knoblauch' => 'garlic',
+            'knoblauchzehe' => 'garlic clove',
+            'karotten' => 'carrots',
+            'möhren' => 'carrots',
+            'kartoffeln' => 'potatoes',
+            'süßkartoffeln' => 'sweet potatoes',
+            'paprika' => 'bell pepper',
+            'rote paprika' => 'red bell pepper',
+            'gelbe paprika' => 'yellow bell pepper',
+            'grüne paprika' => 'green bell pepper',
+            'zucchini' => 'zucchini',
+            'aubergine' => 'eggplant',
+            'brokkoli' => 'broccoli',
+            'blumenkohl' => 'cauliflower',
+            'spinat' => 'spinach',
+            'rucola' => 'arugula',
+            'salat' => 'lettuce',
+            'gurke' => 'cucumber',
+            'avocado' => 'avocado',
+
+            // Kräuter & Gewürze
+            'basilikum' => 'basil',
+            'petersilie' => 'parsley',
+            'schnittlauch' => 'chives',
+            'dill' => 'dill',
+            'thymian' => 'thyme',
+            'rosmarin' => 'rosemary',
+            'oregano' => 'oregano',
+            'majoran' => 'marjoram',
+            'koriander' => 'cilantro',
+            'minze' => 'mint',
+            'salbei' => 'sage',
+            'salz' => 'salt',
+            'pfeffer' => 'black pepper',
+            'schwarzer pfeffer' => 'black pepper',
+            'weißer pfeffer' => 'white pepper',
+            'paprikapulver' => 'paprika',
+            'kreuzkümmel' => 'cumin',
+            'curry' => 'curry powder',
+            'zimt' => 'cinnamon',
+            'muskatnuss' => 'nutmeg',
+
+            // Proteine
+            'hähnchen' => 'chicken',
+            'hähnchenbrustfilet' => 'chicken breast',
+            'hähnchenschenkel' => 'chicken thighs',
+            'rindfleisch' => 'beef',
+            'rinderhackfleisch' => 'ground beef',
+            'schweinefleisch' => 'pork',
+            'schweinehackfleisch' => 'ground pork',
+            'lachs' => 'salmon',
+            'thunfisch' => 'tuna',
+            'garnelen' => 'shrimp',
+            'eier' => 'eggs',
+            'ei' => 'egg',
+
+            // Milchprodukte
+            'milch' => 'milk',
+            'vollmilch' => 'whole milk',
+            'fettarme milch' => 'low fat milk',
+            'sahne' => 'heavy cream',
+            'schlagsahne' => 'heavy cream',
+            'saure sahne' => 'sour cream',
+            'schmand' => 'sour cream',
+            'crème fraîche' => 'crème fraîche',
+            'butter' => 'butter',
+            'margarine' => 'margarine',
+            'käse' => 'cheese',
+            'parmesan' => 'parmesan cheese',
+            'mozzarella' => 'mozzarella cheese',
+            'gouda' => 'gouda cheese',
+            'cheddar' => 'cheddar cheese',
+            'feta' => 'feta cheese',
+            'ricotta' => 'ricotta cheese',
+            'quark' => 'quark',
+            'joghurt' => 'yogurt',
+            'griechischer joghurt' => 'greek yogurt',
+
+            // Öle & Fette
+            'olivenöl' => 'olive oil',
+            'sonnenblumenöl' => 'sunflower oil',
+            'rapsöl' => 'canola oil',
+            'kokosöl' => 'coconut oil',
+            'sesamöl' => 'sesame oil',
+
+            // Backzutaten
+            'mehl' => 'all-purpose flour',
+            'weizenmehl' => 'wheat flour',
+            'vollkornmehl' => 'whole wheat flour',
+            'dinkelmehl' => 'spelt flour',
+            'roggenmehl' => 'rye flour',
+            'zucker' => 'sugar',
+            'brauner zucker' => 'brown sugar',
+            'puderzucker' => 'powdered sugar',
+            'honig' => 'honey',
+            'ahornsirup' => 'maple syrup',
+            'backpulver' => 'baking powder',
+            'natron' => 'baking soda',
+            'hefe' => 'yeast',
+            'vanille' => 'vanilla',
+            'vanilleextrakt' => 'vanilla extract'
         ];
 
         foreach ($zutaten as $zutat) {
@@ -149,30 +234,171 @@ class SpoonacularAPI {
                 continue;
             }
 
-            // Zutat ins Englische übersetzen
+            // Zutat ins Englische übersetzen (case-insensitive)
             $nameLower = strtolower($name);
-            $englischName = $uebersetzung[$nameLower] ?? $name;
+            $englischName = $zutatUebersetzung[$nameLower] ?? $name;
 
-            // Einheit ins Englische übersetzen
-            $einheitLower = strtolower($einheit);
-            $englischEinheit = $einheitenUebersetzung[$einheitLower] ?? $einheit;
+            // Formatierte Zutat erstellen
+            $formattedIngredient = $this->formatIngredientWithQuantity($menge, $einheit, $englischName);
 
-            // Format: "200g pasta" oder "1 cup flour"
-            $ingredient = '';
-            if (!empty($menge)) {
-                $ingredient .= $menge;
-                if (!empty($englischEinheit)) {
-                    $ingredient .= $englischEinheit . ' ';
-                } else {
-                    $ingredient .= ' ';
-                }
+            if (!empty($formattedIngredient)) {
+                $ingredientList[] = $formattedIngredient;
             }
-            $ingredient .= $englischName;
-
-            $ingredientList[] = $ingredient;
         }
 
         return $ingredientList;
+    }
+
+    /**
+     * Formatiert eine einzelne Zutat mit Menge und Einheit für die Spoonacular API
+     */
+    private function formatIngredientWithQuantity(string $menge, string $einheit, string $ingredientName): string {
+        // Deutsche Einheiten -> Englische Einheiten mit Konvertierung
+        $einheitenKonvertierung = [
+            // Gewicht
+            'g' => ['unit' => 'g', 'factor' => 1],
+            'gramm' => ['unit' => 'g', 'factor' => 1],
+            'kg' => ['unit' => 'g', 'factor' => 1000], // Konvertiere kg zu g für bessere API-Kompatibilität
+            'kilogramm' => ['unit' => 'g', 'factor' => 1000],
+
+            // Volumen
+            'ml' => ['unit' => 'ml', 'factor' => 1],
+            'milliliter' => ['unit' => 'ml', 'factor' => 1],
+            'l' => ['unit' => 'ml', 'factor' => 1000], // Konvertiere l zu ml
+            'liter' => ['unit' => 'ml', 'factor' => 1000],
+
+            // Löffel
+            'tl' => ['unit' => 'tsp', 'factor' => 1],
+            'teelöffel' => ['unit' => 'tsp', 'factor' => 1],
+            'el' => ['unit' => 'tbsp', 'factor' => 1],
+            'esslöffel' => ['unit' => 'tbsp', 'factor' => 1],
+            'msp' => ['unit' => 'pinch', 'factor' => 1],
+            'messerspitze' => ['unit' => 'pinch', 'factor' => 1],
+            'prise' => ['unit' => 'pinch', 'factor' => 1],
+
+            // Tassen & Portionen
+            'tasse' => ['unit' => 'cup', 'factor' => 1],
+            'becher' => ['unit' => 'cup', 'factor' => 1],
+
+            // Stück
+            'stück' => ['unit' => '', 'factor' => 1], // Keine Einheit für Stückzahlen
+            'stk' => ['unit' => '', 'factor' => 1],
+            'st' => ['unit' => '', 'factor' => 1],
+
+            // Spezielle Einheiten
+            'zehe' => ['unit' => 'clove', 'factor' => 1], // für Knoblauch
+            'zehen' => ['unit' => 'cloves', 'factor' => 1],
+            'scheibe' => ['unit' => 'slice', 'factor' => 1],
+            'scheiben' => ['unit' => 'slices', 'factor' => 1],
+            'bund' => ['unit' => 'bunch', 'factor' => 1],
+            'dose' => ['unit' => 'can', 'factor' => 1],
+            'dosen' => ['unit' => 'cans', 'factor' => 1],
+            'packung' => ['unit' => 'package', 'factor' => 1],
+            'pkg' => ['unit' => 'package', 'factor' => 1]
+        ];
+
+        // Wenn keine Menge angegeben ist
+        if (empty($menge)) {
+            return $this->handleUnitlessIngredient($ingredientName);
+        }
+
+        // Menge als Zahl extrahieren (kann Brüche oder Dezimalzahlen enthalten)
+        $numericAmount = $this->parseAmount($menge);
+
+        if ($numericAmount <= 0) {
+            return $this->handleUnitlessIngredient($ingredientName);
+        }
+
+        // Einheit konvertieren
+        $einheitLower = strtolower(trim($einheit));
+        $unitData = $einheitenKonvertierung[$einheitLower] ?? ['unit' => $einheit, 'factor' => 1];
+
+        // Menge mit Konvertierungsfaktor anpassen
+        $convertedAmount = $numericAmount * $unitData['factor'];
+        $convertedUnit = $unitData['unit'];
+
+        // Formatierung für Spoonacular API
+        if (empty($convertedUnit)) {
+            // Für Stückzahlen: "2 eggs", "1 onion"
+            $formattedAmount = $this->formatAmount($convertedAmount);
+            return trim("$formattedAmount $ingredientName");
+        } else {
+            // Für Mengen mit Einheiten: "200g pasta", "2 tbsp olive oil"
+            $formattedAmount = $this->formatAmount($convertedAmount);
+            return trim("$formattedAmount$convertedUnit $ingredientName");
+        }
+    }
+
+    /**
+     * Behandelt Zutaten ohne spezifische Mengenangabe
+     */
+    private function handleUnitlessIngredient(string $ingredientName): string {
+        // Für Zutaten ohne Mengenangabe eine Standard-Portion annehmen
+        $defaultPortions = [
+            'onion' => '1 medium onion',
+            'onions' => '1 medium onion',
+            'garlic' => '2 cloves garlic',
+            'garlic clove' => '1 clove garlic',
+            'egg' => '1 large egg',
+            'eggs' => '2 large eggs',
+            'tomato' => '1 medium tomato',
+            'tomatoes' => '2 medium tomatoes',
+            'bell pepper' => '1 medium bell pepper',
+            'carrot' => '1 medium carrot',
+            'carrots' => '2 medium carrots',
+            'potato' => '1 medium potato',
+            'potatoes' => '2 medium potatoes',
+            'avocado' => '1 medium avocado',
+            'lemon' => '1 medium lemon',
+            'lime' => '1 medium lime',
+            'apple' => '1 medium apple',
+            'banana' => '1 medium banana'
+        ];
+
+        $ingredientLower = strtolower($ingredientName);
+        return $defaultPortions[$ingredientLower] ?? "100g $ingredientName";
+    }
+
+    /**
+     * Parst Mengenangaben (unterstützt Brüche und Dezimalzahlen)
+     */
+    private function parseAmount(string $amount): float {
+        $amount = trim($amount);
+
+        // Brüche handhaben (z.B. "1/2", "3/4")
+        if (preg_match('/^(\d+)\/(\d+)$/', $amount, $matches)) {
+            return floatval($matches[1]) / floatval($matches[2]);
+        }
+
+        // Gemischte Zahlen handhaben (z.B. "1 1/2")
+        if (preg_match('/^(\d+)\s+(\d+)\/(\d+)$/', $amount, $matches)) {
+            $whole = floatval($matches[1]);
+            $fraction = floatval($matches[2]) / floatval($matches[3]);
+            return $whole + $fraction;
+        }
+
+        // Komma durch Punkt ersetzen für deutsche Dezimalzahlen
+        $amount = str_replace(',', '.', $amount);
+
+        // Nur Zahlen extrahieren
+        if (preg_match('/(\d+(?:\.\d+)?)/', $amount, $matches)) {
+            return floatval($matches[1]);
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Formatiert Mengenangaben für die API
+     */
+    private function formatAmount(float $amount): string {
+        // Ganze Zahlen ohne Dezimalstellen anzeigen
+        if ($amount == floor($amount)) {
+            return strval(intval($amount));
+        }
+
+        // Dezimalzahlen mit maximal 2 Nachkommastellen
+        return number_format($amount, 2, '.', '');
     }
     
     /**
@@ -321,7 +547,7 @@ class SpoonacularAPI {
     }
     
     /**
-     * Schätzt Nährwerte basierend auf typischen Werten (Fallback)
+     * Schätzt Nährwerte basierend auf typischen Werten (Fallback) mit verbesserter Mengenberechnung
      */
     private function schaetzeNaehrwerte(array $zutaten, int $portionen): array {
         $totalNutrition = [
@@ -334,28 +560,69 @@ class SpoonacularAPI {
             'natrium' => 0
         ];
 
-        // Geschätzte Nährwerte pro 100g für häufige Zutaten
+        // Erweiterte Nährwerttabelle pro 100g/100ml
         $naehrwertTabelle = [
-            'pasta' => ['kalorien' => 350, 'protein' => 12, 'kohlenhydrate' => 70, 'fett' => 2],
-            'nudeln' => ['kalorien' => 350, 'protein' => 12, 'kohlenhydrate' => 70, 'fett' => 2],
-            'basilikum' => ['kalorien' => 25, 'protein' => 3, 'kohlenhydrate' => 2, 'fett' => 0.5],
-            'olivenöl' => ['kalorien' => 884, 'protein' => 0, 'kohlenhydrate' => 0, 'fett' => 100],
-            'parmesan' => ['kalorien' => 430, 'protein' => 35, 'kohlenhydrate' => 4, 'fett' => 30],
-            'reis' => ['kalorien' => 350, 'protein' => 7, 'kohlenhydrate' => 77, 'fett' => 1],
-            'hähnchen' => ['kalorien' => 165, 'protein' => 31, 'kohlenhydrate' => 0, 'fett' => 4],
-            'tomaten' => ['kalorien' => 18, 'protein' => 1, 'kohlenhydrate' => 4, 'fett' => 0.2]
+            // Grundnahrungsmittel
+            'pasta' => ['kalorien' => 350, 'protein' => 12, 'kohlenhydrate' => 70, 'fett' => 2, 'ballaststoffe' => 3, 'zucker' => 2, 'natrium' => 0.01],
+            'nudeln' => ['kalorien' => 350, 'protein' => 12, 'kohlenhydrate' => 70, 'fett' => 2, 'ballaststoffe' => 3, 'zucker' => 2, 'natrium' => 0.01],
+            'reis' => ['kalorien' => 350, 'protein' => 7, 'kohlenhydrate' => 77, 'fett' => 1, 'ballaststoffe' => 1, 'zucker' => 0.5, 'natrium' => 0.005],
+            'quinoa' => ['kalorien' => 368, 'protein' => 14, 'kohlenhydrate' => 64, 'fett' => 6, 'ballaststoffe' => 7, 'zucker' => 4, 'natrium' => 0.005],
+
+            // Gemüse
+            'tomaten' => ['kalorien' => 18, 'protein' => 1, 'kohlenhydrate' => 4, 'fett' => 0.2, 'ballaststoffe' => 1.2, 'zucker' => 2.6, 'natrium' => 0.005],
+            'zwiebel' => ['kalorien' => 40, 'protein' => 1.1, 'kohlenhydrate' => 9, 'fett' => 0.1, 'ballaststoffe' => 1.7, 'zucker' => 4.2, 'natrium' => 0.004],
+            'knoblauch' => ['kalorien' => 149, 'protein' => 6.4, 'kohlenhydrate' => 33, 'fett' => 0.5, 'ballaststoffe' => 2.1, 'zucker' => 1, 'natrium' => 0.017],
+            'karotten' => ['kalorien' => 41, 'protein' => 0.9, 'kohlenhydrate' => 10, 'fett' => 0.2, 'ballaststoffe' => 2.8, 'zucker' => 4.7, 'natrium' => 0.069],
+            'kartoffeln' => ['kalorien' => 77, 'protein' => 2, 'kohlenhydrate' => 17, 'fett' => 0.1, 'ballaststoffe' => 2.2, 'zucker' => 0.8, 'natrium' => 0.006],
+            'paprika' => ['kalorien' => 31, 'protein' => 1, 'kohlenhydrate' => 7, 'fett' => 0.3, 'ballaststoffe' => 2.5, 'zucker' => 4.2, 'natrium' => 0.004],
+            'spinat' => ['kalorien' => 23, 'protein' => 2.9, 'kohlenhydrate' => 3.6, 'fett' => 0.4, 'ballaststoffe' => 2.2, 'zucker' => 0.4, 'natrium' => 0.079],
+
+            // Kräuter (pro 100g, aber meist in kleinen Mengen verwendet)
+            'basilikum' => ['kalorien' => 22, 'protein' => 3.2, 'kohlenhydrate' => 2.6, 'fett' => 0.6, 'ballaststoffe' => 1.6, 'zucker' => 0.3, 'natrium' => 0.004],
+            'petersilie' => ['kalorien' => 36, 'protein' => 3, 'kohlenhydrate' => 6, 'fett' => 0.8, 'ballaststoffe' => 3.3, 'zucker' => 0.9, 'natrium' => 0.056],
+
+            // Proteine
+            'hähnchen' => ['kalorien' => 165, 'protein' => 31, 'kohlenhydrate' => 0, 'fett' => 3.6, 'ballaststoffe' => 0, 'zucker' => 0, 'natrium' => 0.074],
+            'rindfleisch' => ['kalorien' => 250, 'protein' => 26, 'kohlenhydrate' => 0, 'fett' => 15, 'ballaststoffe' => 0, 'zucker' => 0, 'natrium' => 0.055],
+            'lachs' => ['kalorien' => 208, 'protein' => 20, 'kohlenhydrate' => 0, 'fett' => 13, 'ballaststoffe' => 0, 'zucker' => 0, 'natrium' => 0.059],
+            'eier' => ['kalorien' => 155, 'protein' => 13, 'kohlenhydrate' => 1.1, 'fett' => 11, 'ballaststoffe' => 0, 'zucker' => 1.1, 'natrium' => 0.124],
+
+            // Milchprodukte
+            'milch' => ['kalorien' => 42, 'protein' => 3.4, 'kohlenhydrate' => 5, 'fett' => 1, 'ballaststoffe' => 0, 'zucker' => 5, 'natrium' => 0.044],
+            'butter' => ['kalorien' => 717, 'protein' => 0.9, 'kohlenhydrate' => 0.1, 'fett' => 81, 'ballaststoffe' => 0, 'zucker' => 0.1, 'natrium' => 0.011],
+            'parmesan' => ['kalorien' => 431, 'protein' => 35, 'kohlenhydrate' => 4, 'fett' => 29, 'ballaststoffe' => 0, 'zucker' => 0.9, 'natrium' => 1.529],
+            'mozzarella' => ['kalorien' => 300, 'protein' => 22, 'kohlenhydrate' => 2.2, 'fett' => 22, 'ballaststoffe' => 0, 'zucker' => 1, 'natrium' => 0.627],
+
+            // Öle & Fette
+            'olivenöl' => ['kalorien' => 884, 'protein' => 0, 'kohlenhydrate' => 0, 'fett' => 100, 'ballaststoffe' => 0, 'zucker' => 0, 'natrium' => 0.002],
+            'sonnenblumenöl' => ['kalorien' => 884, 'protein' => 0, 'kohlenhydrate' => 0, 'fett' => 100, 'ballaststoffe' => 0, 'zucker' => 0, 'natrium' => 0],
+
+            // Backzutaten
+            'mehl' => ['kalorien' => 364, 'protein' => 10, 'kohlenhydrate' => 76, 'fett' => 1, 'ballaststoffe' => 2.7, 'zucker' => 0.3, 'natrium' => 0.002],
+            'zucker' => ['kalorien' => 387, 'protein' => 0, 'kohlenhydrate' => 100, 'fett' => 0, 'ballaststoffe' => 0, 'zucker' => 100, 'natrium' => 0],
+            'honig' => ['kalorien' => 304, 'protein' => 0.3, 'kohlenhydrate' => 82, 'fett' => 0, 'ballaststoffe' => 0.2, 'zucker' => 82, 'natrium' => 0.004]
         ];
 
         foreach ($zutaten as $zutat) {
             $name = strtolower(trim($zutat['zutat'] ?? ''));
-            $menge = floatval($zutat['menge'] ?? 0);
+            $menge = $this->parseAmount($zutat['menge'] ?? '');
+            $einheit = strtolower(trim($zutat['einheit'] ?? ''));
 
-            if ($menge <= 0) continue;
+            if ($menge <= 0) {
+                // Für Zutaten ohne Mengenangabe Standardwerte verwenden
+                $menge = $this->getDefaultAmount($name);
+                $einheit = 'g'; // Standardeinheit
+            }
+
+            // Menge in Gramm konvertieren
+            $mengeInGramm = $this->convertToGrams($menge, $einheit, $name);
+
+            if ($mengeInGramm <= 0) continue;
 
             // Suche passende Nährwerte
             $naehrwerte = null;
             foreach ($naehrwertTabelle as $key => $werte) {
-                if (strpos($name, $key) !== false) {
+                if (strpos($name, $key) !== false || $key === $name) {
                     $naehrwerte = $werte;
                     break;
                 }
@@ -363,18 +630,17 @@ class SpoonacularAPI {
 
             // Fallback für unbekannte Zutaten
             if (!$naehrwerte) {
-                $naehrwerte = ['kalorien' => 200, 'protein' => 5, 'kohlenhydrate' => 20, 'fett' => 5];
+                $naehrwerte = ['kalorien' => 200, 'protein' => 5, 'kohlenhydrate' => 20, 'fett' => 5, 'ballaststoffe' => 2, 'zucker' => 1, 'natrium' => 0.1];
             }
 
-            // Berechne für die angegebene Menge (angenommen pro 100g)
-            $faktor = $menge / 100;
-            $totalNutrition['kalorien'] += $naehrwerte['kalorien'] * $faktor;
-            $totalNutrition['protein'] += $naehrwerte['protein'] * $faktor;
-            $totalNutrition['kohlenhydrate'] += $naehrwerte['kohlenhydrate'] * $faktor;
-            $totalNutrition['fett'] += $naehrwerte['fett'] * $faktor;
-            $totalNutrition['ballaststoffe'] += 2 * $faktor; // Geschätzt
-            $totalNutrition['zucker'] += 1 * $faktor; // Geschätzt
-            $totalNutrition['natrium'] += 0.1 * $faktor; // Geschätzt
+            // Berechne für die angegebene Menge (Nährwerttabelle ist pro 100g)
+            $faktor = $mengeInGramm / 100;
+
+            foreach ($naehrwerte as $naehrstoff => $wert) {
+                if (isset($totalNutrition[$naehrstoff])) {
+                    $totalNutrition[$naehrstoff] += $wert * $faktor;
+                }
+            }
         }
 
         // Pro Portion berechnen
@@ -382,9 +648,170 @@ class SpoonacularAPI {
             foreach ($totalNutrition as $key => $value) {
                 $totalNutrition[$key] = round($value / $portionen, 2);
             }
+        } else {
+            // Werte runden
+            foreach ($totalNutrition as $key => $value) {
+                $totalNutrition[$key] = round($value, 2);
+            }
         }
 
         return $totalNutrition;
+    }
+
+    /**
+     * Konvertiert verschiedene Einheiten zu Gramm für die Nährwertberechnung
+     */
+    private function convertToGrams(float $amount, string $unit, string $ingredientName): float {
+        $unit = strtolower($unit);
+
+        switch ($unit) {
+            case 'g':
+            case 'gramm':
+                return $amount;
+
+            case 'kg':
+            case 'kilogramm':
+                return $amount * 1000;
+
+            case 'ml':
+            case 'milliliter':
+                // Für Flüssigkeiten: 1ml ≈ 1g (Näherung)
+                return $amount;
+
+            case 'l':
+            case 'liter':
+                return $amount * 1000;
+
+            case 'tl':
+            case 'teelöffel':
+                // 1 TL ≈ 5g (abhängig von der Zutat)
+                return $amount * $this->getTeaspoonWeight($ingredientName);
+
+            case 'el':
+            case 'esslöffel':
+                // 1 EL ≈ 15g (abhängig von der Zutat)
+                return $amount * $this->getTablespoonWeight($ingredientName);
+
+            case 'tasse':
+            case 'becher':
+                // 1 Tasse ≈ 240ml ≈ 240g für Flüssigkeiten
+                return $amount * $this->getCupWeight($ingredientName);
+
+            case 'stück':
+            case 'stk':
+            case '':
+                // Für Stückzahlen das durchschnittliche Gewicht verwenden
+                return $amount * $this->getPieceWeight($ingredientName);
+
+            default:
+                // Unbekannte Einheit: als Gramm behandeln
+                return $amount;
+        }
+    }
+
+    /**
+     * Gibt das durchschnittliche Gewicht eines Teelöffels für verschiedene Zutaten zurück
+     */
+    private function getTeaspoonWeight(string $ingredient): float {
+        $weights = [
+            'salz' => 6,
+            'zucker' => 4,
+            'mehl' => 3,
+            'olivenöl' => 5,
+            'honig' => 7,
+            'zimt' => 2,
+            'paprikapulver' => 2
+        ];
+
+        foreach ($weights as $key => $weight) {
+            if (strpos($ingredient, $key) !== false) {
+                return $weight;
+            }
+        }
+
+        return 5; // Standard: 5g
+    }
+
+    /**
+     * Gibt das durchschnittliche Gewicht eines Esslöffels für verschiedene Zutaten zurück
+     */
+    private function getTablespoonWeight(string $ingredient): float {
+        return $this->getTeaspoonWeight($ingredient) * 3; // 1 EL = 3 TL
+    }
+
+    /**
+     * Gibt das durchschnittliche Gewicht einer Tasse für verschiedene Zutaten zurück
+     */
+    private function getCupWeight(string $ingredient): float {
+        $weights = [
+            'mehl' => 120,
+            'zucker' => 200,
+            'reis' => 185,
+            'milch' => 240,
+            'wasser' => 240,
+            'olivenöl' => 220
+        ];
+
+        foreach ($weights as $key => $weight) {
+            if (strpos($ingredient, $key) !== false) {
+                return $weight;
+            }
+        }
+
+        return 240; // Standard: 240g
+    }
+
+    /**
+     * Gibt das durchschnittliche Gewicht pro Stück für verschiedene Zutaten zurück
+     */
+    private function getPieceWeight(string $ingredient): float {
+        $weights = [
+            'ei' => 60,
+            'eier' => 60,
+            'zwiebel' => 150,
+            'knoblauchzehe' => 3,
+            'knoblauch' => 3,
+            'tomate' => 150,
+            'kartoffel' => 200,
+            'karotte' => 100,
+            'paprika' => 150,
+            'avocado' => 200,
+            'zitrone' => 100,
+            'apfel' => 180,
+            'banane' => 120
+        ];
+
+        foreach ($weights as $key => $weight) {
+            if (strpos($ingredient, $key) !== false) {
+                return $weight;
+            }
+        }
+
+        return 100; // Standard: 100g
+    }
+
+    /**
+     * Gibt Standardmengen für Zutaten ohne Mengenangabe zurück
+     */
+    private function getDefaultAmount(string $ingredient): float {
+        $defaults = [
+            'salz' => 5,      // 1 TL
+            'pfeffer' => 2,   // 1/2 TL
+            'olivenöl' => 15, // 1 EL
+            'butter' => 20,   // 1 EL
+            'knoblauch' => 6, // 2 Zehen
+            'zwiebel' => 150, // 1 mittelgroße
+            'ei' => 60,       // 1 Ei
+            'basilikum' => 10 // 1 EL frisch
+        ];
+
+        foreach ($defaults as $key => $amount) {
+            if (strpos($ingredient, $key) !== false) {
+                return $amount;
+            }
+        }
+
+        return 100; // Standard: 100g
     }
 
     /**
