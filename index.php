@@ -49,6 +49,11 @@ switch ($page) {
         showRegistrierungsFormular();
         break;
 
+    case 'bestaetigeRegistrierung':
+        require_once 'php/controller/NutzerController.php';
+        bestaetigeRegistrierung($_GET['code'] ?? '');
+        break;
+
     case 'pruefeBenutzername':
         require_once 'php/controller/NutzerController.php';
         pruefeBenutzername();
