@@ -55,18 +55,40 @@ function sanitize_email(string $email): string {
 }
 
 /**
- * Prüft Datei-Uploads auf Bildformat.
+ * Prüft Datei-Uploads auf Bildformat mit erweiterten Sicherheitsprüfungen.
  */
 function validate_and_store_image(array $file, string $uploadDir = 'images/'): ?string {
     $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    $maxFileSize = 5 * 1024 * 1024; // 5MB
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
+    // Grundlegende Validierung
     if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) return null;
-    $fileType = mime_content_type($file['tmp_name']);
 
+    // Dateigröße prüfen
+    if ($file['size'] > $maxFileSize) return null;
+
+    // MIME-Type prüfen
+    $fileType = mime_content_type($file['tmp_name']);
     if (!in_array($fileType, $allowedTypes, true)) return null;
 
+    // Dateiendung prüfen
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($extension, $allowedExtensions, true)) return null;
+
+    // Bildvalidierung mit getimagesize
+    $imageInfo = getimagesize($file['tmp_name']);
+    if ($imageInfo === false) return null;
+
+    // Sichere Dateinamen generieren
     $name = preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($file['name']));
+    $name = substr($name, 0, 100); // Länge begrenzen
     $zielPfad = $uploadDir . uniqid('img_') . '_' . $name;
+
+    // Upload-Verzeichnis sicherstellen
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
 
     return move_uploaded_file($file['tmp_name'], $zielPfad) ? $zielPfad : null;
 }

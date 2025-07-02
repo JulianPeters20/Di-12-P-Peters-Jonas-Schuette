@@ -1,6 +1,7 @@
 <main>
     <h2>Anmeldung</h2>
     <form action="index.php?page=anmeldung" method="post" autocomplete="off">
+        <?= getCSRFTokenField() ?>
 
         <div class="form-row">
             <label for="email">E-Mail-Adresse:</label>

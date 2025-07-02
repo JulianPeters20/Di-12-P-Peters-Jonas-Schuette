@@ -6,6 +6,7 @@
 
     <div class="form-container">
         <form action="index.php?page=rezept-aktualisieren&id=<?= urlencode($rezept['id']) ?>" method="post" enctype="multipart/form-data">
+            <?= getCSRFTokenField() ?>
             <!-- TITEL -->
             <div class="form-row">
                 <label for="titel">Titel:</label>
