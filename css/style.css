@@ -616,6 +616,17 @@ select {
   box-sizing: border-box;
   cursor: pointer;
   min-height: 42px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dropdown-header:hover {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.dropdown-multiselect.open .dropdown-header {
+  border-color: #007bff;
+  border-radius: 6px 6px 0 0;
 }
 
 .dropdown-arrow {
