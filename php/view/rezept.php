@@ -280,7 +280,9 @@
             <!-- Ganz unten: Anmelden Button mit Text -->
             <?php if (empty($_SESSION['nutzerId'])): ?>
                 <section class="rezept-block" style="margin-top: 20px;">
-                    <form action="index.php?page=anmeldung" method="get" style="display:inline;">
+                    <form action="index.php" method="get" style="display:inline;">
+                        <input type="hidden" name="page" value="anmeldung">
+                        <input type="hidden" name="return" value="<?= 'rezept&id=' . urlencode($rezept['id']) ?>">
                         <button type="submit" class="btn">Anmelden</button>
                     </form>
                     <span>um das Rezept zu bewerten.</span>

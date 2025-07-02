@@ -59,8 +59,8 @@
 
                                 <div class="meta" style="font-size: 0.9rem; color: #666; margin-bottom: 6px;">
                                     <?php
-                                    $durchschnitt = $rezept['durchschnitt'] ?? null;
-                                    $anzahlBewertungen = $rezept['anzahlBewertungen'] ?? 0;
+                                    $durchschnitt = $rezept->durchschnitt ?? null;
+                                    $anzahlBewertungen = $rezept->anzahlBewertungen ?? 0;
 
                                     if ($durchschnitt !== null && $anzahlBewertungen > 0) {
                                         $sterne = round($durchschnitt);
@@ -76,7 +76,7 @@
 
                                 <div class="meta" style="margin-bottom: 6px;">
                                     <?php
-                                    $kategorien = $rezept['kategorien'] ?? [];
+                                    $kategorien = $rezept->kategorien ?? [];
                                     if (is_array($kategorien) && count($kategorien) > 0) {
                                         $anzeigeKategorien = array_slice($kategorien, 0, 3);
                                         echo htmlspecialchars(implode(', ', $anzeigeKategorien));
@@ -90,18 +90,18 @@
                                 </div>
 
                                 <div class="meta" style="font-size: 0.9rem; color: #666; margin-top: 4px;">
-                                    <?= htmlspecialchars($rezept['Erstellungsdatum'] ?? '-') ?>
-                                <div class="meta">
-                                    Kategorien:
-                                    <?= !empty($rezept->Kategorien) ? implode(', ', $rezept->Kategorien) : '-' ?>
-                                    · <?= htmlspecialchars($rezept->Erstellungsdatum ?? '-') ?>
-                                </div>
+                                    <?= htmlspecialchars($rezept->Erstellungsdatum ?? '-') ?>
+                                    <div class="meta">
+                                        Kategorien:
+                                        <?= !empty($rezept->Kategorien) ? implode(', ', $rezept->Kategorien) : '-' ?>
+                                        · <?= htmlspecialchars($rezept->Erstellungsdatum ?? '-') ?>
+                                    </div>
 
-                                <div class="rezept-aktion" style="margin-top: 10px;">
-                                    <a href="index.php?page=rezept-bearbeiten&id=<?= (int)($rezept->RezeptID ?? 0) ?>" class="btn">Bearbeiten</a>
-                                    <button type="button" class="btn rezept-loeschen-btn" data-id="<?= $rezept->RezeptID ?>">Löschen</button>
+                                    <div class="rezept-aktion" style="margin-top: 10px;">
+                                        <a href="index.php?page=rezept-bearbeiten&id=<?= (int)($rezept->RezeptID ?? 0) ?>" class="btn">Bearbeiten</a>
+                                        <button type="button" class="btn rezept-loeschen-btn" data-id="<?= $rezept->RezeptID ?>">Löschen</button>
+                                    </div>
                                 </div>
-                            </div>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -140,21 +140,27 @@
 
 </main>
 
-
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const buttons = document.querySelectorAll('.tab-button');
         const contents = document.querySelectorAll('.tab-content');
+        console.log("Tab-Script geladen!", buttons.length, "Tabs gefunden.");
 
         buttons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const target = btn.dataset.tab;
+                console.log("Tab clicked! Ziel:", target);
 
                 buttons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
                 contents.forEach(c => {
-                    c.classList.toggle('active', c.id === target);
+                    if (c.id === target) {
+                        c.classList.add('active');
+                        console.log("Section aktiviert:", c.id);
+                    } else {
+                        c.classList.remove('active');
+                    }
                 });
             });
         });
@@ -171,7 +177,7 @@
 
         document.querySelectorAll(".rezept-loeschen-btn").forEach(btn => {
             btn.addEventListener("click", (e) => {
-                e.preventDefault(); // wichtig: verhindert versehentlichen submit
+                e.preventDefault(); // verhindert versehentlichen submit
                 aktiveButton = btn;
                 const titel = btn.closest(".rezept-karte")?.querySelector("h4")?.innerText || "dieses Rezept";
                 loeschText.textContent = `Möchtest du „${titel}“ wirklich löschen?`;
@@ -180,7 +186,6 @@
         });
 
         abbrechenBtn.addEventListener("click", () => {
-            console.log("Abbrechen gedrückt!");
             aktiveButton = null;
             modal.setAttribute("hidden", true);
         });
@@ -233,6 +238,12 @@
         // Automatisch nach Animation entfernen
         setTimeout(() => {
             box.remove();
-        }, 4600); // etwas mehr als fadeout-delay
+        }, 4600);
     }
 </script>
+
+<!-- TAB CONTENT CSS -->
+<style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+</style>

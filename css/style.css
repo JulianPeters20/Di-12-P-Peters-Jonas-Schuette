@@ -140,6 +140,31 @@ select:focus {
   }
 }
 
+.form-row-benutzername-fehler {
+  display: flex;
+  align-items: flex-start;
+  margin-top: -10px;       /* etwas nach oben, damit es zum Benutzernamen-Feld rutscht */
+  margin-bottom: 0;        /* KEIN Extra-Abstand nach unten, damit der Gesamtabstand zum nächsten Feld gleichbleibt */
+  min-height: 0;
+}
+
+.benutzername-fehler {
+  color: #b30000;
+  font-size: 1em;
+  min-height: 20px;        /* Hält die Zeile immer sichtbar, falls keine Fehlermeldung */
+  white-space: pre-line;
+  margin-left: 185px;      /* entspricht der Label-Breite für perfekte Ausrichtung */
+  display: block;
+}
+
+/* Für Mobilgeräte: linksbündig darunter */
+@media (max-width: 600px) {
+  .benutzername-fehler, .form-row-benutzername-fehler {
+    margin-left: 0;
+    margin-top: 0;
+  }
+}
+
 /* ======= Button Styles ======= */
 .btn,
 button,
@@ -1329,4 +1354,11 @@ select {
   .naehrwerte-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
 }

@@ -12,12 +12,15 @@
 
         <div class="form-row">
             <label for="benutzername">Benutzername:</label>
-            <div style="display: flex; align-items: center; gap: 10px; flex:1;">
+            <div style="display:flex; align-items:center; gap:10px; flex:1;">
                 <input type="text" id="benutzername" name="benutzername" maxlength="30"
                        autocomplete="username"
                        value="<?= isset($benutzername) ? htmlspecialchars($benutzername) : (isset($_POST['benutzername']) ? htmlspecialchars($_POST['benutzername']) : '') ?>">
                 <span class="hinweis">(öffentlich sichtbar, optional)</span>
             </div>
+        </div>
+        <div class="form-row-benutzername-fehler">
+            <span id="benutzername-fehler" class="benutzername-fehler"></span>
         </div>
 
         <div class="form-row">
