@@ -8,8 +8,9 @@ try {
 
     // Tabellen löschen (Reihenfolge wegen FK)
     $tables = [
-        'Bewertung', 'RezeptKategorie', 'RezeptUtensil', 'RezeptZutat',
-        'Rezept', 'Kategorie', 'Utensil', 'Zutat', 'Preisklasse', 'Portionsgröße', 'Nutzer'
+        'Bewertung', 'RezeptKategorie', 'RezeptUtensil', 'RezeptZutat', 'RezeptNaehrwerte',
+        'Rezept', 'Kategorie', 'Utensil', 'Zutat', 'Preisklasse', 'Portionsgröße', 'Nutzer',
+        'api_cache', 'api_log'
     ];
     foreach ($tables as $t) {
         $db->exec("DROP TABLE IF EXISTS `$t`");
@@ -70,6 +71,43 @@ try {
             PRIMARY KEY (RezeptID, NutzerID),
             FOREIGN KEY (RezeptID) REFERENCES Rezept(RezeptID) ON DELETE CASCADE,
             FOREIGN KEY (NutzerID) REFERENCES Nutzer(NutzerID) ON DELETE CASCADE
+        )
+    ");
+
+    // Nährwerte-Tabelle für Spoonacular API Integration
+    $db->exec("
+        CREATE TABLE RezeptNaehrwerte (
+            RezeptID INT PRIMARY KEY,
+            Kalorien DECIMAL(8,2),
+            Protein DECIMAL(8,2),
+            Kohlenhydrate DECIMAL(8,2),
+            Fett DECIMAL(8,2),
+            Ballaststoffe DECIMAL(8,2),
+            Zucker DECIMAL(8,2),
+            Natrium DECIMAL(8,2),
+            Berechnet_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (RezeptID) REFERENCES Rezept(RezeptID) ON DELETE CASCADE
+        )
+    ");
+
+    // Cache-Tabelle für API-Aufrufe
+    $db->exec("
+        CREATE TABLE api_cache (
+            cache_key VARCHAR(255) PRIMARY KEY,
+            naehrwerte_json TEXT NOT NULL,
+            erstellt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ");
+
+    // API-Log-Tabelle für Monitoring
+    $db->exec("
+        CREATE TABLE api_log (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            endpoint VARCHAR(100) NOT NULL,
+            status VARCHAR(20) NOT NULL,
+            response_time DECIMAL(10,2),
+            error_message TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ");
 

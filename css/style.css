@@ -1155,9 +1155,120 @@ select {
 }
 
 .hinweis {
-  color: #666;
-  font-size: 0.95em;
-  font-weight: normal;
-  margin-left: 8px;
-  white-space: nowrap;
+    color: #666;
+    font-size: 0.95em;
+    font-weight: normal;
+    margin-left: 8px;
+    white-space: nowrap;
+}
+
+/* ======= Nährwerte-Styling ======= */
+.naehrwerte-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.naehrwert-item {
+  background: var(--card-bg);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.naehrwert-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.naehrwert-wert {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--accent-dark);
+  display: block;
+  margin-top: 5px;
+}
+
+.consent-info {
+  background: #f0f8ff;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid var(--accent);
+  margin-bottom: 20px;
+}
+
+.consent-info h4 {
+  color: var(--accent-dark);
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.consent-info p {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.consent-info label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 15px 0;
+  cursor: pointer;
+}
+
+.consent-info input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.loading-spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#naehrwerte-loading {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+#naehrwerte-error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #c62828;
+  margin-top: 15px;
+}
+
+/* Responsive Nährwerte */
+@media (max-width: 768px) {
+  .naehrwerte-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .naehrwert-item {
+    padding: 12px;
+  }
+
+  .naehrwert-wert {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .naehrwerte-grid {
+    grid-template-columns: 1fr;
+  }
 }
