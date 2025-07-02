@@ -8,7 +8,7 @@
 
 ---
 
-## Wichtige Funktionen und Datenschutz (Stand: Aufgabenblatt 6)
+## Wichtige Funktionen und Datenschutz
 
 - Rechtlich korrekte **Datenschutzerklärung**, **Impressum** und **Nutzungsbedingungen** (im Footer verlinkt)
 - Registrierung mit **Opt-In-Checkboxen** für Datenschutz & Nutzungsbedingungen (sind jeweilig verlinkt)
@@ -18,6 +18,25 @@
 - Keine Anzeige, ob eine E-Mail bereits vergeben ist (**kein Enumeration-Leak**)
 - **Registrierungsmail** wird als klickbare HTML-Datei in `/data/mails/` simuliert (kein echter E-Mail-Versand)
 - Nutzer erhält nach Absenden des Formulars einen Link zur generierten HTML-Mail („Weitere Infos finden Sie in der Datei ...“)
+
+## API-Integration und Nährwerte
+
+- **Spoonacular API** für automatische Nährwertberechnung integriert
+- **DSGVO-konforme Einwilligung** vor API-Nutzung (2-Klick-Lösung)
+- **Caching-System** zur Reduzierung von API-Aufrufen und besserer Performance
+- **Admin-Monitor** für API-Statistiken, Fehlerprotokollierung und Cache-Verwaltung
+- Nährwerte werden pro Portion berechnet und in der Datenbank gespeichert
+
+## Sicherheitsfeatures
+
+- **CSRF-Schutz** für alle Formulare und AJAX-Operationen
+- **Rate Limiting** gegen Brute-Force-Angriffe (5 Versuche/15 Min)
+- **Sichere Session-Konfiguration** (HttpOnly, Secure, SameSite)
+- **Input-Validierung** und XSS-Schutz durch htmlspecialchars()
+- **Sichere Datei-Uploads** mit MIME-Type- und Größenvalidierung
+- **HTTP-Security-Header** (CSP, X-Frame-Options, etc.)
+- **Prepared Statements** gegen SQL-Injection
+- **Autorisierungsprüfungen** (Nutzer können nur eigene Rezepte bearbeiten)
 
 ---
 
@@ -41,5 +60,5 @@
 
 - Weitere Dummy-Rezepte hinzufügen
 - Sortier-/Filterfunktionen für beliebte/bewertete Rezepte (benötigt mehr Beispieldaten)
-- Verbesserte Validierung der Zutaten- und Mengeneingabe
+- Responsiveness verbessern -> Burgermenü für mobile/kleinere Ansichten
 
