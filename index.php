@@ -2,9 +2,24 @@
 declare(strict_types=1);
 ob_start();
 
+// Sicherheitskonfiguration laden
+require_once 'php/config/security.php';
+
+// Sichere Session-Konfiguration
+configureSecureSession();
 session_start();
 
+// Session-Regeneration bei Login-Status-Änderung
+if (isset($_SESSION['regenerate_session']) && $_SESSION['regenerate_session']) {
+    session_regenerate_id(true);
+    unset($_SESSION['regenerate_session']);
+}
+
+// Sicherheits-Header setzen
+setSecurityHeaders();
+
 require_once 'php/include/form_utils.php';
+require_once 'php/include/csrf_protection.php';
 
 $page = htmlspecialchars($_GET['page'] ?? 'home');
 
@@ -15,7 +30,7 @@ $geschuetzteSeiten = [
 ];
 
 if (in_array($page, $geschuetzteSeiten, true) && empty($_SESSION['email']) && $page !== 'anmeldung') {
-    $_SESSION["message"] = "Bitte melde dich zuerst an.";
+    flash("warning", "Bitte melde dich zuerst an.");
     header("Location: index.php?page=anmeldung");
     exit;
 }
@@ -107,7 +122,7 @@ switch ($page) {
         require_once 'php/controller/RezeptController.php';
 
         if (!isset($_SESSION['email'])) {
-            $_SESSION["message"] = "Nur angemeldete Nutzer können neue Rezepte erstellen.";
+            flash("warning", "Nur angemeldete Nutzer können neue Rezepte erstellen.");
             header("Location: index.php?page=anmeldung");
             exit;
         }
@@ -153,21 +168,21 @@ switch ($page) {
         require_once 'php/controller/NutzerController.php';
 
         if (!istAdmin()) {
-            $_SESSION["message"] = "Nur Administratoren dürfen Nutzer löschen.";
+            flash("error", "Nur Administratoren dürfen Nutzer löschen.");
             header("Location: index.php?page=nutzerliste");
             exit;
         }
 
         $id = validateId($_GET['id'] ?? null);
         if ($id === null) {
-            $_SESSION["message"] = "Ungültige Nutzer-ID.";
+            flash("error", "Ungültige Nutzer-ID.");
             header("Location: index.php?page=nutzerliste");
             exit;
         }
 
         // Schutz: Admin darf sich selbst nicht löschen
         if (isset($_SESSION['nutzerId']) && (int)$_SESSION['nutzerId'] === $id) {
-            $_SESSION["message"] = "Du kannst deinen eigenen Account nicht löschen.";
+            flash("warning", "Du kannst deinen eigenen Account nicht löschen.");
             header("Location: index.php?page=nutzerliste");
             exit;
         }

@@ -16,7 +16,7 @@ require_once 'php/model/NaehrwerteDAO.php';
 function showApiMonitor(): void {
     // Zugriffskontrolle - gleich wie bei showNutzerListe()
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
-        $_SESSION["message"] = "Nur Administratoren dürfen den API-Monitor sehen.";
+        flash("error", "Nur Administratoren dürfen den API-Monitor sehen.");
         header("Location: index.php");
         exit;
     }
@@ -46,7 +46,7 @@ function showApiMonitor(): void {
         
     } catch (Exception $e) {
         error_log("Fehler im API-Monitor: " . $e->getMessage());
-        $_SESSION["message"] = "Fehler beim Laden des API-Monitors.";
+        flash("error", "Fehler beim Laden des API-Monitors.");
         header("Location: index.php");
         exit;
     }
@@ -58,7 +58,7 @@ function showApiMonitor(): void {
 function leereApiCache(): void {
     // Zugriffskontrolle
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
-        $_SESSION["message"] = "Nur Administratoren dürfen den Cache leeren.";
+        flash("error", "Nur Administratoren dürfen den Cache leeren.");
         header("Location: index.php");
         exit;
     }
@@ -71,11 +71,11 @@ function leereApiCache(): void {
         $db = Database::getConnection();
         $stmt = $db->exec("DELETE FROM api_cache");
         
-        $_SESSION["message"] = "API-Cache erfolgreich geleert.";
-        
+        flash("success", "API-Cache erfolgreich geleert.");
+
     } catch (Exception $e) {
         error_log("Fehler beim Leeren des API-Caches: " . $e->getMessage());
-        $_SESSION["message"] = "Fehler beim Leeren des API-Caches.";
+        flash("error", "Fehler beim Leeren des API-Caches.");
     }
     
     header("Location: index.php?page=api-monitor");
@@ -88,7 +88,7 @@ function leereApiCache(): void {
 function bereinigeApiLogs(): void {
     // Zugriffskontrolle
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
-        $_SESSION["message"] = "Nur Administratoren dürfen Logs bereinigen.";
+        flash("error", "Nur Administratoren dürfen Logs bereinigen.");
         header("Location: index.php");
         exit;
     }
@@ -97,11 +97,11 @@ function bereinigeApiLogs(): void {
         $apiMonitorDAO = new ApiMonitorDAO();
         $geloeschteEintraege = $apiMonitorDAO->bereinigeAlteLogEintraege();
         
-        $_SESSION["message"] = "API-Logs bereinigt. $geloeschteEintraege alte Einträge entfernt.";
-        
+        flash("success", "API-Logs bereinigt. $geloeschteEintraege alte Einträge entfernt.");
+
     } catch (Exception $e) {
         error_log("Fehler beim Bereinigen der API-Logs: " . $e->getMessage());
-        $_SESSION["message"] = "Fehler beim Bereinigen der API-Logs.";
+        flash("error", "Fehler beim Bereinigen der API-Logs.");
     }
     
     header("Location: index.php?page=api-monitor");

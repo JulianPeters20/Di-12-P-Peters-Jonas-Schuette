@@ -1008,6 +1008,48 @@ select {
   border: 1px solid #ffeeba;
 }
 
+.flash.info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #17a2b8;
+}
+
+/* Flash-message Klasse für Views */
+.flash-message {
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 5px;
+  font-weight: bold;
+  text-align: center;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.flash-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #28a745;
+}
+
+.flash-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #dc3545;
+}
+
+.flash-message.warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+.flash-message.info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #17a2b8;
+}
+
 /* ======= Sticky Flash Toast ======= */
 .flash-toast {
   position: fixed;
@@ -1041,6 +1083,11 @@ select {
   background-color: #fff3cd;
   color: #856404;
   border: 1px solid #ffeeba;
+}
+.flash-toast.info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #17a2b8;
 }
 
 /* Animationen */
