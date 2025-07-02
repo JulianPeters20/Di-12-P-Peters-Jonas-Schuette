@@ -18,11 +18,11 @@ class NutzerDAO {
 
         return $row ? new Nutzer(
             (int)$row['NutzerID'],
-            $row['Benutzername'],
+            $row['Benutzername'] ?? "",
             $row['Email'],
             $row['PasswortHash'],
             $row['RegistrierungsDatum'],
-            $row['IstAdmin'] == 1
+            (bool)($row['IstAdmin'] ?? false)
         ) : null;
     }
 
@@ -33,18 +33,20 @@ class NutzerDAO {
 
         return $row ? new Nutzer(
             (int)$row['NutzerID'],
-            $row['Benutzername'],
+            $row['Benutzername'] ?? "",
             $row['Email'],
             $row['PasswortHash'],
             $row['RegistrierungsDatum'],
-            (bool)$row['IstAdmin']
+            (bool)($row['IstAdmin'] ?? false)
         ) : null;
     }
 
+    // Registrierung erzeugt neuen Nutzer (nach Bestätigung)
     public function registrieren(string $benutzername, string $email, string $passwort): bool {
         try {
             $this->db->beginTransaction();
 
+            // Finaler Check: existiert Email bereits?
             if ($this->findeNachEmail($email) !== null) {
                 $this->db->rollBack();
                 return false;
@@ -70,12 +72,9 @@ class NutzerDAO {
     }
 
     public function existiertBenutzername(string $name): bool {
-        error_log("Prüfe Benutzername in DB: " . $name);
         $stmt = $this->db->prepare("SELECT 1 FROM Nutzer WHERE Benutzername = ?");
         $stmt->execute([$name]);
-        $exists = (bool)$stmt->fetchColumn();
-        error_log("Benutzername existiert: " . ($exists ? 'Ja' : 'Nein'));
-        return $exists;
+        return (bool)$stmt->fetchColumn();
     }
 
     public function findeBenutzer(string $email, string $passwort): ?Nutzer {
@@ -93,14 +92,19 @@ class NutzerDAO {
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $nutzer[] = new Nutzer(
                 (int)$row['NutzerID'],
-                $row['Benutzername'],
+                $row['Benutzername'] ?? "",
                 $row['Email'],
                 $row['PasswortHash'],
                 $row['RegistrierungsDatum'],
-                (bool)$row['IstAdmin']
+                (bool)($row['IstAdmin'] ?? false)
             );
         }
 
         return $nutzer;
+    }
+
+    public function loesche(int $id): bool {
+        $stmt = $this->db->prepare("DELETE FROM Nutzer WHERE NutzerID = ?");
+        return $stmt->execute([$id]);
     }
 }

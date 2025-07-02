@@ -1,40 +1,45 @@
 # README – Broke & Hungry
 
-**Abgabe zu Aufgabenblatt 4 – Webprogrammierung (Di-12-P)**
+*Abgabe zu Aufgabenblatt 6 – Webprogrammierung (Di-12-P)*
 
-## Projektgruppe
+**Projektgruppe**
 - Julian Peters
 - Leon Jonas
 
 ---
 
-## Aktuell umgesetzte Funktionen (Stand: Aufgabenblatt 5)
+## Wichtige Funktionen und Datenschutz (Stand: Aufgabenblatt 6)
 
-- Es können nun mehrere Zutaten beim Dropdown ausgewählt werden
-- (Bildvorschau und Drag and Drop)
-- Die Suchleiste im "Rezepte"-Fenster funktioniert aktiv
-- Mit AJAX wird geprüft ob der Benutzername bereits existiert
-- Nutzer hat Tabssytem für Profil und Rezepte
-- Bewertungssystem für Rezepte über JS
-
----
-
-## Geplante und in Bearbeitung befindliche Erweiterungen
-
-- Mehrfachauswahl von Kategorien beim Erstellen eines Rezepts (z. B. vegan und günstig gleichzeitig)
-- Bewertungssystem: Nutzer können Rezepte mit bis zu 5 Sternen bewerten
-- Erweiterung der Startseite um einen Bereich für die bestbewerteten Rezepte
-- Nutzer können Rezepte speichern und später erneut abrufen
-
--- Sessions werden beim Schließen des Browsers beendet (kein dauerhafter Login)
--- Nach der Abmeldung wird auf die Startseite verwiesen
--- Zutaten und deren Mengen brauchen noch Einschränkungen für die Eingabe
+- Rechtlich korrekte **Datenschutzerklärung**, **Impressum** und **Nutzungsbedingungen** (im Footer verlinkt)
+- Registrierung mit **Opt-In-Checkboxen** für Datenschutz & Nutzungsbedingungen (sind jeweilig verlinkt)
+- Registrierung ausschließlich über **E-Mail-Adresse** (Benutzername ist rein optional, nur Anzeige)
+- Es werden **nur technisch notwendige Session-Cookies** verwendet (kein Tracking, kein Banner)
+- **DSGVO-Rechte** (Auskunft/Löschung) werden auf Wunsch per E-Mail gewährt (keine Automatisierung)
+- Keine Anzeige, ob eine E-Mail bereits vergeben ist (**kein Enumeration-Leak**)
+- **Registrierungsmail** wird als klickbare HTML-Datei in `/data/mails/` simuliert (kein echter E-Mail-Versand)
+- Nutzer erhält nach Absenden des Formulars einen Link zur generierten HTML-Mail („Weitere Infos finden Sie in der Datei ...“)
 
 ---
 
-## Hinweise zur Nutzung
+## Hinweise zur Nutzung und Test
 
-- Nur angemeldete Nutzer können neue Rezepte erstellen, bearbeiten oder speichern
+- `info@brokeandhungry.de` ist eine Dummy-Adresse für unsere rechtskonforme Website
+- **Die Links in simulierten Mails sind absolute URLs, angepasst auf unseren lokalen Serverpfad:**  
+  `http://localhost/Di-12-P-Peters-Jonas-Schuette/`
+- **Hinweis für Prüfer:innen:**  
+  Sollte Ihr Projekt einen anderen lokalen Installations-Pfad besitzen, passen Sie bitte im Browser die URL entsprechend an:
+    - Beispiel: Kopieren Sie den Link aus der HTML-Datei, ersetzen den vorderen Teil durch Ihren eigenen und fügen Sie ihn in die Browser-Adresszeile ein.
+- Das Verzeichnis `/data/mails/` muss existieren und Schreibrechte für PHP besitzen
+- Der Link „Passwort zurücksetzen“ in der simulierten Registrierungs-Mail ist klickbar, dient jedoch nur als Platzhalter und leitet aktuell immer auf die Startseite zurück. Eine echte Passwort-Reset-Funktion ist im Rahmen dieses Projekts nicht implementiert.
+- Nur angemeldete Nutzer können Rezepte erstellen, bearbeiten oder speichern
 - Nicht angemeldete Nutzer werden bei geschützten Aktionen automatisch zur Anmeldung weitergeleitet
-- Die Datenbank muss mit ../init-database.php oder ../init-database-mysql.php initialisiert werden
+- **Die Datenbank muss mit `/init-database.php` oder `/init-database-mysql.php` initialisiert werden**
+
+---
+
+## Offene und geplante Erweiterungen
+
+- Weitere Dummy-Rezepte hinzufügen
+- Sortier-/Filterfunktionen für beliebte/bewertete Rezepte (benötigt mehr Beispieldaten)
+- Verbesserte Validierung der Zutaten- und Mengeneingabe
 
