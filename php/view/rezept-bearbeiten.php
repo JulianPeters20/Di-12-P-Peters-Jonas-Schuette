@@ -60,7 +60,22 @@
                 <label for="utensilien">Utensilien:</label>
                 <div class="dropdown-multiselect">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
-                        <span class="dropdown-label">-- auswählen --</span>
+                        <span class="dropdown-label">
+                            <?php
+                            $selectedUtensilien = array_filter($_SESSION['utensilienListe'], function($id) use ($formUtensilien) {
+                                return in_array($id, $formUtensilien);
+                            }, ARRAY_FILTER_USE_KEY);
+
+                            if (empty($selectedUtensilien)) {
+                                echo '-- auswählen --';
+                            } elseif (count($selectedUtensilien) === 1) {
+                                $utensil = reset($selectedUtensilien);
+                                echo htmlspecialchars($utensil->Name ?? $utensil);
+                            } else {
+                                echo count($selectedUtensilien) . ' ausgewählt';
+                            }
+                            ?>
+                        </span>
                         <span class="dropdown-arrow">&#x25BE;</span>
                     </div>
                     <div class="dropdown-list">
@@ -76,7 +91,22 @@
                 <label for="kategorien">Kategorien:</label>
                 <div class="dropdown-multiselect">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
-                        <span class="dropdown-label">-- auswählen --</span>
+                        <span class="dropdown-label">
+                            <?php
+                            $selectedKategorien = array_filter($_SESSION['kategorienListe'], function($id) use ($formKategorien) {
+                                return in_array($id, $formKategorien);
+                            }, ARRAY_FILTER_USE_KEY);
+
+                            if (empty($selectedKategorien)) {
+                                echo '-- auswählen --';
+                            } elseif (count($selectedKategorien) === 1) {
+                                $kategorie = reset($selectedKategorien);
+                                echo htmlspecialchars($kategorie->Bezeichnung ?? $kategorie);
+                            } else {
+                                echo count($selectedKategorien) . ' ausgewählt';
+                            }
+                            ?>
+                        </span>
                         <span class="dropdown-arrow">&#x25BE;</span>
                     </div>
                     <div class="dropdown-list">
@@ -98,7 +128,16 @@
                 <label for="preisklasse">Preisklasse:</label>
                 <div class="dropdown-multiselect single-select">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
-                        <span class="dropdown-label">-- auswählen --</span>
+                        <span class="dropdown-label">
+                            <?php
+                            if (!empty($formPreisklasse) && isset($_SESSION['preisklasseListe'][$formPreisklasse])) {
+                                $preisklasse = $_SESSION['preisklasseListe'][$formPreisklasse];
+                                echo htmlspecialchars($preisklasse->Preisspanne ?? $preisklasse);
+                            } else {
+                                echo '-- auswählen --';
+                            }
+                            ?>
+                        </span>
                         <span class="dropdown-arrow">&#x25BE;</span>
                     </div>
                     <ul class="dropdown-list">
@@ -114,7 +153,16 @@
                 <label for="portionsgroesse">Portionsgröße:</label>
                 <div class="dropdown-multiselect single-select">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
-                        <span class="dropdown-label">-- auswählen --</span>
+                        <span class="dropdown-label">
+                            <?php
+                            if (!empty($formPortionsgroesse) && isset($_SESSION['portionsgroesseListe'][$formPortionsgroesse])) {
+                                $portionsgroesse = $_SESSION['portionsgroesseListe'][$formPortionsgroesse];
+                                echo htmlspecialchars($portionsgroesse->Angabe ?? $portionsgroesse);
+                            } else {
+                                echo '-- auswählen --';
+                            }
+                            ?>
+                        </span>
                         <span class="dropdown-arrow">&#x25BE;</span>
                     </div>
                     <ul class="dropdown-list">
@@ -299,5 +347,97 @@
         setTimeout(() => {
             box.remove();
         }, 4600); // etwas mehr als fadeout-delay
+    }
+
+    // Dropdown-Funktionalität
+    function toggleDropdown(header) {
+        const dropdown = header.parentElement;
+        const isOpen = dropdown.classList.contains('open');
+
+        // Alle anderen Dropdowns schließen
+        document.querySelectorAll('.dropdown-multiselect.open').forEach(d => {
+            if (d !== dropdown) {
+                d.classList.remove('open');
+            }
+        });
+
+        // Aktuelles Dropdown umschalten
+        dropdown.classList.toggle('open', !isOpen);
+    }
+
+    // Event-Listener für Single-Select Dropdowns (Preisklasse, Portionsgröße)
+    document.addEventListener('DOMContentLoaded', function() {
+        // Single-Select Dropdown-Handler
+        document.querySelectorAll('.dropdown-multiselect.single-select .dropdown-list li').forEach(li => {
+            li.addEventListener('click', function() {
+                const dropdown = this.closest('.dropdown-multiselect');
+                const header = dropdown.querySelector('.dropdown-header');
+                const label = header.querySelector('.dropdown-label');
+                const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+
+                // Alle anderen li-Elemente deselektieren
+                dropdown.querySelectorAll('.dropdown-list li').forEach(item => {
+                    item.classList.remove('selected');
+                });
+
+                // Aktuelles Element selektieren
+                this.classList.add('selected');
+
+                // Label und Hidden Input aktualisieren
+                label.textContent = this.textContent;
+                hiddenInput.value = this.getAttribute('data-value');
+
+                // Dropdown schließen
+                dropdown.classList.remove('open');
+            });
+        });
+
+        // Multi-Select Dropdown-Handler (Kategorien, Utensilien)
+        document.querySelectorAll('.dropdown-multiselect:not(.single-select)').forEach(dropdown => {
+            const header = dropdown.querySelector('.dropdown-header');
+            const label = header.querySelector('.dropdown-label');
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+
+            // Label beim Laden aktualisieren
+            updateMultiSelectLabel(dropdown);
+
+            // Checkbox-Änderungen überwachen
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateMultiSelectLabel(dropdown);
+                });
+            });
+        });
+
+        // Single-Select Labels beim Laden aktualisieren
+        document.querySelectorAll('.dropdown-multiselect.single-select').forEach(dropdown => {
+            const selectedLi = dropdown.querySelector('.dropdown-list li.selected');
+            if (selectedLi) {
+                const label = dropdown.querySelector('.dropdown-label');
+                label.textContent = selectedLi.textContent;
+            }
+        });
+
+        // Außerhalb klicken schließt Dropdowns
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown-multiselect')) {
+                document.querySelectorAll('.dropdown-multiselect.open').forEach(d => {
+                    d.classList.remove('open');
+                });
+            }
+        });
+    });
+
+    function updateMultiSelectLabel(dropdown) {
+        const label = dropdown.querySelector('.dropdown-label');
+        const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+
+        if (checkboxes.length === 0) {
+            label.textContent = '-- auswählen --';
+        } else if (checkboxes.length === 1) {
+            label.textContent = checkboxes[0].parentElement.textContent.trim();
+        } else {
+            label.textContent = `${checkboxes.length} ausgewählt`;
+        }
     }
 </script>
