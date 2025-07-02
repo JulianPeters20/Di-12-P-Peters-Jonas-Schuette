@@ -192,6 +192,13 @@
             const formData = new FormData();
             formData.append("id", id);
 
+            // CSRF-Token hinzufügen
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                             document.querySelector('input[name="csrf_token"]')?.value || '';
+            if (csrfToken) {
+                formData.append("csrf_token", csrfToken);
+            }
+
             const res = await fetch("api/rezept-loeschen.php", {
                 method: "POST",
                 body: formData

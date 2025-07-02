@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../model/NutzerDAO.php';
 require_once __DIR__ . '/../include/form_utils.php';
+require_once __DIR__ . '/../include/rate_limiting.php';
 require_once __DIR__ . '/../model/RezeptDAO.php';
 
 // Einmal zu Beginn definieren – HIER bitte ggf. später bei Änderung anderer Pfade anpassen!!
@@ -47,6 +48,9 @@ function showRegistrierungsFormular(): void {
     $error = ""; // Fehler-Variable für die View
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        // CSRF-Token prüfen
+        checkCSRFToken();
+
         // Sticky: Formularwerte bereitstellen
         $benutzername = sanitize_text($_POST["benutzername"] ?? '');
         $email = sanitize_email($_POST["email"] ?? '');
@@ -113,8 +117,9 @@ MAIL;
         }
         file_put_contents(__DIR__ . "/../../" . $mailDatei, $inhalt);
 
-        echo '<main><div>Weitere Infos findest du in der Datei <a href="' . htmlspecialchars($mailDatei) . '" target="_blank">' . htmlspecialchars($mailDatei) . '</a></div></main>';
-        return;
+        flash("success", "Registrierung eingeleitet! Weitere Infos findest du in der Datei: " . $mailDatei);
+        header("Location: index.php?page=registrierung");
+        exit;
     }
 
     // GET-Request oder erstmaliger Aufruf
@@ -128,29 +133,36 @@ MAIL;
 function bestaetigeRegistrierung(string $code): void {
     $filePath = __DIR__ . "/../../data/mails/registrierung_" . $code . ".json";
     if (!is_file($filePath)) {
-        echo "<main><div>Ungültiger oder bereits genutzter Bestätigungslink.</div></main>";
-        return;
+        flash("error", "Ungültiger oder bereits genutzter Bestätigungslink.");
+        header("Location: index.php?page=registrierung");
+        exit;
     }
     $data = json_decode(file_get_contents($filePath), true);
     if (!$data || empty($data['email']) || empty($data['passwort'])) {
-        echo "<main><div>Ungültige Daten - keine Registrierung möglich.</div></main>";
-        return;
+        flash("error", "Ungültige Daten - keine Registrierung möglich.");
+        header("Location: index.php?page=registrierung");
+        exit;
     }
 
     $dao = new NutzerDAO();
     if ($dao->findeNachEmail($data['email'])) {
         unlink($filePath);
-        echo "<main><div>Diese E-Mail ist bereits registriert.</div></main>";
-        return;
+        flash("warning", "Diese E-Mail ist bereits registriert.");
+        header("Location: index.php?page=anmeldung");
+        exit;
     }
 
     $res = $dao->registrieren($data['benutzername'] ?? '', $data['email'], $data['passwort']);
     unlink($filePath);
 
     if ($res) {
-        echo "<main><div>Registrierung abgeschlossen! Du kannst dich jetzt <a href='index.php?page=anmeldung'>anmelden</a>.</div></main>";
+        flash("success", "Registrierung abgeschlossen! Du kannst dich jetzt anmelden.");
+        header("Location: index.php?page=anmeldung");
+        exit;
     } else {
-        echo "<main><div>Registrierung fehlgeschlagen.</div></main>";
+        flash("error", "Registrierung fehlgeschlagen.");
+        header("Location: index.php?page=registrierung");
+        exit;
     }
 }
 
@@ -166,6 +178,9 @@ function showAnmeldeFormular(): void {
     $dao = new NutzerDAO();
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        // CSRF-Token prüfen
+        checkCSRFToken();
+
         $email = sanitize_email($_POST["email"] ?? '');
         $passwort = sanitize_text($_POST["passwort"] ?? '');
 
@@ -175,22 +190,39 @@ function showAnmeldeFormular(): void {
             exit;
         }
 
+        // Rate Limiting prüfen
+        if (!checkLoginAttempts($email)) {
+            $remainingTime = getRemainingLockTime($email);
+            $minutes = ceil($remainingTime / 60);
+            flash("error", "Zu viele fehlgeschlagene Login-Versuche. Bitte warte $minutes Minuten.");
+            header("Location: index.php?page=anmeldung");
+            exit;
+        }
+
         $nutzer = $dao->findeNachEmail($email);
 
         if (!$nutzer) {
+            recordFailedLogin($email);
             flash("warning","Es existiert kein Konto mit dieser E-Mail-Adresse.");
             header("Location: index.php?page=anmeldung");
             exit;
         } elseif (!password_verify($passwort, $nutzer->passwortHash)) {
+            recordFailedLogin($email);
             flash("warning","Das Passwort ist falsch.");
             header("Location: index.php?page=anmeldung");
             exit;
         } else {
+            // Erfolgreicher Login - Rate Limiting zurücksetzen
+            clearLoginAttempts($email);
             $_SESSION["benutzername"] = $nutzer->benutzername;
             $_SESSION["email"] = $nutzer->email;
             $_SESSION["nutzerId"] = $nutzer->id;
             $_SESSION["istAdmin"] = $nutzer->istAdmin;
             $_SESSION["eingeloggt"] = true;
+            $_SESSION["regenerate_session"] = true; // Session-Regeneration markieren
+
+            // CSRF-Token nach Login regenerieren
+            regenerateCSRFToken();
 
             header("Location: index.php");
             exit;
@@ -242,7 +274,7 @@ function logoutUser(): void {
  */
 function showNutzerProfil(): void {
     if (empty($_SESSION['nutzerId']) || !is_numeric($_SESSION['nutzerId'])) {
-        $_SESSION["message"] = "Du bist nicht eingeloggt.";
+        flash("warning", "Du bist nicht eingeloggt.");
         header("Location: index.php?page=anmeldung");
         exit;
     }
@@ -251,7 +283,7 @@ function showNutzerProfil(): void {
     $nutzer = $nutzerDAO->findeNachID((int)$_SESSION['nutzerId']);
 
     if (!$nutzer) {
-        $_SESSION["message"] = "Nutzerprofil konnte nicht geladen werden.";
+        flash("error", "Nutzerprofil konnte nicht geladen werden.");
         header("Location: index.php");
         exit;
     }
@@ -267,7 +299,7 @@ function showNutzerProfil(): void {
  */
 function showNutzerListe(): void {
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
-        $_SESSION["message"] = "Nur Administratoren dürfen die Nutzerliste sehen.";
+        flash("error", "Nur Administratoren dürfen die Nutzerliste sehen.");
         header("Location: index.php");
         exit;
     }
@@ -283,13 +315,13 @@ function showNutzerListe(): void {
  */
 function loescheNutzer(int $id): void {
     if (empty($_SESSION['istAdmin']) || !$_SESSION['istAdmin']) {
-        $_SESSION["message"] = "Nur Administratoren dürfen Nutzer löschen.";
+        flash("error", "Nur Administratoren dürfen Nutzer löschen.");
         header("Location: index.php");
         exit;
     }
 
     if (isset($_SESSION['nutzerId']) && (int)$_SESSION['nutzerId'] === $id) {
-        $_SESSION["message"] = "Du kannst deinen eigenen Account nicht löschen.";
+        flash("warning", "Du kannst deinen eigenen Account nicht löschen.");
         header("Location: index.php?page=nutzerliste");
         exit;
     }
@@ -297,9 +329,11 @@ function loescheNutzer(int $id): void {
     $dao = new NutzerDAO();
     $ok = $dao->loesche($id);
 
-    $_SESSION["message"] = $ok
-        ? "Nutzer erfolgreich gelöscht."
-        : "Fehler beim Löschen des Nutzers.";
+    if ($ok) {
+        flash("success", "Nutzer erfolgreich gelöscht.");
+    } else {
+        flash("error", "Fehler beim Löschen des Nutzers.");
+    }
 
     header("Location: index.php?page=nutzerliste");
     exit;

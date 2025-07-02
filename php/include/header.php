@@ -1,6 +1,12 @@
 <?php
 // Optional: Session sicherstellen, wenn nicht schon gestartet
 if (session_status() === PHP_SESSION_NONE) session_start();
+
+// CSRF-Token für JavaScript verfügbar machen
+if (function_exists('generateCSRFToken')) {
+    $csrfToken = generateCSRFToken();
+    echo '<meta name="csrf-token" content="' . htmlspecialchars($csrfToken) . '">';
+}
 ?>
 <header class="kopfzeile">
     <div class="logo">

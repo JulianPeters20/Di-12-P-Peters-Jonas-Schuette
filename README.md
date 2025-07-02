@@ -42,4 +42,5 @@
 - Weitere Dummy-Rezepte hinzufügen
 - Sortier-/Filterfunktionen für beliebte/bewertete Rezepte (benötigt mehr Beispieldaten)
 - Verbesserte Validierung der Zutaten- und Mengeneingabe
+- Responsiveness muss noch verbessert werden -> Burgermenü
 
