@@ -8,6 +8,7 @@
     <?php endif; ?>
 
     <form action="index.php?page=registrierung" method="post" autocomplete="off" novalidate>
+        <?= getCSRFTokenField() ?>
 
         <div class="form-row">
             <label for="benutzername">Benutzername:</label>

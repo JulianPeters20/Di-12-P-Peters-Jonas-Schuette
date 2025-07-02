@@ -3,11 +3,11 @@
     <div>Hinweis: Diese Seite ist nur für Administratoren vorgesehen.</div>
 
     <!-- Flash-Nachrichten anzeigen -->
-    <?php if (!empty($_SESSION['message'])): ?>
-        <div class="flash-message" style="margin: 20px 0; padding: 15px; border-radius: 5px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
-            <?= htmlspecialchars($_SESSION['message']) ?>
+    <?php if (!empty($_SESSION['flash'])): ?>
+        <div class="flash-message <?= $_SESSION['flash']['type'] ?>" style="margin: 20px 0; padding: 15px; border-radius: 5px;">
+            <?= htmlspecialchars($_SESSION['flash']['message']) ?>
         </div>
-        <?php unset($_SESSION['message']); ?>
+        <?php unset($_SESSION['flash']); ?>
     <?php endif; ?>
 
     <!-- API-Status und Schnellaktionen -->

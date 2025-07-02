@@ -117,6 +117,9 @@ function showRezeptDetails($id): void {
  * Speicherung von Bild, Zutaten, Kategorien und Utensilien
  */
 function speichereRezept(): void {
+    // CSRF-Token prüfen
+    checkCSRFToken();
+
     require_once 'php/include/form_utils.php'; // sicherstellen, dass flash() verfügbar ist
 
     if (empty($_SESSION['nutzerId'])) {
@@ -217,6 +220,9 @@ function loescheRezept($id): void {
  * optional Bild aktualisieren
  */
 function aktualisiereRezept($id): void {
+    // CSRF-Token prüfen
+    checkCSRFToken();
+
     require_once 'php/include/form_utils.php';
     $id = validateId($id);
     if ($id === null) {

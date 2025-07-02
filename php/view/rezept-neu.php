@@ -1,14 +1,15 @@
 <main>
     <h2>Neues Rezept erstellen</h2>
 
-    <?php if (isset($_SESSION["message"])): ?>
-        <div class="message-box"><?= htmlspecialchars($_SESSION["message"]) ?></div>
-        <?php unset($_SESSION["message"]); ?>
+    <?php if (isset($_SESSION["flash"])): ?>
+        <div class="flash-message <?= $_SESSION['flash']['type'] ?>"><?= htmlspecialchars($_SESSION["flash"]["message"]) ?></div>
+        <?php unset($_SESSION["flash"]); ?>
     <?php endif; ?>
 
     <div class="form-container">
 
         <form action="index.php?page=rezept-neu" method="post" enctype="multipart/form-data">
+            <?= getCSRFTokenField() ?>
             <div class="form-row">
                 <label for="titel">Titel:</label>
             </div>
