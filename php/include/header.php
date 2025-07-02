@@ -17,6 +17,7 @@
 
             <?php if (!empty($_SESSION['istAdmin'])): ?>
                 <li><a href="index.php?page=nutzerliste">Nutzerliste</a></li>
+                <li><a href="index.php?page=api-monitor">API-Monitor</a></li>
             <?php endif; ?>
 
             <?php if (!empty($_SESSION['email'])): ?>
