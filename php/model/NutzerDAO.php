@@ -42,7 +42,8 @@ class NutzerDAO {
     }
 
     // Registrierung erzeugt neuen Nutzer (nach Bestätigung)
-    public function registrieren(string $benutzername, string $email, string $passwort): bool {
+    // Password hashing moved to UserService (Business Logic Layer)
+    public function registrieren(string $benutzername, string $email, string $hashedPassword): bool {
         try {
             $this->db->beginTransaction();
 
@@ -59,7 +60,7 @@ class NutzerDAO {
             $stmt->execute([
                 $benutzername,
                 $email,
-                password_hash($passwort, PASSWORD_DEFAULT),
+                $hashedPassword, // Already hashed in UserService
                 date('Y-m-d')
             ]);
 
@@ -106,5 +107,14 @@ class NutzerDAO {
     public function loesche(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM Nutzer WHERE NutzerID = ?");
         return $stmt->execute([$id]);
+    }
+
+    /**
+     * Aktualisiert das Passwort eines Nutzers
+     * Password hashing should be done in UserService (Business Logic Layer)
+     */
+    public function passwortAktualisieren(int $nutzerId, string $hashedPassword): bool {
+        $stmt = $this->db->prepare("UPDATE Nutzer SET PasswortHash = ? WHERE NutzerID = ?");
+        return $stmt->execute([$hashedPassword, $nutzerId]);
     }
 }

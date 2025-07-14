@@ -211,11 +211,11 @@ try {
         ('Schüssel')
     ");
 
-    // Kategorien & Zutaten Beispielwerte
+    // Predefined Categories - Fixed category system (no new categories per recipe)
     $db->exec("
-    INSERT INTO Kategorie (Bezeichnung) VALUES 
-    ('Vegetarisch'), 
-    ('Schnell'),
+    INSERT INTO Kategorie (Bezeichnung) VALUES
+    ('Vegetarisch'),
+    ('Schnell (unter 30 Min)'),
     ('Vegan'),
     ('Herzhaft'),
     ('Dessert'),
@@ -228,7 +228,18 @@ try {
     ('Kinderfreundlich'),
     ('Snacks'),
     ('Salate'),
-    ('Grillen')
+    ('Grillen'),
+    ('Laktosefrei'),
+    ('Aufwendig (über 60 Min)'),
+    ('Hauptgericht'),
+    ('Vorspeise'),
+    ('Mexikanisch'),
+    ('Deutsch'),
+    ('Mediterran'),
+    ('High Protein'),
+    ('Keto'),
+    ('Paleo'),
+    ('Gesund')
 ");
     $db->exec("INSERT INTO Zutat (Name) VALUES ('Pasta'), ('Tomaten'), ('Basilikum'), ('Olivenöl'), ('Parmesan')");
 
@@ -266,9 +277,12 @@ try {
     $db->exec("INSERT INTO Bewertung (RezeptID, NutzerID, Punkte, Bewertungsdatum) VALUES (1, 1, 5, '" . date('Y-m-d') . "')");
 
     $db->commit();
-    echo "Datenbank erfolgreich initialisiert.";
+    // Fix: Remove user-visible database initialization message
+    error_log("SQLite-Datenbank erfolgreich initialisiert.");
+    return true;
 
 } catch (Exception $e) {
     $db->rollBack();
-    die("Fehler bei Initialisierung: " . $e->getMessage());
+    error_log("Fehler bei SQLite-Datenbankinitialisierung: " . $e->getMessage());
+    throw new RuntimeException("Datenbankinitialisierung fehlgeschlagen: " . $e->getMessage());
 }

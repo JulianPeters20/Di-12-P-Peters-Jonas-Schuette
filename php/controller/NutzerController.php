@@ -1,8 +1,10 @@
 <?php
 
 require_once __DIR__ . '/../model/NutzerDAO.php';
+require_once __DIR__ . '/../service/UserService.php';
 require_once __DIR__ . '/../include/form_utils.php';
 require_once __DIR__ . '/../include/rate_limiting.php';
+require_once __DIR__ . '/../include/csrf_protection.php';
 require_once __DIR__ . '/../model/RezeptDAO.php';
 
 // Einmal zu Beginn definieren – HIER bitte ggf. später bei Änderung anderer Pfade anpassen!!
@@ -175,7 +177,7 @@ function showAnmeldeFormular(): void {
         exit;
     }
 
-    $dao = new NutzerDAO();
+    $userService = new UserService();
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // CSRF-Token prüfen
@@ -199,19 +201,17 @@ function showAnmeldeFormular(): void {
             exit;
         }
 
-        $nutzer = $dao->findeNachEmail($email);
+        try {
+            // Use UserService for authentication (includes password verification)
+            $nutzer = $userService->authentifizieren($email, $passwort);
 
-        if (!$nutzer) {
-            recordFailedLogin($email);
-            flash("warning","Es existiert kein Konto mit dieser E-Mail-Adresse.");
-            header("Location: index.php?page=anmeldung");
-            exit;
-        } elseif (!password_verify($passwort, $nutzer->passwortHash)) {
-            recordFailedLogin($email);
-            flash("warning","Das Passwort ist falsch.");
-            header("Location: index.php?page=anmeldung");
-            exit;
-        } else {
+            if (!$nutzer) {
+                recordFailedLogin($email);
+                flash("warning","E-Mail-Adresse oder Passwort ist falsch.");
+                header("Location: index.php?page=anmeldung");
+                exit;
+            }
+
             // Erfolgreicher Login - Rate Limiting zurücksetzen
             clearLoginAttempts($email);
             $_SESSION["benutzername"] = $nutzer->benutzername;
@@ -225,6 +225,12 @@ function showAnmeldeFormular(): void {
             regenerateCSRFToken();
 
             header("Location: index.php");
+            exit;
+        } catch (Exception $e) {
+            recordFailedLogin($email);
+            error_log("Login error: " . $e->getMessage());
+            flash("error", "Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+            header("Location: index.php?page=anmeldung");
             exit;
         }
     }
