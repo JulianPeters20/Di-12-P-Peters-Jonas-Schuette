@@ -34,13 +34,16 @@ function getCSRFTokenField(): string {
 
 /**
  * Prüft CSRF-Token bei POST-Requests
+ * Verwendet Exception statt die()
+ *
+ * @throws SecurityException bei ungültigem CSRF-Token
  */
 function checkCSRFToken(): void {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $token = $_POST['csrf_token'] ?? '';
         if (!validateCSRFToken($token)) {
             http_response_code(403);
-            error_log("CSRF-Token-Validierung fehlgeschlagen für IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+            error_log("CSRF-Token-Validierung fehlgeschlagen für IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unbekannt'));
             throw new SecurityException('CSRF-Token ungültig. Bitte versuche es erneut.');
         }
     }

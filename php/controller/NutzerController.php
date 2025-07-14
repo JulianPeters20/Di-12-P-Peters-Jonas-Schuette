@@ -202,7 +202,7 @@ function showAnmeldeFormular(): void {
         }
 
         try {
-            // Use UserService for authentication (includes password verification)
+            // UserService für Authentifizierung verwenden (inkl. Passwort-Verifikation)
             $nutzer = $userService->authentifizieren($email, $passwort);
 
             if (!$nutzer) {
@@ -219,16 +219,16 @@ function showAnmeldeFormular(): void {
             $_SESSION["nutzerId"] = $nutzer->id;
             $_SESSION["istAdmin"] = $nutzer->istAdmin;
             $_SESSION["eingeloggt"] = true;
-            $_SESSION["regenerate_session"] = true; // Session-Regeneration markieren
+            $_SESSION["regenerate_session"] = true; // Session-Regeneration für Sicherheit markieren
 
-            // CSRF-Token nach Login regenerieren
+            // CSRF-Token nach erfolgreichem Login regenerieren
             regenerateCSRFToken();
 
             header("Location: index.php");
             exit;
         } catch (Exception $e) {
             recordFailedLogin($email);
-            error_log("Login error: " . $e->getMessage());
+            error_log("Anmeldefehler: " . $e->getMessage());
             flash("error", "Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
             header("Location: index.php?page=anmeldung");
             exit;

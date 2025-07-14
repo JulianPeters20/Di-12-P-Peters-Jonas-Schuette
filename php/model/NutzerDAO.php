@@ -41,8 +41,15 @@ class NutzerDAO {
         ) : null;
     }
 
-    // Registrierung erzeugt neuen Nutzer (nach Bestätigung)
-    // Password hashing moved to UserService (Business Logic Layer)
+    /**
+     * Registriert einen neuen Nutzer in der Datenbank
+     * Passwort-Hashing wurde in UserService (Business Logic Layer) verlagert
+     *
+     * @param string $benutzername Gewünschter Benutzername
+     * @param string $email E-Mail-Adresse (muss eindeutig sein)
+     * @param string $hashedPassword Bereits gehashtes Passwort
+     * @return bool true bei erfolgreicher Registrierung
+     */
     public function registrieren(string $benutzername, string $email, string $hashedPassword): bool {
         try {
             $this->db->beginTransaction();
@@ -60,7 +67,7 @@ class NutzerDAO {
             $stmt->execute([
                 $benutzername,
                 $email,
-                $hashedPassword, // Already hashed in UserService
+                $hashedPassword, // Bereits in UserService gehasht
                 date('Y-m-d')
             ]);
 
@@ -111,7 +118,11 @@ class NutzerDAO {
 
     /**
      * Aktualisiert das Passwort eines Nutzers
-     * Password hashing should be done in UserService (Business Logic Layer)
+     * Passwort-Hashing sollte in UserService (Business Logic Layer) erfolgen
+     *
+     * @param int $nutzerId ID des Nutzers
+     * @param string $hashedPassword Bereits gehashtes neues Passwort
+     * @return bool true bei erfolgreicher Aktualisierung
      */
     public function passwortAktualisieren(int $nutzerId, string $hashedPassword): bool {
         $stmt = $this->db->prepare("UPDATE Nutzer SET PasswortHash = ? WHERE NutzerID = ?");

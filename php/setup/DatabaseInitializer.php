@@ -4,13 +4,17 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config.php';
 
 /**
- * Database Initializer - Handles both SQLite and MySQL database setup
- * Fixes issues with database creation and table generation
+ * Datenbank-Initialisierer - Verwaltet SQLite und MySQL Datenbankeinrichtung
+ *
  */
 class DatabaseInitializer {
-    
+
     /**
-     * Initialize database based on configuration
+     * Initialisiert Datenbank basierend auf Konfiguration
+     * Wählt automatisch zwischen SQLite und MySQL
+     *
+     * @return bool true bei erfolgreicher Initialisierung
+     * @throws RuntimeException bei Initialisierungsfehlern
      */
     public static function initialize(): bool {
         try {
@@ -20,65 +24,76 @@ class DatabaseInitializer {
                 return self::initializeSQLite();
             }
         } catch (Exception $e) {
-            error_log("Database initialization failed: " . $e->getMessage());
+            error_log("Datenbankinitialisierung fehlgeschlagen: " . $e->getMessage());
             throw new RuntimeException("Datenbankinitialisierung fehlgeschlagen: " . $e->getMessage());
         }
     }
 
     /**
-     * Initialize SQLite database
+     * Initialisiert SQLite-Datenbank
+     * Stellt sicher, dass Verzeichnis existiert und .sqlite-Erweiterung korrekt ist
+     *
+     * @return bool true bei erfolgreicher Initialisierung
+     * @throws RuntimeException bei Initialisierungsfehlern
      */
     private static function initializeSQLite(): bool {
         try {
-            // Ensure database directory exists
+            // Sicherstellen, dass Datenbankverzeichnis existiert
             $dbDir = dirname(__DIR__ . '/../data/brokeandhungry.sqlite');
             if (!is_dir($dbDir)) {
                 mkdir($dbDir, 0755, true);
             }
 
-            // Include and run SQLite initialization
+            // SQLite-Initialisierung einbinden und ausführen
             $result = include __DIR__ . '/../../data/init-database.php';
-            
-            // Verify database file was created with .sqlite extension
+
+            // Prüfen, dass Datenbankdatei mit .sqlite-Erweiterung erstellt wurde
             $dbFile = __DIR__ . '/../../data/brokeandhungry.sqlite';
             if (!file_exists($dbFile)) {
-                throw new RuntimeException("SQLite database file was not created");
+                throw new RuntimeException("SQLite-Datenbankdatei wurde nicht erstellt");
             }
 
-            error_log("SQLite database initialized successfully");
+            error_log("SQLite-Datenbank erfolgreich initialisiert");
             return true;
         } catch (Exception $e) {
-            error_log("SQLite initialization error: " . $e->getMessage());
+            error_log("SQLite-Initialisierungsfehler: " . $e->getMessage());
             throw $e;
         }
     }
 
     /**
-     * Initialize MySQL database
+     * Initialisiert MySQL-Datenbank
+     * Führt MySQL-spezifische Initialisierung aus
+     *
+     * @return bool true bei erfolgreicher Initialisierung
+     * @throws RuntimeException bei Initialisierungsfehlern
      */
     private static function initializeMySQL(): bool {
         try {
-            // Include and run MySQL initialization
+            // MySQL-Initialisierung einbinden und ausführen
             $result = include __DIR__ . '/../../data/init-database-mysql.php';
-            
-            error_log("MySQL database initialized successfully");
+
+            error_log("MySQL-Datenbank erfolgreich initialisiert");
             return true;
         } catch (Exception $e) {
-            error_log("MySQL initialization error: " . $e->getMessage());
+            error_log("MySQL-Initialisierungsfehler: " . $e->getMessage());
             throw $e;
         }
     }
 
     /**
-     * Check if database is properly initialized
+     * Prüft, ob Datenbank ordnungsgemäß initialisiert ist
+     * Überprüft Existenz der wichtigsten Tabellen
+     *
+     * @return bool true wenn alle Haupttabellen existieren
      */
     public static function isInitialized(): bool {
         try {
             $db = Database::getConnection();
-            
-            // Check if main tables exist
+
+            // Prüfen, ob Haupttabellen existieren
             $tables = ['Nutzer', 'Rezept', 'Kategorie', 'Preisklasse', 'Portionsgroesse'];
-            
+
             foreach ($tables as $table) {
                 if (USE_MYSQL) {
                     $stmt = $db->prepare("SHOW TABLES LIKE ?");
@@ -87,21 +102,24 @@ class DatabaseInitializer {
                     $stmt = $db->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?");
                     $stmt->execute([$table]);
                 }
-                
+
                 if (!$stmt->fetch()) {
                     return false;
                 }
             }
-            
+
             return true;
         } catch (Exception $e) {
-            error_log("Database check failed: " . $e->getMessage());
+            error_log("Datenbankprüfung fehlgeschlagen: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Get database status information
+     * Ermittelt Datenbankstatus-Informationen
+     * Sammelt Informationen über Datenbanktyp, Initialisierung und Tabellen
+     *
+     * @return array Assoziatives Array mit Statusinformationen
      */
     public static function getStatus(): array {
         $status = [
@@ -114,8 +132,8 @@ class DatabaseInitializer {
         try {
             $db = Database::getConnection();
             $status['initialized'] = self::isInitialized();
-            
-            // Get table list
+
+            // Tabellenliste ermitteln
             if (USE_MYSQL) {
                 $stmt = $db->query("SHOW TABLES");
                 while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
@@ -127,7 +145,7 @@ class DatabaseInitializer {
                     $status['tables'][] = $row['name'];
                 }
             }
-            
+
         } catch (Exception $e) {
             $status['error'] = $e->getMessage();
         }

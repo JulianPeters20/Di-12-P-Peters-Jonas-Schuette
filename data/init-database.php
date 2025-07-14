@@ -6,7 +6,8 @@ $db = Database::getConnection();
 try {
     $db->beginTransaction();
 
-    // Tabellen löschen (nur für Entwicklung/testing, später entfernen!)
+    // Bestehende Tabellen löschen (für Neuinitialisierung)
+    // Reihenfolge beachtet Foreign Key Constraints
     $tabellen = ['RezeptKategorie', 'RezeptUtensil', 'RezeptZutat', 'Bewertung',
         'Rezept', 'Kategorie', 'Utensil', 'Zutat', 'Preisklasse', 'Portionsgroesse', 'Nutzer',
         'RezeptNaehrwerte', 'api_cache', 'api_log'];
@@ -73,6 +74,7 @@ try {
     ");
 
     // Nährwerte-Tabelle für Spoonacular API Integration
+    // Speichert berechnete Nährwerte für Rezepte
     $db->exec("
         CREATE TABLE RezeptNaehrwerte (
             RezeptID INTEGER PRIMARY KEY,
@@ -88,7 +90,7 @@ try {
         )
     ");
 
-    // Cache-Tabelle für API-Aufrufe
+    // Cache-Tabelle für API-Aufrufe (Performance-Optimierung)
     $db->exec("
         CREATE TABLE api_cache (
             cache_key TEXT PRIMARY KEY,
@@ -97,7 +99,7 @@ try {
         )
     ");
 
-    // API-Log-Tabelle für Monitoring
+    // API-Log-Tabelle für Monitoring und Debugging
     $db->exec("
         CREATE TABLE api_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -167,14 +169,16 @@ try {
         )
     ");
 
-    // Beispiel-Nutzer
+    // Beispiel-Nutzer für Entwicklung und Tests
     $nutzerStmt = $db->prepare("
         INSERT INTO Nutzer (Benutzername, Email, PasswortHash, RegistrierungsDatum, IstAdmin)
         VALUES (?, ?, ?, ?, ?)
     ");
 
+    // Administrator-Accounts
     $nutzerStmt->execute(['admin1', 'admin1@example.com', password_hash('adminpass1', PASSWORD_DEFAULT), date('Y-m-d'), 1]);
     $nutzerStmt->execute(['admin2', 'admin2@example.com', password_hash('adminpass2', PASSWORD_DEFAULT), date('Y-m-d'), 1]);
+    // Standard-Nutzer
     $nutzerStmt->execute(['max_muster', 'max@example.com', password_hash('geheim123', PASSWORD_DEFAULT), date('Y-m-d'), 0]);
 
     // Preisklasse Beispielwerte
@@ -211,11 +215,11 @@ try {
         ('Schüssel')
     ");
 
-    // Predefined Categories - Fixed category system (no new categories per recipe)
+    // Kategorien & Zutaten Beispielwerte
     $db->exec("
     INSERT INTO Kategorie (Bezeichnung) VALUES
     ('Vegetarisch'),
-    ('Schnell (unter 30 Min)'),
+    ('Schnell (unter 20 Min)'),
     ('Vegan'),
     ('Herzhaft'),
     ('Dessert'),
@@ -273,11 +277,11 @@ try {
     // Kategorien zum Rezept (Vegetarisch=1, Schnell=2)
     $db->exec("INSERT INTO RezeptKategorie (RezeptID, KategorieID) VALUES (1, 1), (1, 2)");
 
-    // Bewertung Beispiel
+    // Beispiel-Bewertung für Testrezept
     $db->exec("INSERT INTO Bewertung (RezeptID, NutzerID, Punkte, Bewertungsdatum) VALUES (1, 1, 5, '" . date('Y-m-d') . "')");
 
     $db->commit();
-    // Fix: Remove user-visible database initialization message
+
     error_log("SQLite-Datenbank erfolgreich initialisiert.");
     return true;
 

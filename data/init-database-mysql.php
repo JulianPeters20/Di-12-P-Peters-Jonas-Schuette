@@ -179,7 +179,6 @@ try {
     $db->exec("INSERT INTO Portionsgröße (Angabe) VALUES ('1 Person'), ('2 Personen'), ('3 Personen'), ('4 Personen'), ('Familie (5+)')");
     $db->exec("INSERT INTO Utensil (Name) VALUES ('Topf'), ('Pfanne'), ('Kochlöffel'), ('Sieb'), ('Schneidebrett'), ('Messer'), ('Backofen'), ('Mixer'), ('Schüssel')");
 
-    // Predefined Categories - Fixed category system (no new categories per recipe)
     $db->exec("INSERT INTO Kategorie (Bezeichnung) VALUES
         ('Vegetarisch'), ('Schnell (unter 30 Min)'), ('Vegan'), ('Herzhaft'), ('Dessert'),
         ('Glutenfrei'), ('Low-Carb'), ('Frühstück'), ('Asiatisch'), ('Italienisch'),
@@ -198,7 +197,7 @@ try {
     $db->exec("INSERT INTO Bewertung VALUES (1, 1, 5, CURDATE())");
 
     $db->commit();
-    // Fix: Remove user-visible database initialization message
+
     error_log("MySQL-Datenbank erfolgreich initialisiert.");
     return true;
 } catch (Exception $e) {
