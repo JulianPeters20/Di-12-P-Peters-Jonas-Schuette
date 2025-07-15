@@ -7,6 +7,8 @@ try {
     $db->beginTransaction();
 
     // Tabellen löschen (Reihenfolge wegen FK)
+    // WICHTIG: Tabellen werden gelöscht um eine saubere Neuinitialisierung zu gewährleisten
+    // und Konflikte mit geänderten Tabellenstrukturen zu vermeiden
     $tables = [
         'Bewertung', 'RezeptKategorie', 'RezeptUtensil', 'RezeptZutat', 'RezeptNaehrwerte',
         'Rezept', 'Kategorie', 'Utensil', 'Zutat', 'Preisklasse', 'Portionsgröße', 'Nutzer',
@@ -44,7 +46,7 @@ try {
         )
     ");
 
-    // Rezept
+    // Rezept - BildPfad ohne Längenbeschränkung für große Pfade
     $db->exec("
         CREATE TABLE Rezept (
             RezeptID INT AUTO_INCREMENT PRIMARY KEY,

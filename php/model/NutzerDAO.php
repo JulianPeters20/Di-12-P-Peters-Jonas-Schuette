@@ -85,14 +85,6 @@ class NutzerDAO {
         return (bool)$stmt->fetchColumn();
     }
 
-    public function findeBenutzer(string $email, string $passwort): ?Nutzer {
-        $nutzer = $this->findeNachEmail($email);
-        if ($nutzer && password_verify($passwort, $nutzer->passwortHash)) {
-            return $nutzer;
-        }
-        return null;
-    }
-
     public function findeAlle(): array {
         $stmt = $this->db->query("SELECT * FROM Nutzer ORDER BY RegistrierungsDatum DESC");
         $nutzer = [];

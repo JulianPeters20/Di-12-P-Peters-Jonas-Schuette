@@ -19,6 +19,9 @@ class RezeptDAO {
      * Findet alle Rezepte mit optimierten Batch-Abfragen
      * Verwendet JOINs für bessere Performance und vermeidet N+1-Probleme
      *
+     * Diese Methode lädt alle Rezepte mit ihren verknüpften Daten in einem einzigen
+     * Datenbankaufruf, anstatt für jedes Rezept separate Abfragen zu machen.
+     *
      * @return array Array mit allen Rezepten inklusive Kategorien, Utensilien und Zutaten
      */
     public function findeAlle(): array {
@@ -51,10 +54,11 @@ class RezeptDAO {
         }
 
         // Alle Rezept-IDs für Batch-Abfragen sammeln
+        // Dies ermöglicht es, alle verknüpften Daten in wenigen Abfragen zu laden
         $rezeptIds = array_column($rezepte, 'RezeptID');
         $placeholders = str_repeat('?,', count($rezeptIds) - 1) . '?';
 
-        // Kategorien in einem Batch laden (statt einzelne Abfragen)
+        // Kategorien in einem Batch laden (statt einzelne Abfragen pro Rezept)
         $kategorienMap = [];
         $stmtK = $this->db->prepare("
             SELECT rk.RezeptID, k.Bezeichnung
@@ -440,6 +444,22 @@ class RezeptDAO {
         }
     }
 
+    /**
+     * Aktualisiert ein Rezept mit optimierter Methode
+     * Löscht Nährwerte bei Änderungen und verwendet effiziente DELETE/INSERT-Operationen
+     *
+     * @param int $rezeptID ID des zu aktualisierenden Rezepts
+     * @param string $titel Neuer Titel
+     * @param string $zubereitung Neue Zubereitungsanleitung
+     * @param string|null $bildPfad Neuer Bildpfad (optional)
+     * @param int $preisklasseID Neue Preisklasse-ID
+     * @param int $portionsgroesseID Neue Portionsgröße-ID
+     * @param array $kategorien Array mit Kategorie-IDs
+     * @param array $zutaten Array mit Zutaten-Daten
+     * @param array $utensilien Array mit Utensil-IDs
+     * @return bool true bei erfolgreichem Update
+     * @throws RuntimeException bei Datenbankfehlern
+     */
     public function aktualisiere(
         int $rezeptID,
         string $titel,
@@ -454,6 +474,7 @@ class RezeptDAO {
         try {
             $this->db->beginTransaction();
 
+            // Hauptrezept-Daten aktualisieren
             $sql = "UPDATE Rezept SET Titel = ?, Zubereitung = ?, PreisklasseID = ?, PortionsgroesseID = ?";
             $params = [$titel, $zubereitung, $preisklasseID, $portionsgroesseID];
 
@@ -467,16 +488,22 @@ class RezeptDAO {
 
             $this->db->prepare($sql)->execute($params);
 
+            // Nährwerte löschen da sich Zutaten geändert haben könnten
+            // (Benutzer muss Nährwerte neu berechnen lassen)
             $this->db->prepare("DELETE FROM RezeptNaehrwerte WHERE RezeptID = ?")->execute([$rezeptID]);
 
+            // Kategorien aktualisieren (DELETE + INSERT für Einfachheit)
             $this->db->prepare("DELETE FROM RezeptKategorie WHERE RezeptID = ?")->execute([$rezeptID]);
             if (!empty($kategorien)) {
                 $stmtKategorie = $this->db->prepare("INSERT INTO RezeptKategorie (RezeptID, KategorieID) VALUES (?, ?)");
                 foreach ($kategorien as $k) {
-                    $stmtKategorie->execute([$rezeptID, $k]);
+                    if (is_numeric($k)) {
+                        $stmtKategorie->execute([$rezeptID, (int)$k]);
+                    }
                 }
             }
 
+            // Zutaten aktualisieren (DELETE + INSERT für Einfachheit)
             $this->db->prepare("DELETE FROM RezeptZutat WHERE RezeptID = ?")->execute([$rezeptID]);
             if (!empty($zutaten)) {
                 $stmtZutat = $this->db->prepare("INSERT INTO RezeptZutat (RezeptID, Zutat, Menge, Einheit) VALUES (?, ?, ?, ?)");
@@ -488,6 +515,7 @@ class RezeptDAO {
                 }
             }
 
+            // Utensilien aktualisieren (DELETE + INSERT für Einfachheit)
             $this->db->prepare("DELETE FROM RezeptUtensil WHERE RezeptID = ?")->execute([$rezeptID]);
             if (!empty($utensilien)) {
                 $stmtUtensil = $this->db->prepare("INSERT INTO RezeptUtensil (RezeptID, UtensilID) VALUES (?, ?)");

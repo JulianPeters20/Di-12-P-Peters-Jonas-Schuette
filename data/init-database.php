@@ -8,6 +8,8 @@ try {
 
     // Bestehende Tabellen löschen (für Neuinitialisierung)
     // Reihenfolge beachtet Foreign Key Constraints
+    // WICHTIG: Tabellen werden gelöscht um eine saubere Neuinitialisierung zu gewährleisten
+    // und Konflikte mit geänderten Tabellenstrukturen zu vermeiden
     $tabellen = ['RezeptKategorie', 'RezeptUtensil', 'RezeptZutat', 'Bewertung',
         'Rezept', 'Kategorie', 'Utensil', 'Zutat', 'Preisklasse', 'Portionsgroesse', 'Nutzer',
         'RezeptNaehrwerte', 'api_cache', 'api_log'];
