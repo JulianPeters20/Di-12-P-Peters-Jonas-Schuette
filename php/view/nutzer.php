@@ -48,7 +48,7 @@
             <?php if (!empty($rezepte)): ?>
                 <ul class="rezept-galerie">
                     <?php foreach ($rezepte as $rezept): ?>
-                        <li class="rezept-karte">
+                        <li class="rezept-karte" data-rezept-id="<?= (int)($rezept->RezeptID ?? 0) ?>">
                             <img src="<?= htmlspecialchars($rezept->BildPfad ?? 'images/placeholder.jpg') ?>" alt="<?= htmlspecialchars($rezept->Titel ?? '-') ?>">
                             <div class="inhalt">
                                 <h4>
@@ -91,17 +91,13 @@
 
                                 <div class="meta" style="font-size: 0.9rem; color: #666; margin-top: 4px;">
                                     <?= htmlspecialchars($rezept->Erstellungsdatum ?? '-') ?>
-                                    <div class="meta">
-                                        Kategorien:
-                                        <?= !empty($rezept->Kategorien) ? implode(', ', $rezept->Kategorien) : '-' ?>
-                                        · <?= htmlspecialchars($rezept->Erstellungsdatum ?? '-') ?>
-                                    </div>
 
                                     <div class="rezept-aktion" style="margin-top: 10px;">
                                         <a href="index.php?page=rezept-bearbeiten&id=<?= (int)($rezept->RezeptID ?? 0) ?>" class="btn">Bearbeiten</a>
                                         <button type="button" class="btn rezept-loeschen-btn" data-id="<?= $rezept->RezeptID ?>">Löschen</button>
                                     </div>
                                 </div>
+                            </div>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -139,108 +135,6 @@
     </div>
 
 </main>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const buttons = document.querySelectorAll('.tab-button');
-        const contents = document.querySelectorAll('.tab-content');
-        console.log("Tab-Script geladen!", buttons.length, "Tabs gefunden.");
-
-        buttons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = btn.dataset.tab;
-                console.log("Tab clicked! Ziel:", target);
-
-                buttons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                contents.forEach(c => {
-                    if (c.id === target) {
-                        c.classList.add('active');
-                        console.log("Section aktiviert:", c.id);
-                    } else {
-                        c.classList.remove('active');
-                    }
-                });
-            });
-        });
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const modal = document.getElementById("loesch-modal");
-        const loeschText = document.getElementById("loesch-text");
-        const abbrechenBtn = document.getElementById("btn-abbrechen");
-        const bestaetigenBtn = document.getElementById("btn-bestaetigen");
-        let aktiveButton = null;
-
-        document.querySelectorAll(".rezept-loeschen-btn").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                e.preventDefault(); // verhindert versehentlichen submit
-                aktiveButton = btn;
-                const titel = btn.closest(".rezept-karte")?.querySelector("h4")?.innerText || "dieses Rezept";
-                loeschText.textContent = `Möchtest du „${titel}“ wirklich löschen?`;
-                modal.removeAttribute("hidden");
-            });
-        });
-
-        abbrechenBtn.addEventListener("click", () => {
-            aktiveButton = null;
-            modal.setAttribute("hidden", true);
-        });
-
-        bestaetigenBtn.addEventListener("click", async () => {
-            if (!aktiveButton) return;
-
-            const id = aktiveButton.dataset.id;
-            const formData = new FormData();
-            formData.append("id", id);
-
-            // CSRF-Token hinzufügen
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
-                             document.querySelector('input[name="csrf_token"]')?.value || '';
-            if (csrfToken) {
-                formData.append("csrf_token", csrfToken);
-            }
-
-            const res = await fetch("api/rezept-loeschen.php", {
-                method: "POST",
-                body: formData
-            });
-
-            const json = await res.json();
-            if (json.success) {
-                aktiveButton.closest(".rezept-karte").remove();
-                zeigeFlash("success", "Rezept erfolgreich gelöscht.");
-            } else {
-                zeigeFlash("error", "Fehler: " + json.message);
-            }
-
-            aktiveButton = null;
-            modal.setAttribute("hidden", true);
-        });
-    });
-</script>
-
-<script>
-    function zeigeFlash(typ, nachricht) {
-        // Alte entfernen
-        document.querySelectorAll(".flash-toast").forEach(e => e.remove());
-
-        // Neue erstellen
-        const box = document.createElement("div");
-        box.className = "flash-toast " + typ;
-        box.textContent = nachricht;
-
-        document.body.appendChild(box);
-
-        // Automatisch nach Animation entfernen
-        setTimeout(() => {
-            box.remove();
-        }, 4600);
-    }
-</script>
 
 <!-- TAB CONTENT CSS -->
 <style>

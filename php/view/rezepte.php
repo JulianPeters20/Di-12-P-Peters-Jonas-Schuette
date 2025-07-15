@@ -100,31 +100,3 @@
 
 </main>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const form = document.getElementById("suchformular");
-        const feld = document.getElementById("suchfeld");
-        const ergebnisContainer = document.getElementById("such-ergebnisse");
-
-        async function sucheAusfuehren() {
-            const begriff = feld.value.trim();
-            if (begriff.length < 2) {
-                ergebnisContainer.innerHTML = "<p>Bitte mindestens 2 Zeichen eingeben.</p>";
-                return;
-            }
-
-            try {
-                const res = await fetch(`api/rezepte-suche.php?query=${encodeURIComponent(begriff)}`);
-                const html = await res.text();
-                ergebnisContainer.innerHTML = html;
-            } catch (err) {
-                ergebnisContainer.innerHTML = "<p>Fehler beim Laden.</p>";
-            }
-        }
-
-        form.addEventListener("submit", sucheAusfuehren);
-        feld.addEventListener("input", () => {
-            if (feld.value.length > 2) sucheAusfuehren();
-        });
-    });
-</script>

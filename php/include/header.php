@@ -1,13 +1,35 @@
-<?php
-// Optional: Session sicherstellen, wenn nicht schon gestartet
-if (session_status() === PHP_SESSION_NONE) session_start();
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broke & Hungry</title>
+    <link rel="stylesheet" href="css/style.css">
 
-// CSRF-Token für JavaScript verfügbar machen
-if (function_exists('generateCSRFToken')) {
-    $csrfToken = generateCSRFToken();
-    echo '<meta name="csrf-token" content="' . htmlspecialchars($csrfToken) . '">';
-}
-?>
+    <?php
+    // Optional: Session sicherstellen, wenn nicht schon gestartet
+    if (session_status() === PHP_SESSION_NONE) session_start();
+
+    // CSRF-Token für JavaScript verfügbar machen
+    if (function_exists('generateCSRFToken')) {
+        $csrfToken = generateCSRFToken();
+        echo '<meta name="csrf-token" content="' . htmlspecialchars($csrfToken) . '">';
+    }
+
+    // Flash-Nachrichten für JavaScript verfügbar machen
+    if (!empty($_SESSION['flash'])) {
+        echo '<div data-flash-message data-flash-type="' . htmlspecialchars($_SESSION['flash']['type']) . '" data-flash-message="' . htmlspecialchars($_SESSION['flash']['message']) . '" style="display:none;"></div>';
+        unset($_SESSION['flash']);
+    }
+    ?>
+
+    <!-- JavaScript-Dateien -->
+    <script src="js/main.js"></script>
+    <script src="js/forms.js"></script>
+    <script src="js/rezept.js"></script>
+    <script src="js/search.js"></script>
+</head>
+<body>
 <header class="kopfzeile">
     <div class="logo">
         <a href="index.php">
@@ -59,17 +81,3 @@ if (function_exists('generateCSRFToken')) {
     </div>
 </header>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const burgerBtn = document.querySelector('.burger-btn');
-        const hauptNav = document.querySelector('.haupt-nav');
-
-        if (burgerBtn && hauptNav) {
-            burgerBtn.addEventListener('click', () => {
-                const expanded = burgerBtn.getAttribute('aria-expanded') === 'true';
-                burgerBtn.setAttribute('aria-expanded', !expanded);
-                hauptNav.classList.toggle('active');
-            });
-        }
-    });
-</script>
