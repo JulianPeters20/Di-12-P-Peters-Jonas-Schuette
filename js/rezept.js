@@ -71,15 +71,13 @@ function initDeleteModal() {
                          "dieses Rezept";
             
             loeschText.textContent = `Möchtest du „${titel}" wirklich löschen?`;
-            modal.removeAttribute("hidden");
-            modal.style.display = "flex"; // Sicherstellen, dass Modal sichtbar ist
+            modal.showModal();
         });
     });
 
     // Abbrechen-Button
     abbrechenBtn.addEventListener("click", () => {
-        modal.setAttribute("hidden", true);
-        modal.style.display = "none";
+        modal.close();
         aktiveButton = null;
     });
 
@@ -125,23 +123,15 @@ function initDeleteModal() {
         aktiveButton = null;
     });
 
-    // Modal schließen bei Klick auf Overlay
+    // Modal schließen bei Klick auf Backdrop
     modal.addEventListener("click", (e) => {
         if (e.target === modal) {
-            modal.setAttribute("hidden", true);
-            modal.style.display = "none";
+            modal.close();
             aktiveButton = null;
         }
     });
 
-    // Modal schließen mit Escape-Taste
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && !modal.hasAttribute("hidden")) {
-            modal.setAttribute("hidden", true);
-            modal.style.display = "none";
-            aktiveButton = null;
-        }
-    });
+    // Modal schließen mit Escape-Taste (automatisch durch dialog-Element)
 }
 
 // Nährwerte-Berechnung

@@ -123,7 +123,7 @@
         <p>Nutzer nicht gefunden.</p>
     <?php endif; ?>
 
-    <div id="loesch-modal" class="modal-overlay" hidden>
+    <dialog id="loesch-modal" class="modal-dialog">
         <div class="modal-box">
             <h3>Rezept löschen</h3>
             <p id="loesch-text">Möchtest du dieses Rezept wirklich löschen?</p>
@@ -132,7 +132,7 @@
                 <button type="button" class="btn" id="btn-bestaetigen">Löschen</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
 </main>
 

@@ -29,7 +29,7 @@ function validateCSRFToken(string $token): bool {
  */
 function getCSRFTokenField(): string {
     $token = generateCSRFToken();
-    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($token) . '">';
+    return '<input type="hidden" name="csrf_token" value="' . $token . '">';
 }
 
 /**

@@ -7,8 +7,8 @@ require_once __DIR__ . '/../include/rate_limiting.php';
 require_once __DIR__ . '/../include/csrf_protection.php';
 require_once __DIR__ . '/../model/RezeptDAO.php';
 
-// Einmal zu Beginn definieren – HIER bitte ggf. später bei Änderung anderer Pfade anpassen!!
-$baseUrl = "http://localhost/Di-12-P-Peters-Jonas-Schuette/"; // Absolute URL für simulierte Mails
+// Relative Pfade für simulierte Mails verwenden (besser für Tests)
+// Keine absolute URL mehr nötig
 
 /**
  * Hilfsfunktion: Stellt sicher, dass mails-Verzeichnis existiert.
@@ -41,7 +41,6 @@ function speichereVorregistrierung(string $benutzername, string $email, string $
  * Anzeige und Verarbeitung des (angepassten) Registrierungsformulars
  */
 function showRegistrierungsFormular(): void {
-    global $baseUrl; // Für den Link
     if (!empty($_SESSION["eingeloggt"])) {
         header("Location: index.php");
         exit;
@@ -80,10 +79,9 @@ function showRegistrierungsFormular(): void {
 
         $code = speichereVorregistrierung($benutzername, $email, $passwort);
         $mailDatei = "data/mails/registrierung_" . $code . ".html";
-        $bestaetigungsLink = $baseUrl . "index.php?page=bestaetigeRegistrierung&code=" . urlencode($code);
+        $bestaetigungsLink = "index.php?page=bestaetigeRegistrierung&code=" . urlencode($code);
 
         if ($nutzer) {
-            $pwResetLink = $baseUrl . "index.php?page=passwortVergessen";
             $inhalt = <<<MAIL
 <!DOCTYPE html>
 <html lang="de">
@@ -94,9 +92,7 @@ function showRegistrierungsFormular(): void {
 <body>
 <p>Jemand hat versucht, diese E-Mail für ein neues Konto zu nutzen.<br>
 Du bist jedoch bereits registriert.</p>
-<p>Solltest du dein Passwort vergessen haben, klicke hier:<br>
-<a href="{$pwResetLink}">Passwort zurücksetzen</a>
-</p>
+<p>Falls du dich nicht mehr an deine Zugangsdaten erinnerst, wende dich bitte an unseren Support.</p>
 </body>
 </html>
 MAIL;

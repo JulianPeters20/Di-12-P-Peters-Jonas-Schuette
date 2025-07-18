@@ -302,7 +302,7 @@
         <a href="index.php?page=rezepte" class="btn">Zurück zur Übersicht</a>
     </div>
 
-    <div id="loesch-modal" class="modal-overlay" hidden>
+    <dialog id="loesch-modal" class="modal-dialog">
         <div class="modal-box">
             <h3>Rezept löschen</h3>
             <p id="loesch-text">Möchtest du dieses Rezept wirklich löschen?</p>
@@ -311,7 +311,7 @@
                 <button class="btn" id="btn-bestaetigen">Löschen</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
 </main>
 
@@ -370,12 +370,12 @@
                     aktiveButton = btn;
                     const titel = btn.closest(".rezept-karte").querySelector("h4")?.innerText || "dieses Rezept";
                     loeschText.textContent = `Möchtest du „${titel}“ wirklich löschen?`;
-                    modal.removeAttribute("hidden");
+                    modal.showModal();
                 });
             });
 
             abbrechenBtn.addEventListener("click", () => {
-                modal.setAttribute("hidden", true);
+                modal.close();
                 aktiveButton = null;
             });
 
@@ -398,7 +398,7 @@
                     alert("Fehler: " + json.message);
                 }
 
-                modal.setAttribute("hidden", true);
+                modal.close();
                 aktiveButton = null;
             });
         });
