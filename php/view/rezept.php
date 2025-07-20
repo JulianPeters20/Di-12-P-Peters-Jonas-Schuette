@@ -315,46 +315,7 @@
 
 </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const stars = document.querySelectorAll('#star-rating .star');
-            const hiddenInput = document.getElementById('punkte-input');
 
-            function setStars(rating) {
-                stars.forEach(star => {
-                    if (parseInt(star.dataset.value) <= rating) {
-                        star.classList.add('selected');
-                        star.style.color = '#f5c518';
-                    } else {
-                        star.classList.remove('selected');
-                        star.style.color = '#ccc';
-                    }
-                });
-                hiddenInput.value = rating;
-            }
-
-            // Initiale Färbung direkt beim Laden setzen
-            setStars(parseInt(hiddenInput.value) || 0);
-
-            stars.forEach(star => {
-                star.addEventListener('click', () => {
-                    const rating = parseInt(star.dataset.value);
-                    setStars(rating);
-                });
-
-                star.addEventListener('mouseover', () => {
-                    const rating = parseInt(star.dataset.value);
-                    stars.forEach(s => {
-                        s.style.color = (parseInt(s.dataset.value) <= rating) ? '#f5c518' : '#ccc';
-                    });
-                });
-
-                star.addEventListener('mouseout', () => {
-                    setStars(parseInt(hiddenInput.value) || 0);
-                });
-            });
-        });
-    </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
