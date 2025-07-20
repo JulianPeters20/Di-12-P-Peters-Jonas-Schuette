@@ -1,4 +1,30 @@
-/* ======= Fonts & Farbvariablen ======= */
+/* ======================================================================
+   BROKE & HUNGRY - CSS STYLESHEET
+   ====================================================================== */
+
+/*
+   INHALTSVERZEICHNIS:
+
+   1. IMPORTS & CSS-VARIABLEN
+   2. RESET & GRUNDLAGEN
+   3. TYPOGRAFIE
+   4. FORMULARE & EINGABEFELDER
+   5. BUTTONS & INTERAKTIVE ELEMENTE
+   6. HEADER & NAVIGATION
+   7. SUCHLEISTE & FILTER
+   8. HAUPTBEREICH & REZEPT-GALERIE
+   9. NUTZER-BEREICHE & TABELLEN
+   10. FOOTER
+   11. RESPONSIVE DESIGN (MEDIA QUERIES)
+
+   WEITERE BEREICHE:
+   - Accessibility & Utility Classes
+   - Modals & Overlays
+   - Flash Messages & Notifications
+   - Spezielle Komponenten (Dropdown, Tabs, etc.)
+*/
+
+/* ======= 1. IMPORTS & CSS-VARIABLEN ======= */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 :root {
@@ -16,8 +42,7 @@
     --header-btn-txt-hover: #fff;
 }
 
-/* ======= Global Reset & Grundlayout ======= */
-
+/* ======= 2. RESET & GRUNDLAGEN ======= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -34,21 +59,37 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* ======= Headings ======= */
+/* ======= 3. TYPOGRAFIE ======= */
 h2, main h2 {
     font-size: 1.8rem;
     margin-bottom: 20px;
     color: var(--text);
 }
+
 h3 {
     font-size: 1.2rem;
     margin-bottom: 10px;
     color: var(--text);
 }
+
 main p {
     margin-bottom: 15px;
 }
-/* ======= Formular-Elemente ======= */
+
+/* Allgemeine Links */
+a {
+    color: #000;
+    text-decoration: none;
+}
+
+a:hover,
+a:focus {
+    color: var(--muted);
+    outline: 2px solid var(--accent-dark);
+    outline-offset: 2px;
+}
+
+/* ======= 4. FORMULARE & EINGABEFELDER ======= */
 form {
     max-width: 600px;
     margin: 0 auto;
@@ -165,7 +206,7 @@ select:focus {
     }
 }
 
-/* ======= Button Styles ======= */
+/* ======= 5. BUTTONS & INTERAKTIVE ELEMENTE ======= */
 .btn,
 button,
 input[type="submit"],
@@ -205,7 +246,7 @@ input[type="button"]:focus {
     outline-offset: 2px;
 }
 
-/* ======= Header: Navigationsleiste, Logo & Usernav ======= */
+/* ======= 6. HEADER & NAVIGATION ======= */
 .kopfzeile {
     display: flex;
     justify-content: space-between;
@@ -295,7 +336,7 @@ nav a:focus,
     outline: 2px solid var(--accent-dark, #5e8f60);
 }
 
-/* ======= Suchleiste ======= */
+/* ======= 7. SUCHLEISTE & FILTER ======= */
 .suchleiste {
     display: flex;
     flex-wrap: nowrap;
@@ -345,7 +386,7 @@ nav a:focus,
 }
 
 
-/* ======= Hauptbereich & Rezepte ======= */
+/* ======= 8. HAUPTBEREICH & REZEPT-GALERIE ======= */
 main {
     padding: 40px 20px;
     max-width: 1000px;
@@ -496,7 +537,7 @@ main {
     margin-bottom: 20px;
 }
 
-/* ======= Nutzerkarten & Tabellen ======= */
+/* ======= 9. NUTZER-BEREICHE & TABELLEN ======= */
 .nutzerliste {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -560,7 +601,7 @@ main {
     background-color: #eef6f5;
 }
 
-/* ======= Footer ======= */
+/* ======= 10. FOOTER ======= */
 footer {
     margin-top: 60px;
     width: 100vw;
@@ -599,7 +640,7 @@ a:focus {
     outline-offset: 2px;
 }
 
-/* ======= Barrierefreiheit: Visually Hidden ======= */
+/* ======= ACCESSIBILITY & UTILITY CLASSES ======= */
 .visually-hidden {
     position: absolute !important;
     width: 1px;
@@ -876,7 +917,7 @@ select {
     transform: scale(0.95);
 }
 
-/* ======= Media Queries (Responsiv) ======= */
+/* ======= 11. RESPONSIVE DESIGN (MEDIA QUERIES) ======= */
 @media (max-width: 500px) {
     .rezept-aktion {
         flex-direction: column;
@@ -1254,7 +1295,8 @@ select {
     white-space: nowrap;
 }
 
-/* ======= Nährwerte-Styling ======= */
+/* ======= SPEZIELLE KOMPONENTEN ======= */
+/* Nährwerte-Grid */
 .naehrwerte-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
