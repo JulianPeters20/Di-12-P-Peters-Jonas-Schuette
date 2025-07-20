@@ -5,16 +5,25 @@
 
         <div class="form-row">
             <label for="benutzername">Benutzername:</label>
-            <input type="text" id="benutzername" name="benutzername" maxlength="30"
+            <input type="text" id="benutzername" name="benutzername" maxlength="30" required
                    autocomplete="username"
                    value="<?= isset($benutzername) ? htmlspecialchars($benutzername) : (isset($_POST['benutzername']) ? htmlspecialchars($_POST['benutzername']) : '') ?>">
         </div>
         <div style="text-align: center; margin-bottom: 18px; font-size: 14px; color: #6c757d;">
             (öffentlich sichtbar)
         </div>
-        <div class="form-row-benutzername-fehler">
+
+        <!-- JavaScript-Enhanced Live-Validierung -->
+        <div class="form-row-benutzername-fehler js-only">
             <span id="benutzername-fehler" class="benutzername-fehler"></span>
         </div>
+
+        <!-- Fallback-Hinweis für ohne JavaScript -->
+        <noscript>
+            <div style="margin-bottom: 15px; padding: 8px 12px; border-radius: 4px; background: #e3f2fd; border: 1px solid #2196f3; color: #1976d2; font-size: 0.9em;">
+                💡 <strong>Hinweis:</strong> Die Verfügbarkeit des Benutzernamens wird beim Absenden geprüft. Mit aktiviertem JavaScript erhalten Sie sofortiges Feedback.
+            </div>
+        </noscript>
 
         <div class="form-row">
             <label for="email">E-Mail-Adresse:</label>

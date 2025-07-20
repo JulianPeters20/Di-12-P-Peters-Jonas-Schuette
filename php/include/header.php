@@ -23,13 +23,20 @@
     }
     ?>
 
+    <!-- JavaScript-Erkennung für Progressive Enhancement -->
+    <?php
+    require_once 'php/include/javascript_detection.php';
+    echo getJavaScriptDetectionCode();
+    echo getNoScriptDetectionCode();
+    ?>
+
     <!-- JavaScript-Dateien -->
     <script src="js/main.js"></script>
     <script src="js/forms.js"></script>
     <script src="js/rezept.js"></script>
     <script src="js/search.js"></script>
 </head>
-<body>
+<body class="no-js">
 <header class="kopfzeile">
     <div class="logo">
         <a href="index.php">

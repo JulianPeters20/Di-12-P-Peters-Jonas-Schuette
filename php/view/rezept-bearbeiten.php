@@ -4,17 +4,27 @@
 <main>
     <h2>Rezept bearbeiten</h2>
 
+    <?php if (isset($_SESSION["flash"])): ?>
+        <div class="flash-message <?= $_SESSION['flash']['type'] ?>"><?= htmlspecialchars($_SESSION["flash"]["message"]) ?></div>
+        <?php unset($_SESSION["flash"]); ?>
+    <?php endif; ?>
+
     <div class="form-container">
         <form action="index.php?page=rezept-aktualisieren&id=<?= urlencode($rezept['id']) ?>" method="post" enctype="multipart/form-data">
             <?= getCSRFTokenField() ?>
-            <!-- TITEL -->
-            <div class="form-row">
+            <div class="form-group">
                 <label for="titel">Titel:</label>
-                <input type="text" id="titel" name="titel" maxlength="50" value="<?= htmlspecialchars($_SESSION['formdata']['titel'] ?? $rezept['titel'] ?? '') ?>" required>
+                <input
+                        type="text"
+                        id="titel"
+                        name="titel"
+                        maxlength="50"
+                        required
+                        value="<?= htmlspecialchars($_SESSION['formdata']['titel'] ?? $rezept['titel'] ?? '') ?>"
+                >
             </div>
 
-            <!-- ZUTATEN -->
-            <div class="form-row">
+            <div class="form-group">
                 <label for="zutaten">Zutaten:</label>
             </div>
             <div class="zutaten-bereich">
@@ -23,11 +33,14 @@
                     $zutaten = $_SESSION['formdata']['zutaten'] ?? $rezept['zutaten'] ?? [];
                     if (empty($zutaten)) $zutaten[] = ['zutat' => '', 'menge' => '', 'einheit' => ''];
                     $einheitenListe = ["g", "kg", "ml", "l", "Msp", "TL", "EL", "Stück"];
-                    foreach ($zutaten as $zutat):
+                    $maxZutatenFallback = 15; // Für No-JS Fallback
+                    $aktuelleZutatenAnzahl = count($zutaten);
+
+                    foreach ($zutaten as $index => $zutat):
                         ?>
-                        <div class="zutaten-paar" style="display: flex; gap: 8px; margin-bottom: 6px; align-items:center;">
-                            <input type="text" name="zutatennamen[]" placeholder="Zutat" value="<?= htmlspecialchars($zutat['zutat']) ?>" required>
-                            <input type="text" name="mengen[]" placeholder="Menge" value="<?= htmlspecialchars($zutat['menge']) ?>" required>
+                        <div class="zutaten-paar" style="display: flex; gap: 8px; margin-bottom: 6px; align-items: center;">
+                            <input type="text" name="zutatennamen[]" placeholder="Zutat" maxlength="20" value="<?= htmlspecialchars($zutat['zutat']) ?>" <?= $index === 0 ? 'required' : '' ?>>
+                            <input type="number" name="mengen[]" placeholder="Menge" step="0.1" min="0" max="999999" value="<?= htmlspecialchars($zutat['menge']) ?>">
                             <select name="einheiten[]">
                                 <option value="">Einheit</option>
                                 <?php foreach ($einheitenListe as $einheit): ?>
@@ -36,30 +49,55 @@
                             </select>
                         </div>
                     <?php endforeach; ?>
+
+                    <!-- Zusätzliche Felder für No-JavaScript Fallback -->
+                    <noscript>
+                        <?php for ($i = $aktuelleZutatenAnzahl; $i < $maxZutatenFallback; $i++): ?>
+                            <div class="zutaten-paar" style="display: flex; gap: 8px; margin-bottom: 6px; align-items: center;">
+                                <input type="text" name="zutatennamen[]" placeholder="Zutat (optional)" maxlength="20" value="">
+                                <input type="number" name="mengen[]" placeholder="Menge" step="0.1" min="0" max="999999" value="">
+                                <select name="einheiten[]">
+                                    <option value="">Einheit</option>
+                                    <?php foreach ($einheitenListe as $einheit): ?>
+                                        <option value="<?= $einheit ?>"><?= $einheit ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        <?php endfor; ?>
+                        <p style="color: #666; font-size: 0.9em; margin-top: 10px;">
+                            💡 <strong>Hinweis:</strong> Mit aktiviertem JavaScript können Sie dynamisch Zutaten hinzufügen/entfernen.
+                        </p>
+                    </noscript>
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 8px;">
+
+                <!-- JavaScript-Enhanced Buttons -->
+                <div class="js-only flex" style="gap: 10px; margin-top: 8px;">
                     <button type="button" class="btn" onclick="neueZutat()">+ Neue Zutat</button>
                     <button type="button" class="btn" onclick="letztesZutatEntfernen()">− Zutat entfernen</button>
                 </div>
             </div>
 
-            <!-- ZUBEREITUNG -->
-            <div class="form-row">
+            <div class="form-group">
                 <label for="zubereitung">Zubereitung:</label>
-            </div>
-            <div class="form-row">
-                <textarea id="zubereitung" name="zubereitung" rows="6" required><?= htmlspecialchars($_SESSION['formdata']['zubereitung'] ?? $rezept['zubereitung']) ?></textarea>
+                <textarea
+                        id="zubereitung"
+                        name="zubereitung"
+                        rows="6"
+                        required
+                        placeholder="Beschreiben Sie hier Schritt für Schritt die Zubereitung..."
+                ><?= htmlspecialchars($_SESSION['formdata']['zubereitung'] ?? $rezept['zubereitung']) ?></textarea>
             </div>
 
-            <!-- UTENSILIEN + KATEGORIEN (Dropdown mit Mehrfachauswahl) -->
             <?php
             $formUtensilien = $_SESSION['formdata']['utensilien'] ?? array_column($rezept['utensilien'], 'UtensilID');
             $formKategorien = $_SESSION['formdata']['kategorien'] ?? array_column($rezept['kategorienMitIds'], 'KategorieID');
             ?>
 
-            <div class="form-row">
+            <div class="form-group">
                 <label for="utensilien">Utensilien:</label>
-                <div class="dropdown-multiselect">
+
+                <!-- JavaScript-Enhanced Dropdown -->
+                <div class="dropdown-multiselect js-only">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
                         <span class="dropdown-label">
                             <?php
@@ -86,11 +124,26 @@
                         <?php endforeach; ?>
                     </div>
                 </div>
+
+                <!-- Fallback für ohne JavaScript -->
+                <noscript>
+                    <div style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                        <?php foreach ($_SESSION['utensilienListe'] as $id => $utensil):
+                            $checked = in_array($id, $formUtensilien) ? "checked" : ""; ?>
+                            <label style="display: block; margin-bottom: 5px;">
+                                <input type="checkbox" name="utensilien[]" value="<?= $id ?>" <?= $checked ?>>
+                                <?= htmlspecialchars($utensil->Name ?? $utensil) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </noscript>
             </div>
 
-            <div class="form-row">
-                <label for="kategorien">Kategorien:</label>
-                <div class="dropdown-multiselect">
+            <div class="form-group">
+                <label>Kategorien:</label>
+
+                <!-- JavaScript-Enhanced Dropdown -->
+                <div class="dropdown-multiselect js-only">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
                         <span class="dropdown-label">
                             <?php
@@ -117,17 +170,31 @@
                         <?php endforeach; ?>
                     </div>
                 </div>
+
+                <!-- Fallback für ohne JavaScript -->
+                <noscript>
+                    <div style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                        <?php foreach ($_SESSION['kategorienListe'] as $id => $kategorie):
+                            $checked = in_array($id, $formKategorien) ? "checked" : ""; ?>
+                            <label style="display: block; margin-bottom: 5px;">
+                                <input type="checkbox" name="kategorien[]" value="<?= $id ?>" <?= $checked ?>>
+                                <?= htmlspecialchars($kategorie->Bezeichnung ?? $kategorie) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </noscript>
             </div>
 
-            <!-- PREISKLASSE UND PORTIONSGRÖße -->
             <?php
             $formPortionsgroesse = $_SESSION['formdata']['portionsgroesse'] ?? $rezept['portionsgroesseId'];
             $formPreisklasse = $_SESSION['formdata']['preisklasse'] ?? $rezept['preisklasseId'];
             ?>
 
-            <div class="form-row">
+            <div class="form-group">
                 <label for="preisklasse">Preisklasse:</label>
-                <div class="dropdown-multiselect single-select">
+
+                <!-- JavaScript-Enhanced Dropdown -->
+                <div class="dropdown-multiselect single-select js-only">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
                         <span class="dropdown-label">
                             <?php
@@ -139,20 +206,36 @@
                             }
                             ?>
                         </span>
-                        <span class="dropdown-arrow">&#x25BE;</span>
+                        <span class="dropdown-arrow">▾</span>
                     </div>
-                    <ul class="dropdown-list">
-                        <?php foreach ($_SESSION['preisklasseListe'] as $id => $pl):
-                            echo "<li data-value='$id'" . ((string)$id === (string)$formPreisklasse ? " class='selected'" : "") . ">" . htmlspecialchars($pl->Preisspanne ?? $pl) . "</li>";
-                        endforeach; ?>
-                    </ul>
                     <input type="hidden" name="preisklasse" id="preisklasse-hidden" value="<?= htmlspecialchars($formPreisklasse) ?>">
+                    <div class="dropdown-list">
+                        <?php foreach ($_SESSION['preisklasseListe'] as $id => $pl): ?>
+                            <div data-value="<?= htmlspecialchars($id) ?>" class="dropdown-option <?= ((string)$id === (string)$formPreisklasse) ? 'selected' : '' ?>">
+                                <?= htmlspecialchars($pl->Preisspanne ?? $pl) ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
+
+                <!-- Fallback für ohne JavaScript -->
+                <noscript>
+                    <select name="preisklasse" required>
+                        <option value="">-- Bitte wählen --</option>
+                        <?php foreach ($_SESSION['preisklasseListe'] as $id => $pl):
+                            $selected = ((string)$id === (string)$formPreisklasse) ? "selected" : "";
+                            ?>
+                            <option value="<?= htmlspecialchars($id) ?>" <?= $selected ?>><?= htmlspecialchars($pl->Preisspanne ?? $pl) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </noscript>
             </div>
 
-            <div class="form-row">
+            <div class="form-group">
                 <label for="portionsgroesse">Portionsgröße:</label>
-                <div class="dropdown-multiselect single-select">
+
+                <!-- JavaScript-Enhanced Dropdown -->
+                <div class="dropdown-multiselect single-select js-only">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
                         <span class="dropdown-label">
                             <?php
@@ -164,53 +247,66 @@
                             }
                             ?>
                         </span>
-                        <span class="dropdown-arrow">&#x25BE;</span>
+                        <span class="dropdown-arrow">▾</span>
                     </div>
-                    <ul class="dropdown-list">
-                        <?php foreach ($_SESSION['portionsgroesseListe'] as $id => $pg):
-                            echo "<li data-value='$id'" . ((string)$id === (string)$formPortionsgroesse ? " class='selected'" : "") . ">" . htmlspecialchars($pg->Angabe ?? $pg) . "</li>";
-                        endforeach; ?>
-                    </ul>
                     <input type="hidden" name="portionsgroesse" id="portionsgroesse-hidden" value="<?= htmlspecialchars($formPortionsgroesse) ?>">
-                </div>
-            </div>
-
-            <!-- BILD -->
-            <div class="bild-upload">
-                <div class="form-row">
-                    <label><strong>Aktuelles Bild:</strong></label>
-                </div>
-
-                <div class="form-row">
-                    <?php if (!empty($rezept['bild'])): ?>
-                        <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="Rezeptbild"
-                             style="border-radius:6px; max-width:300px; object-fit:contain;">
-                    <?php else: ?>
-                        <p>Kein Bild vorhanden</p>
-                    <?php endif; ?>
-                </div>
-
-                <div class="form-row">
-                    <label><strong>Neues Bild hochladen (optional):</strong></label>
-                </div>
-
-                <div class="form-row datei-auswahl">
-                    <div class="custom-file-upload">
-                        <button type="button" id="btn-select-file" class="btn">Datei auswählen</button>
-                        <span id="selected-file-name">Keine Datei ausgewählt</span>
-                        <input type="file" id="bild" name="bild" accept="image/*" hidden>
+                    <div class="dropdown-list">
+                        <?php foreach ($_SESSION['portionsgroesseListe'] as $id => $pg): ?>
+                            <div data-value="<?= htmlspecialchars($id) ?>" class="dropdown-option <?= ((string)$id === (string)$formPortionsgroesse) ? 'selected' : '' ?>">
+                                <?= htmlspecialchars($pg->Angabe ?? $pg) ?>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div id="preview-container" style="display:none; border-radius:6px;">
-                        <img id="img-preview" src="" alt="Bildvorschau"
-                             style="border-radius:6px; display:none; width:auto; max-width:300px; height:auto; object-fit:contain;">
-                    </div>
-                </div>
+                <!-- Fallback für ohne JavaScript -->
+                <noscript>
+                    <select name="portionsgroesse" required>
+                        <option value="">-- Bitte wählen --</option>
+                        <?php foreach ($_SESSION['portionsgroesseListe'] as $id => $pg):
+                            $selected = ((string)$id === (string)$formPortionsgroesse) ? "selected" : "";
+                            ?>
+                            <option value="<?= htmlspecialchars($id) ?>" <?= $selected ?>><?= htmlspecialchars($pg->Angabe ?? $pg) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </noscript>
             </div>
 
-            <div class="form-row">
+            <div class="form-group">
+                <label><strong>Aktuelles Bild:</strong></label>
+                <?php if (!empty($rezept['bild'])): ?>
+                    <img src="<?= htmlspecialchars($rezept['bild']) ?>" alt="Rezeptbild"
+                         style="border-radius:6px; max-width:300px; object-fit:contain; margin-top: 10px;">
+                <?php else: ?>
+                    <p style="color: #666; margin-top: 5px;">Kein Bild vorhanden</p>
+                <?php endif; ?>
+            </div>
+
+            <div class="form-group">
+                <label for="bild">Neues Bild hochladen (optional):</label>
+
+                <!-- JavaScript-Enhanced File Upload -->
+                <div class="custom-file-upload js-only">
+                    <button type="button" id="btn-select-file" class="btn">Datei auswählen</button>
+                    <span id="selected-file-name">Keine Datei ausgewählt</span>
+                    <input type="file" id="bild" name="bild" accept="image/*" hidden>
+                </div>
+
+                <!-- Fallback für ohne JavaScript -->
+                <noscript>
+                    <input type="file" name="bild" accept="image/*" class="form-control">
+                    <p style="color: #666; font-size: 0.9em; margin-top: 5px;">
+                        💡 <strong>Hinweis:</strong> Mit aktiviertem JavaScript erhalten Sie eine Bildvorschau.
+                    </p>
+                </noscript>
+            </div>
+
+            <!-- JavaScript-Enhanced Image Preview -->
+            <div id="preview-container" class="image-preview-container js-only" style="display: none;">
+                <img id="img-preview" src="" alt="Bildvorschau" class="image-preview">
+            </div>
+
+            <div class="form-group">
                 <input type="submit" value="Änderungen speichern" class="btn">
                 <button type="button" class="btn" onclick="window.history.back()">Abbrechen</button>
             </div>
@@ -242,11 +338,15 @@
         zutatInput.type = "text";
         zutatInput.name = "zutatennamen[]";
         zutatInput.placeholder = "Zutat";
+        zutatInput.maxLength = 20;
 
         const mengeInput = document.createElement("input");
-        mengeInput.type = "text";
+        mengeInput.type = "number";
         mengeInput.name = "mengen[]";
         mengeInput.placeholder = "Menge";
+        mengeInput.step = "0.1";
+        mengeInput.min = "0";
+        mengeInput.max = "999999";
 
         const einheitSelect = document.createElement("select");
         einheitSelect.name = "einheiten[]";
@@ -298,13 +398,16 @@
         zutatInput.type = "text";
         zutatInput.name = "zutatennamen[]";
         zutatInput.placeholder = "Zutat";
+        zutatInput.maxLength = 20;
         zutatInput.required = true;
 
         const mengeInput = document.createElement("input");
-        mengeInput.type = "text";
+        mengeInput.type = "number";
         mengeInput.name = "mengen[]";
         mengeInput.placeholder = "Menge";
-        mengeInput.required = true;
+        mengeInput.step = "0.1";
+        mengeInput.min = "0";
+        mengeInput.max = "999999";
 
         const einheitSelect = document.createElement("select");
         einheitSelect.name = "einheiten[]";
@@ -368,16 +471,16 @@
 
     // Event-Listener für Single-Select Dropdowns (Preisklasse, Portionsgröße)
     document.addEventListener('DOMContentLoaded', function() {
-        // Single-Select Dropdown-Handler
-        document.querySelectorAll('.dropdown-multiselect.single-select .dropdown-list li').forEach(li => {
-            li.addEventListener('click', function() {
+        // Single-Select Dropdown-Handler für DIV-basierte Optionen
+        document.querySelectorAll('.dropdown-multiselect.single-select .dropdown-list .dropdown-option').forEach(option => {
+            option.addEventListener('click', function() {
                 const dropdown = this.closest('.dropdown-multiselect');
                 const header = dropdown.querySelector('.dropdown-header');
                 const label = header.querySelector('.dropdown-label');
                 const hiddenInput = dropdown.querySelector('input[type="hidden"]');
 
-                // Alle anderen li-Elemente deselektieren
-                dropdown.querySelectorAll('.dropdown-list li').forEach(item => {
+                // Alle anderen Optionen deselektieren
+                dropdown.querySelectorAll('.dropdown-list .dropdown-option').forEach(item => {
                     item.classList.remove('selected');
                 });
 
@@ -385,7 +488,7 @@
                 this.classList.add('selected');
 
                 // Label und Hidden Input aktualisieren
-                label.textContent = this.textContent;
+                label.textContent = this.textContent.trim();
                 hiddenInput.value = this.getAttribute('data-value');
 
                 // Dropdown schließen

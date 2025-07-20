@@ -130,6 +130,39 @@ th {
   display: none;
 }
 
+/* ======= JavaScript Detection & Progressive Enhancement ======= */
+/* Standardmäßig alle JS-only Elemente verstecken */
+.js-only {
+  display: none;
+}
+
+/* Wenn JavaScript verfügbar ist, JS-only Elemente anzeigen */
+.js .js-only {
+  display: block;
+}
+
+/* No-JS Fallback-Elemente nur ohne JavaScript anzeigen */
+.no-js-only {
+  display: none;
+}
+
+.no-js .no-js-only {
+  display: block;
+}
+
+/* Inline-Block Elemente korrekt handhaben */
+.js .js-only.inline {
+  display: inline-block;
+}
+
+.js .js-only.flex {
+  display: flex;
+}
+
+.js .js-only.grid {
+  display: grid;
+}
+
 /* ======= Accessibility ======= */
 .sr-only {
   position: absolute;

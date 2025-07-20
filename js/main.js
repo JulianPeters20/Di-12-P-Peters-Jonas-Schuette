@@ -138,6 +138,12 @@ async function fetchWithCSRF(url, options = {}) {
     return fetch(url, options);
 }
 
+// JavaScript-Erkennung: Body-Klasse aktualisieren
+document.documentElement.classList.remove('no-js');
+document.documentElement.classList.add('js');
+document.body.classList.remove('no-js');
+document.body.classList.add('js');
+
 // Initialisierung beim DOM-Load
 document.addEventListener('DOMContentLoaded', function() {
     initBurgerMenu();
