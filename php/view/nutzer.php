@@ -111,9 +111,76 @@
         <!-- Gespeicherte Rezepte -->
         <section class="tab-content" id="gespeichert">
             <h3>Gespeicherte Rezepte</h3>
-            <div class="rezept-galerie">
-                <p>(Diese Funktion ist aktuell noch nicht implementiert.)</p>
-            </div>
+            <?php if (!empty($gespeicherteRezepte)): ?>
+                <ul class="rezept-galerie">
+                    <?php foreach ($gespeicherteRezepte as $rezept): ?>
+                        <li class="rezept-karte" data-rezept-id="<?= (int)($rezept['RezeptID'] ?? 0) ?>" style="display: flex; flex-direction: column;">
+                            <img src="<?= htmlspecialchars($rezept['BildPfad'] ?? 'images/placeholder.jpg') ?>" alt="<?= htmlspecialchars($rezept['Titel'] ?? '-') ?>">
+                            <div class="inhalt" style="flex: 1; display: flex; flex-direction: column;">
+                                <h4>
+                                    <a href="index.php?page=rezept&id=<?= (int)($rezept['RezeptID'] ?? 0) ?>">
+                                        <?= htmlspecialchars($rezept['Titel'] ?? '-') ?>
+                                    </a>
+                                </h4>
+
+                                <div class="meta" style="font-size: 0.9rem; color: #666; margin-bottom: 6px;">
+                                    <?php
+                                    // Durchschnittliche Bewertung als Sterne anzeigen
+                                    $durchschnitt = $rezept['durchschnitt'] ?? null;
+                                    $anzahlBewertungen = $rezept['anzahlBewertungen'] ?? 0;
+
+                                    if ($durchschnitt !== null && $anzahlBewertungen > 0) {
+                                        $sterne = round($durchschnitt);
+                                        for ($i = 1; $i <= 5; $i++) {
+                                            echo $i <= $sterne ? '★' : '☆';
+                                        }
+                                        echo ' (' . number_format($durchschnitt, 2) . ' aus ' . $anzahlBewertungen . ' Bewertung' . ($anzahlBewertungen > 1 ? 'en' : '') . ')';
+                                    } else {
+                                        echo '(Keine Bewertungen)';
+                                    }
+                                    ?>
+                                </div>
+
+                                <div class="meta" style="margin-bottom:6px;">
+                                    <?php
+                                    // Kategorien anzeigen
+                                    $kategorien = $rezept['kategorien'] ?? [];
+                                    if (is_array($kategorien) && count($kategorien) > 0) {
+                                        $anzeigeKategorien = array_slice($kategorien, 0, 3);
+                                        echo htmlspecialchars(implode(', ', $anzeigeKategorien));
+                                        if (count($kategorien) > 3) {
+                                            echo ', ...';
+                                        }
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </div>
+
+                                <div class="meta" style="font-size: 0.9rem; color: #666; margin-bottom: 6px;">
+                                    <?= htmlspecialchars($rezept['Erstellungsdatum'] ?? '-') ?>
+                                    <?php
+                                    $autorName = $rezept['erstellerName'] ?? null;
+                                    if ($autorName) {
+                                        echo ' · ' . htmlspecialchars($autorName);
+                                    }
+                                    ?>
+                                </div>
+
+                                <div class="meta" style="font-size: 0.9rem; color: #888; margin-bottom: 6px;">
+                                    Gespeichert am: <?= htmlspecialchars($rezept['GespeichertAm'] ?? '-') ?>
+                                </div>
+
+                                <div class="rezept-aktion" style="margin-top: auto; padding-top: 10px;">
+                                    <button type="button" class="btn gespeichert-entfernen-btn" data-id="<?= $rezept['RezeptID'] ?>">Aus Favoriten entfernen</button>
+                                </div>
+                            </div>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else: ?>
+                <p>Keine gespeicherten Rezepte vorhanden.</p>
+            <?php endif; ?>
         </section>
 
         <!-- Abmeldung und Konto löschen -->
@@ -209,6 +276,82 @@ document.addEventListener('DOMContentLoaded', function() {
                 kontoModal.close();
             }
         });
+    }
+
+    // Event-Listener für "Aus Favoriten entfernen" Buttons
+    document.querySelectorAll(".gespeichert-entfernen-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const rezeptId = btn.dataset.id;
+            const formData = new FormData();
+            formData.append("rezeptId", rezeptId);
+            formData.append("aktion", "entfernen");
+            formData.append("csrf_token", "<?php require_once 'php/include/csrf_protection.php'; echo generateCSRFToken(); ?>");
+
+            try {
+                const res = await fetch("api/rezept-speichern.php", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const json = await res.json();
+                if (json.success) {
+                    btn.closest(".rezept-karte").remove();
+
+                    // Prüfen ob noch Rezepte vorhanden sind
+                    const gespeichertTab = document.getElementById("gespeichert");
+                    const rezeptGalerie = gespeichertTab.querySelector(".rezept-galerie");
+                    const verbleibendeRezepte = rezeptGalerie.querySelectorAll(".rezept-karte");
+
+                    if (verbleibendeRezepte.length === 0) {
+                        // Alle Rezepte entfernt - Nachricht anzeigen
+                        rezeptGalerie.innerHTML = '<p>Keine gespeicherten Rezepte vorhanden.</p>';
+                    }
+
+                    // Toast-Nachricht anzeigen
+                    showToast(json.message, "success");
+                } else {
+                    showToast("Fehler: " + json.message, "error");
+                }
+            } catch (error) {
+                showToast("Netzwerkfehler beim Entfernen", "error");
+            }
+        });
+    });
+
+    // Toast-Funktion
+    function showToast(message, type) {
+        const toast = document.createElement("div");
+        toast.className = `flash-toast ${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+
+        if (type === "success") {
+            toast.style.backgroundColor = "#28a745";
+        } else if (type === "error") {
+            toast.style.backgroundColor = "#dc3545";
+        }
+
+        document.body.appendChild(toast);
+
+        // Einblenden
+        setTimeout(() => toast.style.opacity = "1", 10);
+
+        // Ausblenden und entfernen
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
     }
 });
 </script>

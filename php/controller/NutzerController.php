@@ -303,6 +303,19 @@ function showNutzerProfil(): void {
         $rezept->anzahlBewertungen = $bewertungDAO->zaehleBewertungen($rezeptId);
     }
 
+    // Gespeicherte Rezepte laden
+    require_once 'php/model/GespeicherteRezepteDAO.php';
+    $gespeicherteRezepteDAO = new GespeicherteRezepteDAO();
+    $gespeicherteRezepte = $gespeicherteRezepteDAO->findeGespeicherteRezepte($nutzer->id);
+
+    // Bewertungen für gespeicherte Rezepte hinzufügen
+    foreach ($gespeicherteRezepte as &$rezept) {
+        $rezeptId = $rezept['RezeptID'];
+        $rezept['durchschnitt'] = $bewertungDAO->berechneDurchschnittRating($rezeptId);
+        $rezept['anzahlBewertungen'] = $bewertungDAO->zaehleBewertungen($rezeptId);
+    }
+    unset($rezept);
+
     require 'php/view/nutzer.php';
 }
 
