@@ -1,37 +1,6 @@
 <main>
     <?php if (!empty($rezept)): ?>
-        <!-- Flash-Toast anzeigen -->
-        <?php if (!empty($_SESSION['flash'])): ?>
-            <script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    // Flash-Toast erstellen
-                    const toast = document.createElement("div");
-                    toast.className = "flash-toast <?= $_SESSION['flash']['type'] ?>";
-                    toast.textContent = "<?= htmlspecialchars($_SESSION['flash']['message']) ?>";
 
-                    // Längere Anzeigedauer für Nährwerte-Nachrichten
-                    const message = "<?= $_SESSION['flash']['message'] ?>";
-                    const isNutritionMessage = message.includes("Nährwerte");
-                    const displayDuration = isNutritionMessage ? 6000 : 4600; // 6s für Nährwerte, 4.6s für andere
-
-                    // Custom Animation für längere Anzeige
-                    if (isNutritionMessage) {
-                        toast.style.animation = "fadein 0.3s forwards, fadeout 0.4s forwards 5.5s";
-                    }
-
-                    // Toast zum Body hinzufügen
-                    document.body.appendChild(toast);
-
-                    // Toast nach Animation automatisch entfernen
-                    setTimeout(() => {
-                        if (toast.parentNode) {
-                            toast.parentNode.removeChild(toast);
-                        }
-                    }, displayDuration);
-                });
-            </script>
-            <?php unset($_SESSION['flash']); ?>
-        <?php endif; ?>
 
         <article class="rezept-detail">
             <header>

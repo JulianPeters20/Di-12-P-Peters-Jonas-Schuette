@@ -13,6 +13,15 @@ function zeigeFlash(typ, nachricht) {
     box.className = "flash-toast " + typ;
     box.textContent = nachricht;
 
+    // Längere Anzeigedauer für Nährwerte-Nachrichten
+    const isNutritionMessage = nachricht.includes("Nährwerte");
+    const displayDuration = isNutritionMessage ? 6000 : 4600; // 6s für Nährwerte, 4.6s für andere
+
+    // Custom Animation für längere Anzeige
+    if (isNutritionMessage) {
+        box.style.animation = "fadein 0.3s forwards, fadeout 0.4s forwards 5.5s";
+    }
+
     document.body.appendChild(box);
 
     // Automatisch nach Animation entfernen
@@ -20,7 +29,7 @@ function zeigeFlash(typ, nachricht) {
         if (box.parentNode) {
             box.parentNode.removeChild(box);
         }
-    }, 4600);
+    }, displayDuration);
 }
 
 // Burger-Menu-Funktionalität
@@ -82,15 +91,28 @@ function initTabSystem() {
 // Automatische Flash-Toast-Anzeige beim Laden
 function initFlashMessages() {
     // Prüfe auf PHP-Flash-Nachrichten im DOM
-    const flashData = document.querySelector('[data-flash-message]');
+    const flashData = document.querySelector('[data-flash-type]');
     if (flashData) {
         const type = flashData.dataset.flashType || 'info';
         const message = flashData.dataset.flashMessage || '';
         if (message) {
             zeigeFlash(type, message);
+            // Flash-Nachricht aus der Session löschen via AJAX
+            clearFlashFromSession();
         }
         flashData.remove();
     }
+}
+
+// Flash-Nachricht aus der PHP-Session löschen
+function clearFlashFromSession() {
+    // Einfacher GET-Request um die Session zu bereinigen
+    fetch('index.php?page=clearFlash', {
+        method: 'GET',
+        credentials: 'same-origin'
+    }).catch(() => {
+        // Fehler ignorieren - nicht kritisch
+    });
 }
 
 // Hilfsfunktion: CSRF-Token abrufen

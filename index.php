@@ -34,19 +34,10 @@ if (in_array($page, $geschuetzteSeiten, true) && empty($_SESSION['email']) && $p
     header("Location: index.php?page=anmeldung");
     exit;
 }
-?>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Broke & Hungry</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
 
-<?php require_once 'php/include/header.php'; ?>
+// Header einbinden (enthält vollständige HTML-Struktur)
+require_once 'php/include/header.php';
 
-<?php
 switch ($page) {
 
     case 'anmeldung':
@@ -212,6 +203,22 @@ switch ($page) {
         require_once 'php/view/nutzungsbedingungen.php';
         break;
 
+    case 'clearFlash':
+        // Flash-Nachricht aus Session löschen (AJAX-Endpoint)
+        if (!empty($_SESSION['flash'])) {
+            unset($_SESSION['flash']);
+        }
+        http_response_code(204); // No Content
+        exit;
+
+    case 'setJSStatus':
+        // JavaScript-Status setzen
+        require_once 'php/include/javascript_detection.php';
+        $enabled = isset($_GET['enabled']) && $_GET['enabled'] === '1';
+        setJavaScriptStatus($enabled);
+        http_response_code(204); // No Content
+        exit;
+
     default:
         require_once 'php/controller/IndexController.php';
         showHome();
@@ -220,12 +227,6 @@ switch ($page) {
 ?>
 
 <?php require_once 'php/include/footer.php'; ?>
-
-
-
-
-
-
 
 </body>
 </html>

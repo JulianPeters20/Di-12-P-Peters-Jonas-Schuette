@@ -1,23 +1,4 @@
 <main>
-    <!-- Flash-Toast anzeigen -->
-    <?php if (!empty($_SESSION['flash'])): ?>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const toast = document.createElement("div");
-                toast.className = "flash-toast <?= $_SESSION['flash']['type'] ?>";
-                toast.textContent = "<?= htmlspecialchars($_SESSION['flash']['message']) ?>";
-
-                document.body.appendChild(toast);
-
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 4600);
-            });
-        </script>
-        <?php unset($_SESSION['flash']); ?>
-    <?php endif; ?>
 
     <?php
     // Sicherstellen, dass alle Arrays existieren
