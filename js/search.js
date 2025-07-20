@@ -8,18 +8,12 @@ function initLiveSearch() {
     const form = document.getElementById("suchformular");
     const feld = document.getElementById("suchfeld");
     const ergebnisContainer = document.getElementById("such-ergebnisse");
-    const originalContent = document.querySelector('.rezept-galerie');
-    
+    const originalContent = document.getElementById("original-rezepte");
+
     if (!form || !feld || !ergebnisContainer) return;
 
     let searchTimeout = null;
     let isSearching = false;
-
-    // Originalen Inhalt speichern
-    let originalHTML = '';
-    if (originalContent) {
-        originalHTML = originalContent.outerHTML;
-    }
 
     async function sucheAusfuehren(begriff = null) {
         if (begriff === null) {
@@ -28,8 +22,8 @@ function initLiveSearch() {
 
         // Wenn Suchfeld leer ist, ursprünglichen Inhalt wiederherstellen
         if (begriff.length === 0) {
-            ergebnisContainer.innerHTML = originalHTML;
-            ergebnisContainer.style.display = 'block';
+            ergebnisContainer.innerHTML = '';
+            ergebnisContainer.style.display = 'none';
             if (originalContent) {
                 originalContent.style.display = 'block';
             }
@@ -73,9 +67,15 @@ function initLiveSearch() {
                 ergebnisContainer.innerHTML = "<p class='search-no-results'>Keine Rezepte gefunden.</p>";
             } else {
                 ergebnisContainer.innerHTML = html;
-                
+
                 // Klickbare Links zu den Suchergebnissen hinzufügen
                 makeSearchResultsClickable();
+            }
+
+            // Originale Liste verstecken, Suchergebnisse anzeigen
+            ergebnisContainer.style.display = 'block';
+            if (originalContent) {
+                originalContent.style.display = 'none';
             }
             
         } catch (error) {

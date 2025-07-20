@@ -45,8 +45,8 @@ function showHome(): void
 function showRezepte(): void
 {
     $dao = new RezeptDAO();
-    // Nur die neuesten 9 Rezepte für die Rezepte-Seite
-    $alleRezepte = $dao->findeNeuesteLimitiert(9);
+    // Alle Rezepte anzeigen (keine Limitierung)
+    $alleRezepte = $dao->findeAlle();
 
     $bewertungDAO = new BewertungDAO();
 
