@@ -43,7 +43,7 @@ class RezeptDAO {
             LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
             LEFT JOIN Preisklasse pk ON r.PreisklasseID = pk.PreisklasseID
             LEFT JOIN Portionsgroesse pg ON r.PortionsgroesseID = pg.PortionsgroesseID
-            ORDER BY r.Erstellungsdatum DESC
+            ORDER BY r.Erstellungsdatum DESC, r.RezeptID DESC
         ";
 
         $stmt = $this->db->query($sql);
@@ -111,6 +111,205 @@ class RezeptDAO {
         return $rezepte;
     }
 
+    /**
+     * Findet die neuesten Rezepte limitiert auf eine bestimmte Anzahl
+     * @param int $limit Anzahl der Rezepte die zurückgegeben werden sollen
+     * @return array Array mit den neuesten Rezepten
+     */
+    public function findeNeuesteLimitiert(int $limit = 10): array {
+        $sql = "
+            SELECT
+                r.RezeptID,
+                r.Titel,
+                r.Zubereitung,
+                r.BildPfad,
+                r.ErstellerID,
+                r.PreisklasseID,
+                r.PortionsgroesseID,
+                r.Erstellungsdatum,
+                n.Benutzername AS erstellerName,
+                n.Email AS erstellerEmail,
+                pk.Preisspanne AS preisklasseName,
+                pg.Angabe AS portionsgroesseName
+            FROM Rezept r
+            LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
+            LEFT JOIN Preisklasse pk ON r.PreisklasseID = pk.PreisklasseID
+            LEFT JOIN Portionsgroesse pg ON r.PortionsgroesseID = pg.PortionsgroesseID
+            ORDER BY r.Erstellungsdatum DESC, r.RezeptID DESC
+            LIMIT ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($rezepte)) {
+            return [];
+        }
+
+        return $this->enricheRezepteWithDetails($rezepte);
+    }
+
+    /**
+     * Findet die beliebtesten Rezepte sortiert nach Anzahl der Bewertungen
+     * @param int $limit Anzahl der Rezepte die zurückgegeben werden sollen
+     * @return array Array mit Rezepten sortiert nach Bewertungsanzahl (absteigend)
+     */
+    public function findeBeliebteste(int $limit = 10): array {
+        $sql = "
+            SELECT
+                r.RezeptID,
+                r.Titel,
+                r.Zubereitung,
+                r.BildPfad,
+                r.ErstellerID,
+                r.PreisklasseID,
+                r.PortionsgroesseID,
+                r.Erstellungsdatum,
+                n.Benutzername AS erstellerName,
+                n.Email AS erstellerEmail,
+                pk.Preisspanne AS preisklasseName,
+                pg.Angabe AS portionsgroesseName,
+                COUNT(b.RezeptID) as anzahlBewertungen
+            FROM Rezept r
+            LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
+            LEFT JOIN Preisklasse pk ON r.PreisklasseID = pk.PreisklasseID
+            LEFT JOIN Portionsgroesse pg ON r.PortionsgroesseID = pg.PortionsgroesseID
+            LEFT JOIN Bewertung b ON r.RezeptID = b.RezeptID
+            GROUP BY r.RezeptID, r.Titel, r.Zubereitung, r.BildPfad, r.ErstellerID,
+                     r.PreisklasseID, r.PortionsgroesseID, r.Erstellungsdatum,
+                     n.Benutzername, n.Email, pk.Preisspanne, pg.Angabe
+            ORDER BY anzahlBewertungen DESC, r.Erstellungsdatum DESC, r.RezeptID DESC
+            LIMIT ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($rezepte)) {
+            return [];
+        }
+
+        return $this->enricheRezepteWithDetails($rezepte);
+    }
+
+    /**
+     * Findet die bestbewerteten Rezepte (mindestens 3 Bewertungen)
+     * @param int $limit Anzahl der Rezepte die zurückgegeben werden sollen
+     * @return array Array mit Rezepten sortiert nach Durchschnittsbewertung (absteigend)
+     */
+    public function findeBestBewertete(int $limit = 10): array {
+        $sql = "
+            SELECT
+                r.RezeptID,
+                r.Titel,
+                r.Zubereitung,
+                r.BildPfad,
+                r.ErstellerID,
+                r.PreisklasseID,
+                r.PortionsgroesseID,
+                r.Erstellungsdatum,
+                n.Benutzername AS erstellerName,
+                n.Email AS erstellerEmail,
+                pk.Preisspanne AS preisklasseName,
+                pg.Angabe AS portionsgroesseName,
+                COUNT(b.RezeptID) as anzahlBewertungen,
+                AVG(b.Punkte) as durchschnittsBewertung
+            FROM Rezept r
+            LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
+            LEFT JOIN Preisklasse pk ON r.PreisklasseID = pk.PreisklasseID
+            LEFT JOIN Portionsgroesse pg ON r.PortionsgroesseID = pg.PortionsgroesseID
+            LEFT JOIN Bewertung b ON r.RezeptID = b.RezeptID
+            GROUP BY r.RezeptID, r.Titel, r.Zubereitung, r.BildPfad, r.ErstellerID,
+                     r.PreisklasseID, r.PortionsgroesseID, r.Erstellungsdatum,
+                     n.Benutzername, n.Email, pk.Preisspanne, pg.Angabe
+            HAVING COUNT(b.RezeptID) >= 3
+            ORDER BY durchschnittsBewertung DESC, anzahlBewertungen DESC, r.RezeptID DESC
+            LIMIT ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($rezepte)) {
+            return [];
+        }
+
+        return $this->enricheRezepteWithDetails($rezepte);
+    }
+
+    /**
+     * Hilfsmethode um Rezepte mit Kategorien, Utensilien und Zutaten anzureichern
+     * @param array $rezepte Array mit Basis-Rezeptdaten
+     * @return array Array mit angereicherten Rezeptdaten
+     */
+    private function enricheRezepteWithDetails(array $rezepte): array {
+        if (empty($rezepte)) {
+            return [];
+        }
+
+        // Alle Rezept-IDs für Batch-Abfragen sammeln
+        $rezeptIds = array_column($rezepte, 'RezeptID');
+        $placeholders = str_repeat('?,', count($rezeptIds) - 1) . '?';
+
+        // Kategorien in einem Batch laden
+        $kategorienMap = [];
+        $stmtK = $this->db->prepare("
+            SELECT rk.RezeptID, k.Bezeichnung
+            FROM RezeptKategorie rk
+            JOIN Kategorie k ON rk.KategorieID = k.KategorieID
+            WHERE rk.RezeptID IN ($placeholders)
+        ");
+        $stmtK->execute($rezeptIds);
+        while ($row = $stmtK->fetch(PDO::FETCH_ASSOC)) {
+            $kategorienMap[$row['RezeptID']][] = $row['Bezeichnung'];
+        }
+
+        // Utensilien in einem Batch laden
+        $utensilienMap = [];
+        $stmtU = $this->db->prepare("
+            SELECT ru.RezeptID, u.UtensilID, u.Name
+            FROM RezeptUtensil ru
+            JOIN Utensil u ON ru.UtensilID = u.UtensilID
+            WHERE ru.RezeptID IN ($placeholders)
+        ");
+        $stmtU->execute($rezeptIds);
+        while ($row = $stmtU->fetch(PDO::FETCH_ASSOC)) {
+            $utensilienMap[$row['RezeptID']][] = [
+                'UtensilID' => $row['UtensilID'],
+                'Name' => $row['Name']
+            ];
+        }
+
+        // Zutaten in einem Batch laden
+        $zutatenMap = [];
+        $stmtZ = $this->db->prepare("
+            SELECT RezeptID, Zutat, Menge, Einheit
+            FROM RezeptZutat
+            WHERE RezeptID IN ($placeholders)
+        ");
+        $stmtZ->execute($rezeptIds);
+        while ($row = $stmtZ->fetch(PDO::FETCH_ASSOC)) {
+            $zutatenMap[$row['RezeptID']][] = [
+                'Zutat' => $row['Zutat'],
+                'Menge' => $row['Menge'],
+                'Einheit' => $row['Einheit']
+            ];
+        }
+
+        // Daten zusammenführen
+        foreach ($rezepte as &$rezept) {
+            $rezeptID = (int)$rezept['RezeptID'];
+            $rezept['kategorien'] = $kategorienMap[$rezeptID] ?? [];
+            $rezept['utensilien'] = $utensilienMap[$rezeptID] ?? [];
+            $rezept['zutaten'] = $zutatenMap[$rezeptID] ?? [];
+        }
+
+        return $rezepte;
+    }
+
     public function findeNachErstellerID(int $nutzerId): array {
         $sql = "
         SELECT 
@@ -120,7 +319,7 @@ class RezeptDAO {
         FROM Rezept r
         LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
         WHERE r.ErstellerID = ?
-        ORDER BY r.Erstellungsdatum DESC
+        ORDER BY r.Erstellungsdatum DESC, r.RezeptID DESC
     ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$nutzerId]);
@@ -311,7 +510,7 @@ class RezeptDAO {
             JOIN Kategorie k ON rk.KategorieID = k.KategorieID
             LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
             WHERE k.Bezeichnung = ?
-            ORDER BY r.Erstellungsdatum DESC
+            ORDER BY r.Erstellungsdatum DESC, r.RezeptID DESC
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$kategorie]);

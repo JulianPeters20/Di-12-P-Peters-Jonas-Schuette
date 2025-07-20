@@ -27,7 +27,7 @@
 
     <div id="such-ergebnisse" class="rezept-galerie"></div>
 
-    <h2 class="mb-2 mt-3">Beliebte Rezepte</h2>
+    <h2 class="mb-2 mt-3">Neue Rezepte</h2>
 
     <ul class="rezept-galerie">
         <?php if (!empty($rezepte)) : ?>
