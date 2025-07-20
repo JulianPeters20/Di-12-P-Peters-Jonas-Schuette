@@ -293,6 +293,16 @@ function showNutzerProfil(): void {
     $rezeptDAO = new RezeptDAO();
     $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->id);
 
+    // Bewertungen für jedes Rezept laden
+    require_once 'php/model/BewertungDAO.php';
+    $bewertungDAO = new BewertungDAO();
+
+    foreach ($rezepte as $rezept) {
+        $rezeptId = $rezept->RezeptID;
+        $rezept->durchschnitt = $bewertungDAO->berechneDurchschnittRating($rezeptId);
+        $rezept->anzahlBewertungen = $bewertungDAO->zaehleBewertungen($rezeptId);
+    }
+
     require 'php/view/nutzer.php';
 }
 
