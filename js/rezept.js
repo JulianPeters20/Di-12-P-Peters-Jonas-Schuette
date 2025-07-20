@@ -143,6 +143,30 @@ function initNutritionConsent() {
 
     if (!consentCheckbox || !consentBtn) return;
 
+    // Prüfen ob Einwilligung bereits vorhanden ist
+    const hasServerConsent = consentArea && consentArea.classList.contains('flash-hidden');
+    const hasLocalConsent = localStorage.getItem('naehrwerte_einwilligung') === 'true';
+
+    if (hasServerConsent || hasLocalConsent) {
+        // Einwilligung bereits vorhanden - Bereich versteckt lassen
+        if (consentArea) {
+            consentArea.style.display = 'none';
+            consentArea.classList.add('flash-hidden');
+        }
+
+        // "Nährwerte berechnen" Button anzeigen
+        if (calculateBtn) {
+            calculateBtn.style.display = 'inline-block';
+        }
+
+        // Wenn nur localStorage-Einwilligung vorhanden ist, mit Server synchronisieren
+        if (hasLocalConsent && !hasServerConsent) {
+            syncConsentWithServer();
+        }
+
+        return;
+    }
+
     // Checkbox-Event: Button aktivieren/deaktivieren
     consentCheckbox.addEventListener('change', () => {
         consentBtn.disabled = !consentCheckbox.checked;
@@ -171,15 +195,20 @@ function initNutritionConsent() {
             const result = await response.json();
 
             if (result.success) {
-                // Einverständnisbereich ausblenden
+                // Einverständnisbereich ausblenden und CSS-Klasse hinzufügen
                 if (consentArea) {
                     consentArea.style.display = 'none';
+                    consentArea.classList.add('flash-hidden');
                 }
 
                 // "Nährwerte berechnen" Button anzeigen
                 if (calculateBtn) {
                     calculateBtn.style.display = 'inline-block';
                 }
+
+                // Zusätzlich in localStorage speichern für Client-side Persistenz
+                localStorage.setItem('naehrwerte_einwilligung', 'true');
+                localStorage.setItem('naehrwerte_einwilligung_datum', new Date().toISOString());
 
                 zeigeFlash("success", "Einwilligung gespeichert. Du kannst jetzt Nährwerte berechnen.");
             } else {
@@ -194,6 +223,21 @@ function initNutritionConsent() {
             consentBtn.textContent = "Einwilligung speichern";
         }
     });
+}
+
+// Synchronisiert localStorage-Einwilligung mit Server-Session
+async function syncConsentWithServer() {
+    try {
+        const formData = new FormData();
+        formData.append('einwilligung', 'true');
+
+        await fetchWithCSRF('index.php?page=setzeNaehrwerteEinwilligung', {
+            method: 'POST',
+            body: formData
+        });
+    } catch (error) {
+        console.error("Fehler beim Synchronisieren der Einwilligung:", error);
+    }
 }
 
 // Nährwerte-Berechnung
@@ -257,27 +301,12 @@ function initNutritionCalculation() {
     });
 }
 
-// Fallback für Bewertungen ohne JavaScript
+// Fallback für Bewertungen ohne JavaScript (nicht mehr benötigt)
 function initRatingFallback() {
-    const ratingForm = document.querySelector('.bewertung-form');
-    const starRating = document.getElementById('star-rating');
-    
-    if (!ratingForm || !starRating) return;
-
-    // Prüfe ob JavaScript verfügbar ist
-    if (typeof window.zeigeFlash === 'undefined') {
-        // Fallback: Zeige normale Radio-Buttons
-        const fallbackHTML = `
-            <div class="rating-fallback">
-                <label><input type="radio" name="punkte" value="1"> 1 Stern</label>
-                <label><input type="radio" name="punkte" value="2"> 2 Sterne</label>
-                <label><input type="radio" name="punkte" value="3"> 3 Sterne</label>
-                <label><input type="radio" name="punkte" value="4"> 4 Sterne</label>
-                <label><input type="radio" name="punkte" value="5"> 5 Sterne</label>
-            </div>
-        `;
-        starRating.innerHTML = fallbackHTML;
-    }
+    // Diese Funktion ist nicht mehr nötig, da wir jetzt
+    // CSS-basierte Progressive Enhancement verwenden
+    // Fallbacks werden über <noscript> Tags und CSS-Klassen gehandhabt
+    return;
 }
 
 // Initialisierung

@@ -25,6 +25,19 @@ class RezeptDAO {
      * @return array Array mit allen Rezepten inklusive Kategorien, Utensilien und Zutaten
      */
     public function findeAlle(): array {
+        return $this->findeAlleMitSortierung('datum', 'desc');
+    }
+
+    /**
+     * Lädt alle Rezepte mit Sortierung
+     * @param string $sortBy Sortierkriterium: 'bewertung', 'beliebtheit', 'datum'
+     * @param string $sortOrder Sortierreihenfolge: 'asc', 'desc'
+     * @return array Array mit allen Rezepten inklusive Kategorien, Utensilien und Zutaten
+     */
+    public function findeAlleMitSortierung(string $sortBy, string $sortOrder): array {
+        // Sortierung bestimmen
+        $orderClause = $this->buildOrderClause($sortBy, $sortOrder);
+
         $sql = "
             SELECT
                 r.RezeptID,
@@ -38,12 +51,18 @@ class RezeptDAO {
                 n.Benutzername AS erstellerName,
                 n.Email AS erstellerEmail,
                 pk.Preisspanne AS preisklasseName,
-                pg.Angabe AS portionsgroesseName
+                pg.Angabe AS portionsgroesseName,
+                COALESCE(AVG(b.Punkte), 0) AS durchschnittsBewertung,
+                COUNT(b.RezeptID) AS anzahlBewertungen
             FROM Rezept r
             LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
             LEFT JOIN Preisklasse pk ON r.PreisklasseID = pk.PreisklasseID
             LEFT JOIN Portionsgroesse pg ON r.PortionsgroesseID = pg.PortionsgroesseID
-            ORDER BY r.Erstellungsdatum DESC, r.RezeptID DESC
+            LEFT JOIN Bewertung b ON r.RezeptID = b.RezeptID
+            GROUP BY r.RezeptID, r.Titel, r.Zubereitung, r.BildPfad, r.ErstellerID,
+                     r.PreisklasseID, r.PortionsgroesseID, r.Erstellungsdatum,
+                     n.Benutzername, n.Email, pk.Preisspanne, pg.Angabe
+            $orderClause
         ";
 
         $stmt = $this->db->query($sql);
@@ -109,6 +128,26 @@ class RezeptDAO {
         }
 
         return $rezepte;
+    }
+
+    /**
+     * Erstellt die ORDER BY Klausel basierend auf Sortierkriterium und -reihenfolge
+     * @param string $sortBy Sortierkriterium
+     * @param string $sortOrder Sortierreihenfolge
+     * @return string ORDER BY Klausel
+     */
+    private function buildOrderClause(string $sortBy, string $sortOrder): string {
+        $direction = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+
+        switch ($sortBy) {
+            case 'bewertung':
+                return "ORDER BY durchschnittsBewertung $direction, anzahlBewertungen DESC, r.Erstellungsdatum DESC";
+            case 'beliebtheit':
+                return "ORDER BY anzahlBewertungen $direction, durchschnittsBewertung DESC, r.Erstellungsdatum DESC";
+            case 'datum':
+            default:
+                return "ORDER BY r.Erstellungsdatum $direction, r.RezeptID $direction";
+        }
     }
 
     /**

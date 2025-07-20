@@ -17,9 +17,9 @@
 
         <!-- Tabs -->
         <nav class="tabs">
-            <button class="tab-button active" data-tab="profil">Profil</button>
-            <button class="tab-button" data-tab="eigene">Eigene Rezepte</button>
-            <button class="tab-button" data-tab="gespeichert">Gespeicherte Rezepte</button>
+            <button class="tab-button active" data-tab="profil" onclick="showNutzerTab('profil')">Profil</button>
+            <button class="tab-button" data-tab="eigene" onclick="showNutzerTab('eigene')">Eigene Rezepte</button>
+            <button class="tab-button" data-tab="gespeichert" onclick="showNutzerTab('gespeichert')">Gespeicherte Rezepte</button>
         </nav>
 
         <!-- Profil -->
@@ -48,17 +48,17 @@
             <?php if (!empty($rezepte)): ?>
                 <ul class="rezept-galerie">
                     <?php foreach ($rezepte as $rezept): ?>
-                        <li class="rezept-karte" data-rezept-id="<?= (int)($rezept->RezeptID ?? 0) ?>" style="display: flex; flex-direction: column;">
+                        <li class="rezept-karte nutzer-karte-container" data-rezept-id="<?= (int)($rezept->RezeptID ?? 0) ?>">
                             <img src="<?= htmlspecialchars($rezept->BildPfad ?? 'images/placeholder.jpg') ?>" alt="<?= htmlspecialchars($rezept->Titel ?? '-') ?>">
-                            <div class="inhalt" style="flex: 1; display: flex; flex-direction: column;">
+                            <div class="inhalt nutzer-karte-inhalt">
                                 <h4>
                                     <a href="index.php?page=rezept&id=<?= (int)($rezept->RezeptID ?? 0) ?>">
                                         <?= htmlspecialchars($rezept->Titel ?? '-') ?>
                                     </a>
                                 </h4>
 
-                                <div class="meta-content" style="flex: 1;">
-                                    <div class="meta" style="font-size: 0.9rem; color: #666; margin-bottom: 6px;">
+                                <div class="meta-content nutzer-meta-content">
+                                    <div class="meta nutzer-meta-bewertung">
                                         <?php
                                         $durchschnitt = $rezept->durchschnitt ?? null;
                                         $anzahlBewertungen = $rezept->anzahlBewertungen ?? 0;
@@ -75,7 +75,7 @@
                                         ?>
                                     </div>
 
-                                    <div class="meta" style="margin-bottom: 6px;">
+                                    <div class="meta nutzer-meta-kategorie">
                                         <?php
                                         $kategorien = $rezept->Kategorien ?? [];
                                         if (is_array($kategorien) && count($kategorien) > 0) {
@@ -90,12 +90,12 @@
                                         ?>
                                     </div>
 
-                                    <div class="meta" style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">
+                                    <div class="meta nutzer-karte-meta">
                                         <?= htmlspecialchars($rezept->Erstellungsdatum ?? '-') ?>
                                     </div>
                                 </div>
 
-                                <div class="rezept-aktion" style="margin-top: auto; padding-top: 10px;">
+                                <div class="rezept-aktion nutzer-karte-aktion">
                                     <a href="index.php?page=rezept-bearbeiten&id=<?= (int)($rezept->RezeptID ?? 0) ?>" class="btn">Bearbeiten</a>
                                     <button type="button" class="btn rezept-loeschen-btn" data-id="<?= $rezept->RezeptID ?>">Löschen</button>
                                 </div>
@@ -114,16 +114,16 @@
             <?php if (!empty($gespeicherteRezepte)): ?>
                 <ul class="rezept-galerie">
                     <?php foreach ($gespeicherteRezepte as $rezept): ?>
-                        <li class="rezept-karte" data-rezept-id="<?= (int)($rezept['RezeptID'] ?? 0) ?>" style="display: flex; flex-direction: column;">
+                        <li class="rezept-karte nutzer-karte-container" data-rezept-id="<?= (int)($rezept['RezeptID'] ?? 0) ?>">
                             <img src="<?= htmlspecialchars($rezept['BildPfad'] ?? 'images/placeholder.jpg') ?>" alt="<?= htmlspecialchars($rezept['Titel'] ?? '-') ?>">
-                            <div class="inhalt" style="flex: 1; display: flex; flex-direction: column;">
+                            <div class="inhalt nutzer-karte-inhalt">
                                 <h4>
                                     <a href="index.php?page=rezept&id=<?= (int)($rezept['RezeptID'] ?? 0) ?>">
                                         <?= htmlspecialchars($rezept['Titel'] ?? '-') ?>
                                     </a>
                                 </h4>
 
-                                <div class="meta" style="font-size: 0.9rem; color: #666; margin-bottom: 6px;">
+                                <div class="meta nutzer-meta-bewertung">
                                     <?php
                                     // Durchschnittliche Bewertung als Sterne anzeigen
                                     $durchschnitt = $rezept['durchschnitt'] ?? null;
@@ -141,7 +141,7 @@
                                     ?>
                                 </div>
 
-                                <div class="meta" style="margin-bottom:6px;">
+                                <div class="meta nutzer-meta-kategorie">
                                     <?php
                                     // Kategorien anzeigen
                                     $kategorien = $rezept['kategorien'] ?? [];
@@ -157,7 +157,7 @@
                                     ?>
                                 </div>
 
-                                <div class="meta" style="font-size: 0.9rem; color: #666; margin-bottom: 6px;">
+                                <div class="meta nutzer-meta-autor">
                                     <?= htmlspecialchars($rezept['Erstellungsdatum'] ?? '-') ?>
                                     <?php
                                     $autorName = $rezept['erstellerName'] ?? null;
@@ -167,11 +167,11 @@
                                     ?>
                                 </div>
 
-                                <div class="meta" style="font-size: 0.9rem; color: #888; margin-bottom: 6px;">
+                                <div class="meta nutzer-karte-meta-gespeichert">
                                     Gespeichert am: <?= htmlspecialchars($rezept['GespeichertAm'] ?? '-') ?>
                                 </div>
 
-                                <div class="rezept-aktion" style="margin-top: auto; padding-top: 10px;">
+                                <div class="rezept-aktion nutzer-karte-aktion">
                                     <button type="button" class="btn gespeichert-entfernen-btn" data-id="<?= $rezept['RezeptID'] ?>">Aus Favoriten entfernen</button>
                                 </div>
                             </div>
@@ -184,9 +184,11 @@
         </section>
 
         <!-- Abmeldung und Konto löschen -->
-        <div style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap;">
+        <div class="nutzer-aktionen-container">
             <a href="index.php?page=abmeldung" class="btn">Abmelden</a>
-            <button type="button" class="btn btn-danger" id="konto-loeschen-btn">Konto löschen</button>
+            <?php if (!$istAdmin): ?>
+                <button type="button" class="btn btn-danger" id="konto-loeschen-btn">Konto löschen</button>
+            <?php endif; ?>
         </div>
 
     <?php else: ?>
@@ -207,10 +209,10 @@
     <dialog id="konto-loesch-modal" class="modal-dialog">
         <div class="modal-box">
             <h3>⚠️ Konto unwiderruflich löschen</h3>
-            <div style="margin: 20px 0;">
+            <div class="konto-loesch-warnung">
                 <p><strong>Achtung:</strong> Diese Aktion kann nicht rückgängig gemacht werden!</p>
                 <p>Folgende Daten werden <strong>permanent gelöscht</strong>:</p>
-                <ul style="text-align: left; margin: 10px 0;">
+                <ul class="konto-loesch-liste-ul">
                     <li>Dein Benutzerkonto</li>
                     <li>Alle deine Rezepte</li>
                     <li>Alle deine Bewertungen</li>
@@ -228,6 +230,37 @@
 </main>
 
 <script>
+// Tab-Funktionalität für Nutzer-Seite
+function showNutzerTab(tabName) {
+    console.log('showNutzerTab aufgerufen mit:', tabName);
+
+    // Alle Buttons deaktivieren
+    const buttons = document.querySelectorAll('.tab-button');
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Aktiven Button markieren
+    const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+
+    // Alle Contents verstecken
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // Aktiven Content anzeigen
+    const activeContent = document.getElementById(tabName);
+    if (activeContent) {
+        activeContent.classList.add('active');
+    }
+
+    console.log('Tab gewechselt zu:', tabName);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Konto löschen Modal
     const kontoLoeschenBtn = document.getElementById('konto-loeschen-btn');
@@ -356,108 +389,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- TAB CONTENT CSS -->
-<style>
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
 
-    /* Rezept-Karten gleichmäßig ausrichten */
-    .rezept-galerie {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-        list-style: none;
-        padding: 0;
-    }
-
-    .rezept-karte {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        overflow: hidden;
-        background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        height: 100%; /* Alle Karten gleich hoch */
-    }
-
-    .rezept-karte:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    .rezept-karte img {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-    }
-
-    .rezept-karte .inhalt {
-        padding: 15px;
-    }
-
-    .rezept-karte h4 {
-        margin: 0 0 10px 0;
-        font-size: 1.1rem;
-    }
-
-    .rezept-karte h4 a {
-        text-decoration: none;
-        color: #333;
-    }
-
-    .rezept-karte h4 a:hover {
-        color: #007bff;
-    }
-
-    .rezept-aktion {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .rezept-aktion .btn {
-        flex: 1;
-        min-width: 80px;
-        text-align: center;
-        padding: 8px 12px;
-        font-size: 0.9rem;
-    }
-
-    /* Danger Button Styling */
-    .btn-danger {
-        background-color: #dc3545 !important;
-        border-color: #dc3545 !important;
-        color: white !important;
-    }
-
-    .btn-danger:hover {
-        background-color: #c82333 !important;
-        border-color: #bd2130 !important;
-    }
-
-    /* Modal Styling */
-    .modal-dialog {
-        border: none;
-        border-radius: 8px;
-        padding: 0;
-        max-width: 500px;
-        width: 90%;
-    }
-
-    .modal-box {
-        padding: 20px;
-        background: white;
-        border-radius: 8px;
-    }
-
-    .modal-actions {
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-        margin-top: 20px;
-    }
-
-    .modal-dialog::backdrop {
-        background: rgba(0, 0, 0, 0.5);
-    }
-</style>

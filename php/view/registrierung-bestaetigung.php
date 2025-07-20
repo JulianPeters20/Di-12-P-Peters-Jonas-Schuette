@@ -47,21 +47,9 @@
                 </a>
             </div>
 
-            <div style="font-size: 14px; color: #666; margin-top: 30px;">
+            <div class="registrierung-bestaetigung-info">
                 <p>Falls du dich nicht registriert hast, kannst du diese Seite einfach schließen.</p>
             </div>
         </div>
     </div>
 </main>
-
-<style>
-button:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-}
-
-a:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-}
-</style>

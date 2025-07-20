@@ -120,4 +120,23 @@ class NutzerDAO {
         $stmt = $this->db->prepare("UPDATE Nutzer SET PasswortHash = ? WHERE NutzerID = ?");
         return $stmt->execute([$hashedPassword, $nutzerId]);
     }
+
+    /**
+     * Findet alle Nutzer die Rezepte erstellt haben
+     * @return array Array mit Benutzernamen der Ersteller
+     */
+    public function findeAlleErsteller(): array {
+        $stmt = $this->db->query("
+            SELECT DISTINCT n.Benutzername
+            FROM Nutzer n
+            INNER JOIN Rezept r ON n.NutzerID = r.ErstellerID
+            ORDER BY n.Benutzername
+        ");
+
+        $ersteller = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $ersteller[] = $row['Benutzername'];
+        }
+        return $ersteller;
+    }
 }

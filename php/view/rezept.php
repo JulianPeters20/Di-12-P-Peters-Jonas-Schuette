@@ -130,8 +130,16 @@
                 <h3>Nährwerte pro Portion</h3>
 
                 <!-- Einwilligungsbereich (wird nur angezeigt wenn noch keine Einwilligung) -->
-                <div id="consent-area" style="<?= !empty($_SESSION['naehrwerte_einwilligung']) ? 'display: none;' : '' ?>">
-                    <div class="consent-info" style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                <?php
+                $hatEinwilligung = !empty($_SESSION['naehrwerte_einwilligung']);
+                // Debug: Session-Inhalt prüfen (temporär)
+                if (isset($_GET['debug']) && $_GET['debug'] === 'session') {
+                    echo "<!-- DEBUG: naehrwerte_einwilligung = " . var_export($_SESSION['naehrwerte_einwilligung'] ?? 'NOT_SET', true) . " -->";
+                    echo "<!-- DEBUG: hatEinwilligung = " . var_export($hatEinwilligung, true) . " -->";
+                }
+                ?>
+                <div id="consent-area" class="<?= $hatEinwilligung ? 'flash-hidden' : '' ?>" <?= $hatEinwilligung ? 'style="display: none;"' : '' ?>>
+                    <div class="consent-info">
                         <h4>Datenschutzhinweis</h4>
                         <p>Zur Berechnung der Nährwerte werden die Zutaten dieses Rezepts an den externen Dienst <strong>Spoonacular</strong> übertragen. Es werden keine personenbezogenen Daten übermittelt.</p>
                         <p>Weitere Informationen findest du in unserer <a href="index.php?page=datenschutz" target="_blank">Datenschutzerklärung</a>.</p>
@@ -207,7 +215,7 @@
 
                             <p>Für dieses Rezept wurden noch keine Nährwerte berechnet.</p>
                             <button type="button" id="berechne-naehrwerte-btn" class="btn"
-                                    style="<?= empty($_SESSION['naehrwerte_einwilligung']) ? 'display: none;' : '' ?>">
+                                    style="<?= $hatEinwilligung ? '' : 'display: none;' ?>">
                                 Nährwerte berechnen
                             </button>
                         </div>
@@ -227,8 +235,11 @@
                 <section class="rezept-block">
                     <h3>Deine Bewertung</h3>
                     <form action="index.php?page=bewerteRezept" method="post" id="bewertungs-form" style="display:inline-block;">
+                        <?= getCSRFTokenField() ?>
                         <input type="hidden" name="rezeptId" value="<?= htmlspecialchars($rezept['id']) ?>">
-                        <div id="star-rating" style="font-size: 2rem; user-select: none;">
+
+                        <!-- JavaScript-Enhanced Stern-Rating -->
+                        <div id="star-rating" class="js-only" style="font-size: 2rem; user-select: none;">
                             <?php
                             $eigenePunkte = ($nutzerBewertung && isset($nutzerBewertung->Punkte)) ? (int)$nutzerBewertung->Punkte : 0;
                             for ($i = 1; $i <= 5; $i++):
@@ -237,7 +248,23 @@
                                 <span class="star <?= $class ?>" data-value="<?= $i ?>" style="cursor: pointer;">&#9733;</span>
                             <?php endfor; ?>
                         </div>
-                        <input type="hidden" name="punkte" id="punkte-input" value="<?= $eigenePunkte ?>">
+                        <input type="hidden" name="punkte" id="punkte-input" value="<?= $eigenePunkte ?>" class="js-only">
+
+                        <!-- Fallback für ohne JavaScript -->
+                        <noscript>
+                            <div class="rating-fallback">
+                                <label for="punkte-select">Bewertung:</label>
+                                <select name="punkte" id="punkte-select" required>
+                                    <option value="">Bitte wählen...</option>
+                                    <option value="1" <?= $eigenePunkte == 1 ? 'selected' : '' ?>>⭐ 1 Stern (Schlecht)</option>
+                                    <option value="2" <?= $eigenePunkte == 2 ? 'selected' : '' ?>>⭐⭐ 2 Sterne (Geht so)</option>
+                                    <option value="3" <?= $eigenePunkte == 3 ? 'selected' : '' ?>>⭐⭐⭐ 3 Sterne (Okay)</option>
+                                    <option value="4" <?= $eigenePunkte == 4 ? 'selected' : '' ?>>⭐⭐⭐⭐ 4 Sterne (Gut)</option>
+                                    <option value="5" <?= $eigenePunkte == 5 ? 'selected' : '' ?>>⭐⭐⭐⭐⭐ 5 Sterne (Ausgezeichnet)</option>
+                                </select>
+                            </div>
+                        </noscript>
+
                         <br>
                         <button type="submit" class="btn" style="margin-top: 8px;">Bewertung speichern</button>
                     </form>
@@ -438,31 +465,3 @@
         });
     </script>
 
-    <style>
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #004085;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #545b62;
-            border-color: #4e555b;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-    </style>
