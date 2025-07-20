@@ -1,6 +1,6 @@
 # 🍳 Broke & Hungry - Rezept-Community
 
-*Abgabe zu Aufgabenblatt 6 – Webprogrammierung (Di-12-P)*
+*Endabgabe – Webprogrammierung (Di-12-P)*
 
 **Projektgruppe**
 - Julian Peters
@@ -15,7 +15,7 @@
 ### 🚀 Hauptfunktionen
 
 - **Rezeptverwaltung**: Erstellen, bearbeiten, löschen und durchsuchen von Rezepten
-- **Bewertungssystem**: 5-Sterne-Bewertungen mit Kommentaren
+- **Bewertungssystem**: 5-Sterne-Bewertungen 
 - **Live-Suche**: AJAX-basierte Echtzeitsuche nach Rezepten, Kategorien und Autoren
 - **Nährwertberechnung**: Automatische Berechnung über Spoonacular API
 - **Benutzerverwaltung**: Registrierung, Anmeldung, Profilverwaltung
@@ -40,7 +40,7 @@
 - **DSGVO-konforme Einwilligung** vor API-Nutzung (2-Klick-Lösung)
 - **Intelligentes Caching-System** zur Reduzierung von API-Aufrufen und besserer Performance
 - **Admin-Monitor** für API-Statistiken, Fehlerprotokollierung und Cache-Verwaltung
-- **Fallback-System**: Geschätzte Nährwerte wenn API nicht verfügbar
+- **Fallback-System**: Für Pesto mit Nudel gib es geschätzte Nährwerte wenn API nicht verfügbar
 - Nährwerte werden pro Portion berechnet und in der Datenbank gespeichert
 - **API-Limit-Überwachung** mit wöchentlicher Nutzungsstatistik
 
@@ -62,7 +62,7 @@
 ## 💻 Technische Features
 
 ### Frontend-Technologien
-- **Progressive Enhancement**: Funktioniert mit und ohne JavaScript
+- **Basis-Funktionen** Rezept erstellen, bearbeiten und Suche funktioren mit und ohne JavaScript
 - **AJAX-Live-Suche**: Echtzeitsuche ohne Seitenreload
 - **Responsive Design**: Optimiert für Desktop und Mobile
 - **Interactive UI**: Sterne-Bewertungssystem, Modal-Dialoge, Dropdown-Menüs
@@ -232,7 +232,7 @@ Di-12-P-Peters-Jonas/
 ## 🎯 Besondere Highlights
 
 ### Progressive Enhancement
-Die Anwendung funktioniert vollständig ohne JavaScript und wird durch JavaScript-Features erweitert:
+Die Anwendung funktioniert ohne JavaScript und wird durch JavaScript-Features erweitert:
 - **Ohne JS**: Normale Formular-Submissions, Server-seitige Suche
 - **Mit JS**: AJAX-Suche, Modal-Dialoge, Live-Validierung
 
@@ -273,18 +273,6 @@ php -S localhost:8000
 
 ---
 
-## 📝 Offene und geplante Erweiterungen
-
-### Mögliche Zukunftserweiterungen
-- **E-Mail-Integration**: Echter E-Mail-Versand statt HTML-Dateien
-- **Passwort-Reset**: Vollständige Passwort-Zurücksetzen-Funktion
-- **Social Features**: Nutzer folgen, Rezept-Sammlungen teilen
-- **Erweiterte Suche**: Volltext-Suche, Filter nach Nährwerten
-- **Mobile App**: Progressive Web App (PWA) Features
-- **Internationalisierung**: Mehrsprachige Unterstützung
-- **Recipe Import**: Import von Rezepten aus anderen Quellen
-- **Meal Planning**: Wochenplanung und Einkaufslisten
-
 ### Bekannte Limitierungen
 - **E-Mail-Simulation**: Registrierungsmails werden als HTML-Dateien gespeichert
 - **Passwort-Reset**: Nur Platzhalter-Link implementiert
@@ -307,7 +295,7 @@ php -S localhost:8000
 
 ## 📄 Lizenz und Rechtliches
 
-Dieses Projekt wurde im Rahmen des Kurses "Webprogrammierung (Di-12-P)" entwickelt und dient ausschließlich Bildungszwecken.
+Dieses Projekt wurde im Rahmen des Moduls "Webprogrammierung (Di-12-P)" entwickelt und dient ausschließlich Bildungszwecken.
 
 **Verwendete APIs:**
 - [Spoonacular API](https://spoonacular.com/food-api) - Nährwertdaten
