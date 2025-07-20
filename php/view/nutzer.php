@@ -17,9 +17,9 @@
 
         <!-- Tabs -->
         <nav class="tabs">
-            <button class="tab-button active" data-tab="profil">Profil</button>
-            <button class="tab-button" data-tab="eigene">Eigene Rezepte</button>
-            <button class="tab-button" data-tab="gespeichert">Gespeicherte Rezepte</button>
+            <button class="tab-button active" data-tab="profil" onclick="showNutzerTab('profil')">Profil</button>
+            <button class="tab-button" data-tab="eigene" onclick="showNutzerTab('eigene')">Eigene Rezepte</button>
+            <button class="tab-button" data-tab="gespeichert" onclick="showNutzerTab('gespeichert')">Gespeicherte Rezepte</button>
         </nav>
 
         <!-- Profil -->
@@ -230,6 +230,37 @@
 </main>
 
 <script>
+// Tab-Funktionalität für Nutzer-Seite
+function showNutzerTab(tabName) {
+    console.log('showNutzerTab aufgerufen mit:', tabName);
+
+    // Alle Buttons deaktivieren
+    const buttons = document.querySelectorAll('.tab-button');
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Aktiven Button markieren
+    const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+
+    // Alle Contents verstecken
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // Aktiven Content anzeigen
+    const activeContent = document.getElementById(tabName);
+    if (activeContent) {
+        activeContent.classList.add('active');
+    }
+
+    console.log('Tab gewechselt zu:', tabName);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Konto löschen Modal
     const kontoLoeschenBtn = document.getElementById('konto-loeschen-btn');

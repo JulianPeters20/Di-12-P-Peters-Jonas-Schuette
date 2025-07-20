@@ -405,11 +405,23 @@ function showNutzerProfil(): void {
     $gespeicherteRezepteDAO = new GespeicherteRezepteDAO();
     $gespeicherteRezepte = $gespeicherteRezepteDAO->findeGespeicherteRezepte($nutzer->id);
 
-    // Bewertungen für gespeicherte Rezepte hinzufügen
+    // Bewertungen und Kategorien für gespeicherte Rezepte hinzufügen
+    $db = Database::getConnection();
+
     foreach ($gespeicherteRezepte as &$rezept) {
         $rezeptId = $rezept['RezeptID'];
         $rezept['durchschnitt'] = $bewertungDAO->berechneDurchschnittRating($rezeptId);
         $rezept['anzahlBewertungen'] = $bewertungDAO->zaehleBewertungen($rezeptId);
+
+        // Kategorien für gespeicherte Rezepte laden
+        $stmtKat = $db->prepare("
+            SELECT k.Bezeichnung
+            FROM RezeptKategorie rk
+            JOIN Kategorie k ON rk.KategorieID = k.KategorieID
+            WHERE rk.RezeptID = ?
+        ");
+        $stmtKat->execute([$rezeptId]);
+        $rezept['kategorien'] = array_column($stmtKat->fetchAll(PDO::FETCH_ASSOC), 'Bezeichnung');
     }
     unset($rezept);
 
