@@ -10,7 +10,7 @@ try {
     // Reihenfolge beachtet Foreign Key Constraints
     // WICHTIG: Tabellen werden gelöscht um eine saubere Neuinitialisierung zu gewährleisten
     // und Konflikte mit geänderten Tabellenstrukturen zu vermeiden
-    $tabellen = ['RezeptKategorie', 'RezeptUtensil', 'RezeptZutat', 'Bewertung',
+    $tabellen = ['RezeptKategorie', 'RezeptUtensil', 'RezeptZutat', 'Bewertung', 'GespeicherteRezepte',
         'Rezept', 'Kategorie', 'Utensil', 'Zutat', 'Preisklasse', 'Portionsgroesse', 'Nutzer',
         'RezeptNaehrwerte', 'api_cache', 'api_log'];
     foreach ($tabellen as $t) {
@@ -72,6 +72,18 @@ try {
             PRIMARY KEY (RezeptID, NutzerID),
             FOREIGN KEY (RezeptID) REFERENCES Rezept(RezeptID) ON DELETE CASCADE,
             FOREIGN KEY (NutzerID) REFERENCES Nutzer(NutzerID) ON DELETE CASCADE
+        )
+    ");
+
+    // GespeicherteRezepte - Tabelle für Nutzer-Favoriten
+    $db->exec("
+        CREATE TABLE GespeicherteRezepte (
+            NutzerID INTEGER,
+            RezeptID INTEGER,
+            GespeichertAm TEXT NOT NULL DEFAULT CURRENT_DATE,
+            PRIMARY KEY (NutzerID, RezeptID),
+            FOREIGN KEY (NutzerID) REFERENCES Nutzer(NutzerID) ON DELETE CASCADE,
+            FOREIGN KEY (RezeptID) REFERENCES Rezept(RezeptID) ON DELETE CASCADE
         )
     ");
 
@@ -485,6 +497,24 @@ try {
 
         -- Rezept 6: Schokoladen Brownies (peter_grill) - 0 Bewertungen (neuestes Rezept)
         -- Keine Bewertungen, da gerade erst heute erstellt
+    ");
+
+    // Beispiel-Daten für gespeicherte Rezepte hinzufügen
+    $db->exec("
+        INSERT INTO GespeicherteRezepte (NutzerID, RezeptID, GespeichertAm)
+        VALUES
+        -- Dibo (Admin, ID: 3) speichert einige Rezepte
+        (3, 1, date('now', '-10 days')),  -- Dibo speichert Leons Pesto
+        (3, 2, date('now', '-7 days')),   -- Dibo speichert Julians Pasta
+        (3, 4, date('now', '-3 days')),   -- Dibo speichert max_musters Quinoa Salat
+        (3, 5, date('now', '-1 day')),    -- Dibo speichert anna_kochs Hähnchen Stir-Fry
+
+        -- Weitere Nutzer speichern auch Rezepte (für Testzwecke)
+        (2, 1, date('now', '-5 days')),   -- Julian speichert Leons Pesto
+        (2, 6, date('now', '-2 days')),   -- Julian speichert peter_grills Brownies
+        (4, 2, date('now', '-4 days')),   -- max_muster speichert Julians Pasta
+        (5, 1, date('now', '-6 days')),   -- anna_koch speichert Leons Pesto
+        (5, 3, date('now', '-1 day'))     -- anna_koch speichert Dibos Lachs
     ");
 
     $db->commit();

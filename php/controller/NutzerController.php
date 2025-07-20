@@ -390,6 +390,29 @@ function showNutzerProfil(): void {
     $rezeptDAO = new RezeptDAO();
     $rezepte = $rezeptDAO->findeNachErstellerID($nutzer->id);
 
+    // Bewertungen für jedes Rezept laden
+    require_once 'php/model/BewertungDAO.php';
+    $bewertungDAO = new BewertungDAO();
+
+    foreach ($rezepte as $rezept) {
+        $rezeptId = $rezept->RezeptID;
+        $rezept->durchschnitt = $bewertungDAO->berechneDurchschnittRating($rezeptId);
+        $rezept->anzahlBewertungen = $bewertungDAO->zaehleBewertungen($rezeptId);
+    }
+
+    // Gespeicherte Rezepte laden
+    require_once 'php/model/GespeicherteRezepteDAO.php';
+    $gespeicherteRezepteDAO = new GespeicherteRezepteDAO();
+    $gespeicherteRezepte = $gespeicherteRezepteDAO->findeGespeicherteRezepte($nutzer->id);
+
+    // Bewertungen für gespeicherte Rezepte hinzufügen
+    foreach ($gespeicherteRezepte as &$rezept) {
+        $rezeptId = $rezept['RezeptID'];
+        $rezept['durchschnitt'] = $bewertungDAO->berechneDurchschnittRating($rezeptId);
+        $rezept['anzahlBewertungen'] = $bewertungDAO->zaehleBewertungen($rezeptId);
+    }
+    unset($rezept);
+
     require 'php/view/nutzer.php';
 }
 
@@ -445,4 +468,72 @@ function loescheNutzer(int $id): void {
 
     header("Location: index.php?page=nutzerliste");
     exit;
+}
+
+/**
+ * Nutzer löscht sein eigenes Konto
+ */
+function loescheEigenesKonto(): void {
+    // Prüfen ob Nutzer angemeldet ist
+    if (empty($_SESSION['nutzerId']) || !is_numeric($_SESSION['nutzerId'])) {
+        flash("error", "Du bist nicht angemeldet.");
+        header("Location: index.php?page=anmeldung");
+        exit;
+    }
+
+    $nutzerId = (int)$_SESSION['nutzerId'];
+
+    // CSRF-Token prüfen
+    try {
+        require_once 'php/include/csrf_protection.php';
+        checkCSRFToken();
+    } catch (Exception $e) {
+        flash("error", "Sicherheitsfehler. Bitte versuche es erneut.");
+        header("Location: index.php?page=nutzer");
+        exit;
+    }
+
+    $nutzerDAO = new NutzerDAO();
+
+    // Nutzer-Daten vor Löschung abrufen (für Log/Bestätigung)
+    $nutzer = $nutzerDAO->findeNachID($nutzerId);
+    if (!$nutzer) {
+        flash("error", "Nutzer nicht gefunden.");
+        header("Location: index.php");
+        exit;
+    }
+
+    // Admins können sich nicht selbst löschen (Sicherheitsmaßnahme)
+    if ($nutzer->istAdmin) {
+        flash("warning", "Administratoren können ihr eigenes Konto nicht löschen. Wende dich an einen anderen Administrator.");
+        header("Location: index.php?page=nutzer");
+        exit;
+    }
+
+    try {
+        // Konto löschen (CASCADE DELETE löscht automatisch alle verknüpften Daten)
+        $ok = $nutzerDAO->loesche($nutzerId);
+
+        if ($ok) {
+            // Session beenden
+            session_destroy();
+
+            // Erfolgs-Flash für die neue Session setzen
+            session_start();
+            flash("success", "Dein Konto wurde erfolgreich gelöscht. Wir bedauern, dass du uns verlässt.");
+
+            // Zur Startseite weiterleiten
+            header("Location: index.php");
+            exit;
+        } else {
+            flash("error", "Fehler beim Löschen des Kontos. Bitte versuche es erneut oder kontaktiere den Support.");
+            header("Location: index.php?page=nutzer");
+            exit;
+        }
+    } catch (Exception $e) {
+        error_log("Fehler beim Löschen des eigenen Kontos (Nutzer-ID: $nutzerId): " . $e->getMessage());
+        flash("error", "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.");
+        header("Location: index.php?page=nutzer");
+        exit;
+    }
 }

@@ -134,29 +134,36 @@ function initDeleteModal() {
     // Modal schließen mit Escape-Taste (automatisch durch dialog-Element)
 }
 
-// Nährwerte-Berechnung
-function initNutritionCalculation() {
-    const calculateBtn = document.getElementById('naehrwerte-berechnen');
-    const nutritionSection = document.querySelector('.naehrwerte-section');
-    
-    if (!calculateBtn) return;
+// Einverständniserklärung für Nährwerte
+function initNutritionConsent() {
+    const consentCheckbox = document.getElementById('consent-checkbox');
+    const consentBtn = document.getElementById('consent-btn');
+    const consentArea = document.getElementById('consent-area');
+    const calculateBtn = document.getElementById('berechne-naehrwerte-btn');
 
-    calculateBtn.addEventListener('click', async () => {
-        const rezeptId = calculateBtn.dataset.rezeptId;
-        if (!rezeptId) {
-            zeigeFlash("error", "Rezept-ID nicht gefunden.");
+    if (!consentCheckbox || !consentBtn) return;
+
+    // Checkbox-Event: Button aktivieren/deaktivieren
+    consentCheckbox.addEventListener('change', () => {
+        consentBtn.disabled = !consentCheckbox.checked;
+    });
+
+    // Einwilligung speichern
+    consentBtn.addEventListener('click', async () => {
+        if (!consentCheckbox.checked) {
+            zeigeFlash("error", "Bitte stimme der Datenübertragung zu.");
             return;
         }
 
         // Loading-Zustand
-        calculateBtn.disabled = true;
-        calculateBtn.textContent = "Berechne...";
+        consentBtn.disabled = true;
+        consentBtn.textContent = "Speichere...";
 
         try {
             const formData = new FormData();
-            formData.append('rezept_id', rezeptId);
+            formData.append('einwilligung', 'true');
 
-            const response = await fetchWithCSRF('api/naehrwerte-berechnen.php', {
+            const response = await fetchWithCSRF('index.php?page=setzeNaehrwerteEinwilligung', {
                 method: 'POST',
                 body: formData
             });
@@ -164,21 +171,88 @@ function initNutritionCalculation() {
             const result = await response.json();
 
             if (result.success) {
-                // Nährwerte-Sektion aktualisieren
-                if (nutritionSection && result.html) {
-                    nutritionSection.innerHTML = result.html;
+                // Einverständnisbereich ausblenden
+                if (consentArea) {
+                    consentArea.style.display = 'none';
                 }
-                zeigeFlash("success", "Nährwerte erfolgreich berechnet.");
+
+                // "Nährwerte berechnen" Button anzeigen
+                if (calculateBtn) {
+                    calculateBtn.style.display = 'inline-block';
+                }
+
+                zeigeFlash("success", "Einwilligung gespeichert. Du kannst jetzt Nährwerte berechnen.");
             } else {
-                zeigeFlash("error", result.message || "Fehler bei der Berechnung.");
+                zeigeFlash("error", "Fehler beim Speichern der Einwilligung.");
+            }
+        } catch (error) {
+            console.error("Fehler beim Speichern der Einwilligung:", error);
+            zeigeFlash("error", "Fehler beim Speichern der Einwilligung.");
+        } finally {
+            // Loading-Zustand zurücksetzen
+            consentBtn.disabled = false;
+            consentBtn.textContent = "Einwilligung speichern";
+        }
+    });
+}
+
+// Nährwerte-Berechnung
+function initNutritionCalculation() {
+    const calculateBtn = document.getElementById('berechne-naehrwerte-btn');
+    const loadingDiv = document.getElementById('naehrwerte-loading');
+    const errorDiv = document.getElementById('naehrwerte-error');
+    const displayDiv = document.getElementById('naehrwerte-display');
+    const placeholderDiv = document.getElementById('naehrwerte-placeholder');
+
+    if (!calculateBtn) return;
+
+    calculateBtn.addEventListener('click', async () => {
+        // Rezept-ID aus URL extrahieren
+        const urlParams = new URLSearchParams(window.location.search);
+        const rezeptId = urlParams.get('id');
+
+        if (!rezeptId) {
+            zeigeFlash("error", "Rezept-ID nicht gefunden.");
+            return;
+        }
+
+        // UI-Zustand setzen
+        calculateBtn.style.display = 'none';
+        if (loadingDiv) loadingDiv.style.display = 'block';
+        if (errorDiv) errorDiv.style.display = 'none';
+
+        try {
+            const formData = new FormData();
+            formData.append('rezeptId', rezeptId);
+
+            const response = await fetchWithCSRF('index.php?page=berechneNaehrwerte', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Seite neu laden um die aktualisierten Nährwerte anzuzeigen
+                window.location.reload();
+            } else {
+                if (errorDiv) {
+                    errorDiv.textContent = result.error || "Fehler bei der Berechnung.";
+                    errorDiv.style.display = 'block';
+                }
+                zeigeFlash("error", result.error || "Fehler bei der Berechnung.");
             }
         } catch (error) {
             console.error("Fehler bei Nährwerte-Berechnung:", error);
+            if (errorDiv) {
+                errorDiv.textContent = "Fehler bei der Nährwerte-Berechnung.";
+                errorDiv.style.display = 'block';
+            }
             zeigeFlash("error", "Fehler bei der Nährwerte-Berechnung.");
         } finally {
             // Loading-Zustand zurücksetzen
-            calculateBtn.disabled = false;
-            calculateBtn.textContent = "Nährwerte berechnen";
+            if (loadingDiv) loadingDiv.style.display = 'none';
+            calculateBtn.style.display = 'inline-block';
         }
     });
 }
@@ -210,6 +284,7 @@ function initRatingFallback() {
 document.addEventListener('DOMContentLoaded', function() {
     initStarRating();
     initDeleteModal();
+    initNutritionConsent();
     initNutritionCalculation();
     initRatingFallback();
 });

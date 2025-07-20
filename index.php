@@ -191,6 +191,11 @@ switch ($page) {
         loescheNutzer($id);
         break;
 
+    case 'konto-loeschen':
+        require_once 'php/controller/NutzerController.php';
+        loescheEigenesKonto();
+        break;
+
     case 'impressum':
         require_once 'php/view/impressum.php';
         break;
