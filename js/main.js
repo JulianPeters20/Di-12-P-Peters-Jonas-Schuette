@@ -34,28 +34,34 @@ function zeigeFlash(typ, nachricht) {
 
 // Burger-Menu-Funktionalität
 function initBurgerMenu() {
+    const burgerToggle = document.querySelector('.burger-toggle');
     const burgerBtn = document.querySelector('.burger-btn');
     const hauptNav = document.querySelector('.haupt-nav');
-    const nutzerNav = document.querySelector('.nutzer-nav');
 
-    if (burgerBtn && (hauptNav || nutzerNav)) {
-        burgerBtn.addEventListener('click', () => {
-            const expanded = burgerBtn.getAttribute('aria-expanded') === 'true';
-            burgerBtn.setAttribute('aria-expanded', !expanded);
-            
-            // Beide Navigationen togglen
-            if (hauptNav) hauptNav.classList.toggle('active');
-            if (nutzerNav) nutzerNav.classList.toggle('active');
+    if (burgerToggle && burgerBtn) {
+        // Aria-Label dynamisch aktualisieren
+        burgerToggle.addEventListener('change', () => {
+            const isOpen = burgerToggle.checked;
+            burgerBtn.setAttribute('aria-label', isOpen ? 'Menü schließen' : 'Menü öffnen');
         });
 
-        // Schließen bei Klick außerhalb
+        // Klick außerhalb des Menüs schließt es
         document.addEventListener('click', (e) => {
-            if (!burgerBtn.contains(e.target) && 
-                !hauptNav?.contains(e.target) && 
-                !nutzerNav?.contains(e.target)) {
-                burgerBtn.setAttribute('aria-expanded', 'false');
-                hauptNav?.classList.remove('active');
-                nutzerNav?.classList.remove('active');
+            if (burgerToggle.checked) {
+                // Prüfen ob der Klick außerhalb des Menüs und Burger-Buttons war
+                if (!hauptNav.contains(e.target) && !burgerBtn.contains(e.target) && e.target !== burgerToggle) {
+                    burgerToggle.checked = false;
+                    burgerBtn.setAttribute('aria-label', 'Menü öffnen');
+                }
+            }
+        });
+
+        // ESC-Taste schließt das Menü
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && burgerToggle.checked) {
+                burgerToggle.checked = false;
+                burgerBtn.setAttribute('aria-label', 'Menü öffnen');
+                burgerBtn.focus(); // Fokus zurück zum Button
             }
         });
     }

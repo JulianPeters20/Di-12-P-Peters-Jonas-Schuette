@@ -37,11 +37,13 @@
         </a>
     </div>
 
-    <button class="burger-btn" aria-label="Menü öffnen" aria-expanded="false" aria-controls="haupt-navigation nutzer-navigation">
-        <span class="burger-line"></span>
-        <span class="burger-line"></span>
-        <span class="burger-line"></span>
-    </button>
+    <!-- CSS-only Burger Menu -->
+    <input type="checkbox" id="burger-toggle" class="burger-toggle" aria-label="Menü öffnen/schließen">
+    <label for="burger-toggle" class="burger-btn" tabindex="0" role="button" aria-label="Menü öffnen">
+        <span class="burger-line" aria-hidden="true"></span>
+        <span class="burger-line" aria-hidden="true"></span>
+        <span class="burger-line" aria-hidden="true"></span>
+    </label>
 
     <nav class="haupt-nav" id="haupt-navigation">
         <ul>
@@ -61,18 +63,18 @@
     <div class="nutzer-nav" id="nutzer-navigation">
         <ul>
             <?php if (!empty($_SESSION['nutzerId'])): ?>
-                <li><span>Hallo, <?= htmlspecialchars($_SESSION['benutzername'] ?? 'Nutzer') ?></span></li>
-                <li><a href="index.php?page=abmeldung">Abmelden</a></li>
+                <li class="nutzer-begruessung mobile-hidden"><span>Hallo, <?= htmlspecialchars($_SESSION['benutzername'] ?? 'Nutzer') ?></span></li>
+                <li class="nutzer-abmelden mobile-hidden"><a href="index.php?page=abmeldung">Abmelden</a></li>
             <?php else: ?>
-                <li><a href="index.php?page=anmeldung">Anmelden</a></li>
-                <li><a href="index.php?page=registrierung">Registrieren</a></li>
+                <li class="nutzer-anmelden mobile-hidden"><a href="index.php?page=anmeldung">Anmelden</a></li>
+                <li class="nutzer-registrieren mobile-hidden"><a href="index.php?page=registrierung">Registrieren</a></li>
             <?php endif; ?>
 
-            <li>
+            <li class="nutzer-icon-container">
                 <?php if (!empty($_SESSION['nutzerId'])): ?>
-                <a href="index.php?page=nutzer" title="Benutzerkonto">
+                <a href="index.php?page=nutzer" title="Benutzerkonto" class="nutzer-icon-link">
                     <?php else: ?>
-                    <a href="index.php?page=anmeldung" title="Benutzerkonto">
+                    <a href="index.php?page=anmeldung" title="Benutzerkonto" class="nutzer-icon-link">
                         <?php endif; ?>
                         <img src="images/Icon Nutzer ChatGPT.webp" alt="Benutzerprofil" class="nutzer-icon">
                     </a>

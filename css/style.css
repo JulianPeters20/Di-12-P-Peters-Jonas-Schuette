@@ -185,7 +185,7 @@ select:focus {
     display: flex;
     align-items: flex-start;
     margin-top: -10px;       /* etwas nach oben, damit es zum Benutzernamen-Feld rutscht */
-    margin-bottom: 0;        /* KEIN Extra-Abstand nach unten, damit der Gesamtabstand zum nächsten Feld gleichbleibt */
+    margin-bottom: 0;        /* KEIN Extra-Abstand nach unten, damit der Gesamtabstand zum nächsten Feld gleich bleibt */
     min-height: 0;
 }
 
@@ -251,12 +251,13 @@ input[type="button"]:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     padding: 20px;
     background-color: var(--accent);
     color: var(--text);
     border-radius: 0;
     gap: 20px;
+    min-height: 60px;
 }
 .logo a {
     display: inline-block;
@@ -325,7 +326,7 @@ nav a:focus,
     border-radius: 50%;
     background: var(--header-btn-bg, rgba(0,0,0,0.3));
     padding: 6px;
-    transition: background 0.3s;
+    transition: background 0.3s, transform 0.2s ease;
     display: block;
     object-fit: cover;
 }
@@ -334,6 +335,18 @@ nav a:focus,
 .nutzer-icon:focus {
     background: var(--header-btn-bg-hover, rgba(0,0,0,0.6));
     outline: 2px solid var(--accent-dark, #5e8f60);
+    transform: scale(1.05);
+}
+
+/* Nutzer-Icon Container für bessere Klickfläche */
+.nutzer-icon-link {
+    display: inline-block;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.nutzer-icon-link:hover {
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* ======= 7. SUCHLEISTE & FILTER ======= */
@@ -931,22 +944,34 @@ select {
     }
 }
 
-@media (max-width: 800px) {
-    .kopfzeile {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 18px 4vw;
-        gap: 15px;
+/* Zwischenstufe: Nutzer-Navigation nur Icon anzeigen - früher aktivieren */
+@media (max-width: 1100px) {
+    .mobile-hidden {
+        display: none !important;
     }
-    .logo {
-        align-self: center;
-        margin-bottom: 8px;
+
+    .nutzer-nav {
+        display: flex !important;
+        margin-left: 16px;
+        flex-shrink: 0;
+        min-width: auto;
     }
-    .haupt-nav ul,
+
     .nutzer-nav ul {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
+        display: flex !important;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+
+    .nutzer-icon {
+        width: 36px !important;
+        height: 36px !important;
+        padding: 4px !important;
+        flex-shrink: 0;
+    }
+
+    .nutzer-icon-container {
+        display: flex !important;
     }
 }
 @media (max-width: 650px) {
@@ -1208,25 +1233,97 @@ select {
     padding: 0;
 }
 
-/* Burger-Button verstecken am Desktop */
-.burger-btn {
+/* ======= CSS-ONLY BURGER MENU ======= */
+/*
+   Funktionsweise:
+   1. Versteckter Checkbox-Input (.burger-toggle)
+   2. Sichtbares Label (.burger-btn) als Burger-Button
+   3. Navigation wird über :checked Pseudo-Klasse gesteuert
+   4. Funktioniert komplett ohne JavaScript
+   5. Accessibility-freundlich mit Keyboard-Support
+*/
+
+/* Versteckter Checkbox für CSS-only Funktionalität */
+.burger-toggle {
     display: none;
 }
 
-/* Anpassungen für kleine Bildschirme */
+/* Burger-Button verstecken am Desktop */
+.burger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    box-sizing: content-box;
+    position: relative;
+    z-index: 1001;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+/* Focus-Styles für Accessibility */
+.burger-btn:focus,
+.burger-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.burger-line {
+    width: 100%;
+    height: 3px;
+    background-color: var(--text);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    transform-origin: center;
+}
+
+/* Burger-Animation bei aktivem Zustand - perfektes X */
+.burger-toggle:checked + .burger-btn .burger-line:nth-child(1) {
+    transform: translateY(7.5px) rotate(45deg);
+}
+
+.burger-toggle:checked + .burger-btn .burger-line:nth-child(2) {
+    opacity: 0;
+    transform: scale(0);
+}
+
+.burger-toggle:checked + .burger-btn .burger-line:nth-child(3) {
+    transform: translateY(-7.5px) rotate(-45deg);
+}
+
+/* Overlay für bessere UX - klickbar zum Schließen - 70% transparent */
+.burger-toggle:checked ~ .haupt-nav::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 998;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+/* Burger-Menü aktivieren */
 @media (max-width: 768px) {
-    /* Kopfzeile kleiner und kompakter */
     .kopfzeile {
         padding: 8px 16px;
         height: 48px;
+        position: relative;
     }
 
-    /* Kleineres Logo */
     .logo a img {
         height: 32px;
     }
 
-    /* Burger-Button sichtbar */
+    /* Burger-Button sichtbar machen */
     .burger-btn {
         display: flex;
         width: 24px;
@@ -1247,37 +1344,145 @@ select {
         border-radius: 2px;
     }
 
-    /* Hauptnavigation verstecken, per active Klasse zeigen */
+    /* Haupt-Navigation verstecken und als Dropdown anzeigen */
     .haupt-nav {
-        display: none;
         position: absolute;
         top: 48px;
         left: 0;
         width: 100%;
-        flex-direction: column;
-        background-color: var(--card-bg);
+        background-color: rgba(249, 249, 249, 0.95);
+        backdrop-filter: blur(10px);
         border-top: 1px solid var(--border);
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        z-index: 1000;
+        z-index: 1001;
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.3s ease;
+        transition: max-height 0.4s ease, opacity 0.3s ease;
+        opacity: 0;
+        flex-direction: column;
+        padding: 0;
+        transform: translateY(-10px);
+        pointer-events: auto;
     }
 
-    .haupt-nav.active {
-        display: flex;
+    /* Haupt-Navigation anzeigen wenn Checkbox aktiviert */
+    .burger-toggle:checked ~ .haupt-nav {
         max-height: 300px;
+        opacity: 1;
         overflow: visible;
+        display: flex;
+        transform: translateY(0);
     }
 
-    /* Nutzer-Nav immer sichtbar */
+    /* Haupt-Navigation-Liste vertikal anordnen */
+    .haupt-nav ul {
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px;
+        margin: 0;
+    }
+
+    .haupt-nav li {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Nutzer-Navigation bleibt sichtbar, nur Icon */
     .nutzer-nav {
+        position: static !important;
         display: flex !important;
+        background: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        max-height: none !important;
+        opacity: 1 !important;
+        transform: none !important;
         margin-left: 16px;
     }
 
     .nutzer-nav ul {
-        gap: 8px;
+        flex-direction: row !important;
+        padding: 0 !important;
+        gap: 8px !important;
+    }
+
+    .nutzer-icon-container {
+        width: auto !important;
+        text-align: left !important;
+    }
+
+    .nutzer-icon-link {
+        padding: 4px !important;
+        border: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .nutzer-icon {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50%;
+        transition: transform 0.2s ease;
+        background: var(--header-btn-bg, rgba(0,0,0,0.3)) !important;
+        padding: 4px !important;
+    }
+
+    .nutzer-icon:hover {
+        transform: scale(1.1);
+        background: var(--header-btn-bg-hover, rgba(0,0,0,0.6)) !important;
+    }
+
+    .haupt-nav li a {
+        display: inline-block;
+        padding: 8px 16px;
+        background-color: var(--header-btn-bg, rgba(0,0,0,0.1));
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--header-btn-txt, #fff);
+        text-decoration: none;
+        transition: background-color 0.3s, color 0.3s;
+        position: relative;
+        z-index: 1002;
+        pointer-events: auto;
+        width: auto;
+        box-sizing: border-box;
+        border: none;
+    }
+
+    .haupt-nav li a:hover,
+    .haupt-nav li a:focus {
+        background-color: var(--header-btn-bg-hover, rgba(0,0,0,0.6));
+        color: var(--header-btn-txt-hover, #fff);
+        outline: 2px solid var(--accent-dark);
+    }
+}
+
+/* Anpassungen für sehr kleine Bildschirme */
+@media (max-width: 480px) {
+    .kopfzeile {
+        padding: 6px 12px;
+        height: 44px;
+    }
+
+    .logo a img {
+        height: 28px;
+    }
+
+    .nutzer-icon {
+        width: 28px !important;
+        height: 28px !important;
+        padding: 3px !important;
+    }
+
+    .burger-btn {
+        width: 20px;
+        height: 16px;
+    }
+
+    .burger-line {
+        height: 2px;
     }
 }
 
