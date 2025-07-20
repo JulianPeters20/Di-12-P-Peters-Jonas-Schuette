@@ -116,9 +116,10 @@
             </div>
         </section>
 
-        <!-- Abmeldung -->
-        <div style="margin-top: 30px;">
+        <!-- Abmeldung und Konto löschen -->
+        <div style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap;">
             <a href="index.php?page=abmeldung" class="btn">Abmelden</a>
+            <button type="button" class="btn btn-danger" id="konto-loeschen-btn">Konto löschen</button>
         </div>
 
     <?php else: ?>
@@ -136,7 +137,81 @@
         </div>
     </dialog>
 
+    <dialog id="konto-loesch-modal" class="modal-dialog">
+        <div class="modal-box">
+            <h3>⚠️ Konto unwiderruflich löschen</h3>
+            <div style="margin: 20px 0;">
+                <p><strong>Achtung:</strong> Diese Aktion kann nicht rückgängig gemacht werden!</p>
+                <p>Folgende Daten werden <strong>permanent gelöscht</strong>:</p>
+                <ul style="text-align: left; margin: 10px 0;">
+                    <li>Dein Benutzerkonto</li>
+                    <li>Alle deine Rezepte</li>
+                    <li>Alle deine Bewertungen</li>
+                    <li>Alle damit verbundenen Daten</li>
+                </ul>
+                <p>Bist du dir absolut sicher, dass du dein Konto löschen möchtest?</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn" id="konto-abbrechen-btn">Abbrechen</button>
+                <button type="button" class="btn btn-danger" id="konto-bestaetigen-btn">Ja, Konto unwiderruflich löschen</button>
+            </div>
+        </div>
+    </dialog>
+
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Konto löschen Modal
+    const kontoLoeschenBtn = document.getElementById('konto-loeschen-btn');
+    const kontoModal = document.getElementById('konto-loesch-modal');
+    const kontoAbbrechenBtn = document.getElementById('konto-abbrechen-btn');
+    const kontoBestaetigenBtn = document.getElementById('konto-bestaetigen-btn');
+
+    if (kontoLoeschenBtn && kontoModal) {
+        kontoLoeschenBtn.addEventListener('click', () => {
+            kontoModal.showModal();
+        });
+
+        kontoAbbrechenBtn.addEventListener('click', () => {
+            kontoModal.close();
+        });
+
+        kontoBestaetigenBtn.addEventListener('click', async () => {
+            kontoBestaetigenBtn.disabled = true;
+            kontoBestaetigenBtn.textContent = 'Lösche...';
+
+            try {
+                const formData = new FormData();
+
+                const response = await fetchWithCSRF('index.php?page=konto-loeschen', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Erfolgreich gelöscht - zur Startseite weiterleiten
+                    window.location.href = 'index.php';
+                } else {
+                    throw new Error('Fehler beim Löschen des Kontos');
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+                alert('Fehler beim Löschen des Kontos. Bitte versuche es erneut.');
+                kontoBestaetigenBtn.disabled = false;
+                kontoBestaetigenBtn.textContent = 'Ja, Konto unwiderruflich löschen';
+            }
+        });
+
+        // Modal schließen bei Klick auf Backdrop
+        kontoModal.addEventListener('click', (e) => {
+            if (e.target === kontoModal) {
+                kontoModal.close();
+            }
+        });
+    }
+});
+</script>
 
 <!-- TAB CONTENT CSS -->
 <style>
@@ -203,5 +278,43 @@
         text-align: center;
         padding: 8px 12px;
         font-size: 0.9rem;
+    }
+
+    /* Danger Button Styling */
+    .btn-danger {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+    }
+
+    /* Modal Styling */
+    .modal-dialog {
+        border: none;
+        border-radius: 8px;
+        padding: 0;
+        max-width: 500px;
+        width: 90%;
+    }
+
+    .modal-box {
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .modal-dialog::backdrop {
+        background: rgba(0, 0, 0, 0.5);
     }
 </style>
