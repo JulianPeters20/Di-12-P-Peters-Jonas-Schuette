@@ -237,6 +237,16 @@ input[type="button"]:hover {
     outline-offset: 2px;
 }
 
+/* Sekundärer Button */
+.btn-secondary {
+    background-color: var(--muted);
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #555;
+}
+
 .btn:focus,
 button:focus,
 input[type="submit"]:focus,
@@ -352,6 +362,19 @@ nav a:focus,
     border: 1px solid var(--border, #e0e0e0);
     box-sizing: border-box;
 }
+
+/* Progressive Enhancement: JavaScript-Enhanced vs Fallback */
+.suchleiste.js-enhanced {
+    /* JavaScript-Enhanced Suchformular - standardmäßig versteckt */
+    display: none;
+}
+
+.suchleiste.no-js-fallback {
+    /* Fallback-Suchformular - standardmäßig sichtbar */
+    display: flex;
+}
+
+/* Wenn JavaScript verfügbar ist, werden die Sichtbarkeiten per JS umgeschaltet */
 .suchleiste .suchfeld {
     width: 45vw;
     min-width: 210px;

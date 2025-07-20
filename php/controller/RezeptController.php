@@ -10,7 +10,7 @@ require_once 'php/model/BewertungDAO.php';
 require_once 'php/include/form_utils.php';
 
 /**
- * Alle Rezepte anzeigen, optional mit Suchfilter
+ * Alle Rezepte anzeigen, optional mit Suchfilter und Sortierung
  */
 function showRezepte(): void {
     // Sortier-Parameter aus URL oder Session holen
@@ -26,8 +26,23 @@ function showRezepte(): void {
     // Sortierung in Session speichern
     $_SESSION['rezepte_sort'] = $sortBy;
 
+    // Such-Parameter aus URL holen und validieren
+    $searchQuery = trim($_GET['search'] ?? '');
+    $isSearchActive = false;
+
+    if ($searchQuery !== '' && strlen($searchQuery) >= 2 && strlen($searchQuery) <= 100) {
+        $isSearchActive = true;
+    }
+
     $dao = new RezeptDAO();
+
+    // Alle Rezepte laden (mit Sortierung)
     $alleRezepte = $dao->findeAlleMitSortierung($sortBy, 'desc'); // Immer absteigend
+
+    // Suchfilter anwenden, falls aktiv
+    if ($isSearchActive) {
+        $alleRezepte = filterRezepteBySearch($alleRezepte, $searchQuery);
+    }
 
     $bewertungDAO = new BewertungDAO();
 
@@ -40,9 +55,42 @@ function showRezepte(): void {
 
     // Parameter für View verfügbar machen
     $currentSort = $sortBy;
+    $currentSearch = $searchQuery;
 
     $rezepte = $alleRezepte;
     require 'php/view/rezepte.php';
+}
+
+/**
+ * Filtert Rezepte basierend auf Suchbegriff
+ * Sucht in Titel, Kategorien und Autor
+ */
+function filterRezepteBySearch(array $rezepte, string $query): array {
+    $suchbegriff = strtolower($query);
+
+    return array_filter($rezepte, function ($rezept) use ($suchbegriff) {
+        // Suche in Rezeptname (Titel)
+        if (stripos($rezept['Titel'] ?? '', $suchbegriff) !== false) {
+            return true;
+        }
+
+        // Suche in Kategorien
+        $kategorien = $rezept['kategorien'] ?? [];
+        if (is_array($kategorien)) {
+            foreach ($kategorien as $kategorie) {
+                if (stripos($kategorie, $suchbegriff) !== false) {
+                    return true;
+                }
+            }
+        }
+
+        // Suche in Autor (Benutzername)
+        if (stripos($rezept['erstellerName'] ?? '', $suchbegriff) !== false) {
+            return true;
+        }
+
+        return false;
+    });
 }
 
 /**

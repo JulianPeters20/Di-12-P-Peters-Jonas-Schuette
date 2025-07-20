@@ -2,8 +2,18 @@
 
     <!-- Suchformular mit integriertem Sortier-Widget -->
     <div class="suchleiste-container">
-        <form id="suchformular" class="suchleiste" onsubmit="return false;">
+        <!-- JavaScript-Enhanced Suchformular (wird durch JS aktiviert) -->
+        <form id="suchformular" class="suchleiste js-enhanced" onsubmit="return false;" style="display: none;">
             <input type="search" id="suchfeld" class="suchfeld" placeholder="Suche nach Rezeptitel, Kategorie oder Autor..." aria-label="Suchbegriff">
+            <button type="submit" class="btn suchen-btn">Suchen</button>
+        </form>
+
+        <!-- Fallback-Suchformular (funktioniert ohne JavaScript) -->
+        <form id="suchformular-fallback" class="suchleiste no-js-fallback" method="get" action="index.php">
+            <input type="hidden" name="page" value="rezepte">
+            <input type="hidden" name="sort" value="<?= htmlspecialchars($currentSort ?? 'datum') ?>">
+            <input type="search" name="search" class="suchfeld" placeholder="Suche nach Rezeptitel, Kategorie oder Autor..."
+                   value="<?= htmlspecialchars($currentSearch ?? '') ?>" aria-label="Suchbegriff">
             <button type="submit" class="btn suchen-btn">Suchen</button>
         </form>
 
@@ -11,9 +21,13 @@
         <div class="sortier-widget-neben-suche">
             <form id="sortier-form" method="get" action="index.php">
                 <input type="hidden" name="page" value="rezepte">
+                <!-- Suchbegriff beibehalten beim Sortieren -->
+                <?php if (!empty($currentSearch)): ?>
+                    <input type="hidden" name="search" value="<?= htmlspecialchars($currentSearch) ?>">
+                <?php endif; ?>
 
                 <label for="sort-select" class="sortier-label">Sortieren nach:</label>
-                <select id="sort-select" name="sort" class="sortier-select">
+                <select id="sort-select" name="sort" class="sortier-select" onchange="this.form.submit();">
                     <option value="datum" <?= ($currentSort ?? 'datum') === 'datum' ? 'selected' : '' ?>>
                         📅 Neueste zuerst
                     </option>
@@ -31,8 +45,19 @@
     <div id="such-ergebnisse" style="display: none;"></div>
 
     <div id="original-rezepte">
-        <!-- Nur noch der Titel -->
-        <h2 class="rezepte-titel">Alle Rezepte</h2>
+        <!-- Titel mit Suchinformation -->
+        <h2 class="rezepte-titel">
+            <?php if (!empty($currentSearch)): ?>
+                Suchergebnisse für "<?= htmlspecialchars($currentSearch) ?>"
+                <small>(<?= count($rezepte) ?> <?= count($rezepte) === 1 ? 'Rezept' : 'Rezepte' ?> gefunden)</small>
+                <a href="index.php?page=rezepte&sort=<?= htmlspecialchars($currentSort ?? 'datum') ?>"
+                   class="btn btn-secondary" style="margin-left: 15px; font-size: 0.9rem;">
+                    Suche zurücksetzen
+                </a>
+            <?php else: ?>
+                Alle Rezepte
+            <?php endif; ?>
+        </h2>
 
         <ul class="rezept-galerie">
         <?php if (!empty($rezepte)) : ?>
@@ -54,6 +79,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Progressive Enhancement: JavaScript-Enhanced Suchformular aktivieren
+    const jsSearchForm = document.getElementById('suchformular');
+    const fallbackSearchForm = document.getElementById('suchformular-fallback');
+
+    if (jsSearchForm && fallbackSearchForm) {
+        // JavaScript-Enhanced Formular anzeigen, Fallback verstecken
+        jsSearchForm.style.display = 'flex';
+        fallbackSearchForm.style.display = 'none';
+    }
+
     const sortierForm = document.getElementById('sortier-form');
     const sortSelect = document.getElementById('sort-select');
     const sortierWidget = document.querySelector('.sortier-widget-neben-suche');
@@ -66,6 +101,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Progressive Enhancement: AJAX-Sortierung aktivieren
     let isAjaxEnabled = true;
+
+    // Entferne onchange-Attribut für Progressive Enhancement
+    if (sortSelect.hasAttribute('onchange')) {
+        sortSelect.removeAttribute('onchange');
+    }
 
     // Event Listener für Sortier-Änderungen
     function handleSortChange() {

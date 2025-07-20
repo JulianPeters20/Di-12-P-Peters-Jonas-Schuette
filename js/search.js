@@ -10,7 +10,10 @@ function initLiveSearch() {
     const ergebnisContainer = document.getElementById("such-ergebnisse");
     const originalContent = document.getElementById("original-rezepte");
 
-    if (!form || !feld || !ergebnisContainer) return;
+    if (!form || !feld || !ergebnisContainer) {
+        console.log('Live-Suche: Erforderliche Elemente nicht gefunden');
+        return;
+    }
 
     let searchTimeout = null;
     let isSearching = false;
@@ -173,7 +176,7 @@ function initSearchFallback() {
         // Fallback: Normale Form-Submission
         form.action = "index.php";
         form.method = "GET";
-        
+
         // Hidden input für page parameter
         if (!form.querySelector('input[name="page"]')) {
             const pageInput = document.createElement('input');
@@ -182,9 +185,9 @@ function initSearchFallback() {
             pageInput.value = 'rezepte';
             form.appendChild(pageInput);
         }
-        
-        // Suchfeld-Name anpassen
-        feld.name = 'suche';
+
+        // Suchfeld-Name anpassen für Server-seitige Verarbeitung
+        feld.name = 'search';
         
         // Submit-Button sichtbar machen falls versteckt
         let submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
