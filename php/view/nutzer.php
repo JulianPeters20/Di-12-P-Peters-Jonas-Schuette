@@ -186,7 +186,9 @@
         <!-- Abmeldung und Konto löschen -->
         <div class="nutzer-aktionen-container">
             <a href="index.php?page=abmeldung" class="btn">Abmelden</a>
-            <button type="button" class="btn btn-danger" id="konto-loeschen-btn">Konto löschen</button>
+            <?php if (!$istAdmin): ?>
+                <button type="button" class="btn btn-danger" id="konto-loeschen-btn">Konto löschen</button>
+            <?php endif; ?>
         </div>
 
     <?php else: ?>

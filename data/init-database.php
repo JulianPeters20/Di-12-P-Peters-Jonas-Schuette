@@ -190,16 +190,16 @@ try {
     ");
 
     // Administrator-Accounts
-    $nutzerStmt->execute(['Leon', 'admin1@example.com', password_hash('AdminLeon1', PASSWORD_DEFAULT), '2025-04-01', 1]);
-    $nutzerStmt->execute(['Julian', 'admin2@example.com', password_hash('JulianAdmin2', PASSWORD_DEFAULT), '2025-04-01', 1]);
-    $nutzerStmt->execute(['Dibo', 'admin3@example.com', password_hash('DiboPass3', PASSWORD_DEFAULT), '2025-04-01', 1]);
+    $nutzerStmt->execute(['Leon', 'admin1@example.com', password_hash('AdminLeon1?', PASSWORD_DEFAULT), '2025-04-01', 1]);
+    $nutzerStmt->execute(['Julian', 'admin2@example.com', password_hash('JulianAdmin2!', PASSWORD_DEFAULT), '2025-04-01', 1]);
+    $nutzerStmt->execute(['Dibo', 'admin3@example.com', password_hash('DiboPass3!', PASSWORD_DEFAULT), '2025-04-01', 1]);
 
     // Beispiel-Nutzer verteilt bis zum aktuellen Datum
-    $nutzerStmt->execute(['max_muster', 'max@example.com', password_hash('MaxPass123', PASSWORD_DEFAULT), '2025-04-15', 0]);
-    $nutzerStmt->execute(['anna_koch', 'anna@example.com', password_hash('AnnaKocht8', PASSWORD_DEFAULT), '2025-05-10', 0]);
-    $nutzerStmt->execute(['tom_baker', 'tom@example.com', password_hash('TomBakes9', PASSWORD_DEFAULT), '2025-06-05', 0]);
-    $nutzerStmt->execute(['lisa_vegan', 'lisa@example.com', password_hash('LisaVeg7', PASSWORD_DEFAULT), '2025-06-25', 0]);
-    $nutzerStmt->execute(['peter_grill', 'peter@example.com', password_hash('PeterGrill4', PASSWORD_DEFAULT), date('Y-m-d'), 0]);
+    $nutzerStmt->execute(['max_muster', 'max@example.com', password_hash('MaxPass123?', PASSWORD_DEFAULT), '2025-04-15', 0]);
+    $nutzerStmt->execute(['anna_koch', 'anna@example.com', password_hash('AnnaKocht8?', PASSWORD_DEFAULT), '2025-05-10', 0]);
+    $nutzerStmt->execute(['tom_baker', 'tom@example.com', password_hash('TomBakes9?', PASSWORD_DEFAULT), '2025-06-05', 0]);
+    $nutzerStmt->execute(['lisa_vegan', 'lisa@example.com', password_hash('LisaVeg7?', PASSWORD_DEFAULT), '2025-06-25', 0]);
+    $nutzerStmt->execute(['peter_grill', 'peter@example.com', password_hash('PeterGrill4?', PASSWORD_DEFAULT), date('Y-m-d'), 0]);
 
     // Preisklasse Beispielwerte
     $db->exec("
