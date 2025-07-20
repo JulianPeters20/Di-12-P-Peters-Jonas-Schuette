@@ -4,6 +4,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../model/Rezept.php';
 
+/**
+ * Data Access Object für Rezepte
+ * Verwaltet alle Datenbankoperationen für Rezepte mit optimierten Abfragen
+ */
 class RezeptDAO {
     private PDO $db;
 
@@ -11,11 +15,27 @@ class RezeptDAO {
         $this->db = Database::getConnection();
     }
 
+    /**
+     * Findet alle Rezepte mit optimierten Batch-Abfragen
+     * Verwendet JOINs für bessere Performance und vermeidet N+1-Probleme
+     *
+     * Diese Methode lädt alle Rezepte mit ihren verknüpften Daten in einem einzigen
+     * Datenbankaufruf, anstatt für jedes Rezept separate Abfragen zu machen.
+     *
+     * @return array Array mit allen Rezepten inklusive Kategorien, Utensilien und Zutaten
+     */
     public function findeAlle(): array {
         $sql = "
-            SELECT 
-                r.*, 
-                n.Benutzername AS erstellerName, 
+            SELECT
+                r.RezeptID,
+                r.Titel,
+                r.Zubereitung,
+                r.BildPfad,
+                r.ErstellerID,
+                r.PreisklasseID,
+                r.PortionsgroesseID,
+                r.Erstellungsdatum,
+                n.Benutzername AS erstellerName,
                 n.Email AS erstellerEmail,
                 pk.Preisspanne AS preisklasseName,
                 pg.Angabe AS portionsgroesseName
@@ -23,43 +43,268 @@ class RezeptDAO {
             LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
             LEFT JOIN Preisklasse pk ON r.PreisklasseID = pk.PreisklasseID
             LEFT JOIN Portionsgroesse pg ON r.PortionsgroesseID = pg.PortionsgroesseID
-            ORDER BY r.Erstellungsdatum DESC
+            ORDER BY r.Erstellungsdatum DESC, r.RezeptID DESC
         ";
+
         $stmt = $this->db->query($sql);
         $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        if (empty($rezepte)) {
+            return [];
+        }
+
+        // Alle Rezept-IDs für Batch-Abfragen sammeln
+        // Dies ermöglicht es, alle verknüpften Daten in wenigen Abfragen zu laden
+        $rezeptIds = array_column($rezepte, 'RezeptID');
+        $placeholders = str_repeat('?,', count($rezeptIds) - 1) . '?';
+
+        // Kategorien in einem Batch laden (statt einzelne Abfragen pro Rezept)
+        $kategorienMap = [];
+        $stmtK = $this->db->prepare("
+            SELECT rk.RezeptID, k.Bezeichnung
+            FROM RezeptKategorie rk
+            JOIN Kategorie k ON rk.KategorieID = k.KategorieID
+            WHERE rk.RezeptID IN ($placeholders)
+        ");
+        $stmtK->execute($rezeptIds);
+        while ($row = $stmtK->fetch(PDO::FETCH_ASSOC)) {
+            $kategorienMap[$row['RezeptID']][] = $row['Bezeichnung'];
+        }
+
+        // Utensilien in einem Batch laden
+        $utensilienMap = [];
+        $stmtU = $this->db->prepare("
+            SELECT ru.RezeptID, u.UtensilID, u.Name
+            FROM RezeptUtensil ru
+            JOIN Utensil u ON ru.UtensilID = u.UtensilID
+            WHERE ru.RezeptID IN ($placeholders)
+        ");
+        $stmtU->execute($rezeptIds);
+        while ($row = $stmtU->fetch(PDO::FETCH_ASSOC)) {
+            $utensilienMap[$row['RezeptID']][] = ['UtensilID' => (int)$row['UtensilID'], 'Name' => $row['Name']];
+        }
+
+        // Zutaten in einem Batch laden
+        $zutatenMap = [];
+        $stmtZ = $this->db->prepare("
+            SELECT RezeptID, Zutat, Menge, Einheit
+            FROM RezeptZutat
+            WHERE RezeptID IN ($placeholders)
+        ");
+        $stmtZ->execute($rezeptIds);
+        while ($row = $stmtZ->fetch(PDO::FETCH_ASSOC)) {
+            $zutatenMap[$row['RezeptID']][] = [
+                'Zutat' => $row['Zutat'],
+                'Menge' => $row['Menge'],
+                'Einheit' => $row['Einheit']
+            ];
+        }
+
+        // Daten zusammenführen
         foreach ($rezepte as &$rezept) {
             $rezeptID = (int)$rezept['RezeptID'];
+            $rezept['kategorien'] = $kategorienMap[$rezeptID] ?? [];
+            $rezept['utensilien'] = $utensilienMap[$rezeptID] ?? [];
+            $rezept['zutaten'] = $zutatenMap[$rezeptID] ?? [];
+        }
 
-            // Kategorien mit Namen laden
-            $stmtK = $this->db->prepare("
-                SELECT k.Bezeichnung
-                FROM RezeptKategorie rk
-                JOIN Kategorie k ON rk.KategorieID = k.KategorieID
-                WHERE rk.RezeptID = ?
-            ");
-            $stmtK->execute([$rezeptID]);
-            $kategorien = $stmtK->fetchAll(PDO::FETCH_ASSOC);
-            $rezept['kategorien'] = array_column($kategorien, 'Bezeichnung');
+        return $rezepte;
+    }
 
-            // Utensilien mit Namen laden
-            $stmtU = $this->db->prepare("
-                SELECT u.UtensilID, u.Name
-                FROM RezeptUtensil ru
-                JOIN Utensil u ON ru.UtensilID = u.UtensilID
-                WHERE ru.RezeptID = ?
-            ");
-            $stmtU->execute([$rezeptID]);
-            $rezept['utensilien'] = $stmtU->fetchAll(PDO::FETCH_ASSOC);
+    /**
+     * Findet die neuesten Rezepte limitiert auf eine bestimmte Anzahl
+     * @param int $limit Anzahl der Rezepte die zurückgegeben werden sollen
+     * @return array Array mit den neuesten Rezepten
+     */
+    public function findeNeuesteLimitiert(int $limit = 10): array {
+        $sql = "
+            SELECT
+                r.RezeptID,
+                r.Titel,
+                r.Zubereitung,
+                r.BildPfad,
+                r.ErstellerID,
+                r.PreisklasseID,
+                r.PortionsgroesseID,
+                r.Erstellungsdatum,
+                n.Benutzername AS erstellerName,
+                n.Email AS erstellerEmail,
+                pk.Preisspanne AS preisklasseName,
+                pg.Angabe AS portionsgroesseName
+            FROM Rezept r
+            LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
+            LEFT JOIN Preisklasse pk ON r.PreisklasseID = pk.PreisklasseID
+            LEFT JOIN Portionsgroesse pg ON r.PortionsgroesseID = pg.PortionsgroesseID
+            ORDER BY r.Erstellungsdatum DESC, r.RezeptID DESC
+            LIMIT ?
+        ";
 
-            // Zutaten laden
-            $stmtZ = $this->db->prepare("
-                SELECT Zutat, Menge, Einheit 
-                FROM RezeptZutat 
-                WHERE RezeptID = ?
-            ");
-            $stmtZ->execute([$rezeptID]);
-            $rezept['zutaten'] = $stmtZ->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($rezepte)) {
+            return [];
+        }
+
+        return $this->enricheRezepteWithDetails($rezepte);
+    }
+
+    /**
+     * Findet die beliebtesten Rezepte sortiert nach Anzahl der Bewertungen
+     * @param int $limit Anzahl der Rezepte die zurückgegeben werden sollen
+     * @return array Array mit Rezepten sortiert nach Bewertungsanzahl (absteigend)
+     */
+    public function findeBeliebteste(int $limit = 10): array {
+        $sql = "
+            SELECT
+                r.RezeptID,
+                r.Titel,
+                r.Zubereitung,
+                r.BildPfad,
+                r.ErstellerID,
+                r.PreisklasseID,
+                r.PortionsgroesseID,
+                r.Erstellungsdatum,
+                n.Benutzername AS erstellerName,
+                n.Email AS erstellerEmail,
+                pk.Preisspanne AS preisklasseName,
+                pg.Angabe AS portionsgroesseName,
+                COUNT(b.RezeptID) as anzahlBewertungen
+            FROM Rezept r
+            LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
+            LEFT JOIN Preisklasse pk ON r.PreisklasseID = pk.PreisklasseID
+            LEFT JOIN Portionsgroesse pg ON r.PortionsgroesseID = pg.PortionsgroesseID
+            LEFT JOIN Bewertung b ON r.RezeptID = b.RezeptID
+            GROUP BY r.RezeptID, r.Titel, r.Zubereitung, r.BildPfad, r.ErstellerID,
+                     r.PreisklasseID, r.PortionsgroesseID, r.Erstellungsdatum,
+                     n.Benutzername, n.Email, pk.Preisspanne, pg.Angabe
+            ORDER BY anzahlBewertungen DESC, r.Erstellungsdatum DESC, r.RezeptID DESC
+            LIMIT ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($rezepte)) {
+            return [];
+        }
+
+        return $this->enricheRezepteWithDetails($rezepte);
+    }
+
+    /**
+     * Findet die bestbewerteten Rezepte (mindestens 3 Bewertungen)
+     * @param int $limit Anzahl der Rezepte die zurückgegeben werden sollen
+     * @return array Array mit Rezepten sortiert nach Durchschnittsbewertung (absteigend)
+     */
+    public function findeBestBewertete(int $limit = 10): array {
+        $sql = "
+            SELECT
+                r.RezeptID,
+                r.Titel,
+                r.Zubereitung,
+                r.BildPfad,
+                r.ErstellerID,
+                r.PreisklasseID,
+                r.PortionsgroesseID,
+                r.Erstellungsdatum,
+                n.Benutzername AS erstellerName,
+                n.Email AS erstellerEmail,
+                pk.Preisspanne AS preisklasseName,
+                pg.Angabe AS portionsgroesseName,
+                COUNT(b.RezeptID) as anzahlBewertungen,
+                AVG(b.Punkte) as durchschnittsBewertung
+            FROM Rezept r
+            LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
+            LEFT JOIN Preisklasse pk ON r.PreisklasseID = pk.PreisklasseID
+            LEFT JOIN Portionsgroesse pg ON r.PortionsgroesseID = pg.PortionsgroesseID
+            LEFT JOIN Bewertung b ON r.RezeptID = b.RezeptID
+            GROUP BY r.RezeptID, r.Titel, r.Zubereitung, r.BildPfad, r.ErstellerID,
+                     r.PreisklasseID, r.PortionsgroesseID, r.Erstellungsdatum,
+                     n.Benutzername, n.Email, pk.Preisspanne, pg.Angabe
+            HAVING COUNT(b.RezeptID) >= 3
+            ORDER BY durchschnittsBewertung DESC, anzahlBewertungen DESC, r.RezeptID DESC
+            LIMIT ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        $rezepte = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($rezepte)) {
+            return [];
+        }
+
+        return $this->enricheRezepteWithDetails($rezepte);
+    }
+
+    /**
+     * Hilfsmethode um Rezepte mit Kategorien, Utensilien und Zutaten anzureichern
+     * @param array $rezepte Array mit Basis-Rezeptdaten
+     * @return array Array mit angereicherten Rezeptdaten
+     */
+    private function enricheRezepteWithDetails(array $rezepte): array {
+        if (empty($rezepte)) {
+            return [];
+        }
+
+        // Alle Rezept-IDs für Batch-Abfragen sammeln
+        $rezeptIds = array_column($rezepte, 'RezeptID');
+        $placeholders = str_repeat('?,', count($rezeptIds) - 1) . '?';
+
+        // Kategorien in einem Batch laden
+        $kategorienMap = [];
+        $stmtK = $this->db->prepare("
+            SELECT rk.RezeptID, k.Bezeichnung
+            FROM RezeptKategorie rk
+            JOIN Kategorie k ON rk.KategorieID = k.KategorieID
+            WHERE rk.RezeptID IN ($placeholders)
+        ");
+        $stmtK->execute($rezeptIds);
+        while ($row = $stmtK->fetch(PDO::FETCH_ASSOC)) {
+            $kategorienMap[$row['RezeptID']][] = $row['Bezeichnung'];
+        }
+
+        // Utensilien in einem Batch laden
+        $utensilienMap = [];
+        $stmtU = $this->db->prepare("
+            SELECT ru.RezeptID, u.UtensilID, u.Name
+            FROM RezeptUtensil ru
+            JOIN Utensil u ON ru.UtensilID = u.UtensilID
+            WHERE ru.RezeptID IN ($placeholders)
+        ");
+        $stmtU->execute($rezeptIds);
+        while ($row = $stmtU->fetch(PDO::FETCH_ASSOC)) {
+            $utensilienMap[$row['RezeptID']][] = [
+                'UtensilID' => $row['UtensilID'],
+                'Name' => $row['Name']
+            ];
+        }
+
+        // Zutaten in einem Batch laden
+        $zutatenMap = [];
+        $stmtZ = $this->db->prepare("
+            SELECT RezeptID, Zutat, Menge, Einheit
+            FROM RezeptZutat
+            WHERE RezeptID IN ($placeholders)
+        ");
+        $stmtZ->execute($rezeptIds);
+        while ($row = $stmtZ->fetch(PDO::FETCH_ASSOC)) {
+            $zutatenMap[$row['RezeptID']][] = [
+                'Zutat' => $row['Zutat'],
+                'Menge' => $row['Menge'],
+                'Einheit' => $row['Einheit']
+            ];
+        }
+
+        // Daten zusammenführen
+        foreach ($rezepte as &$rezept) {
+            $rezeptID = (int)$rezept['RezeptID'];
+            $rezept['kategorien'] = $kategorienMap[$rezeptID] ?? [];
+            $rezept['utensilien'] = $utensilienMap[$rezeptID] ?? [];
+            $rezept['zutaten'] = $zutatenMap[$rezeptID] ?? [];
         }
 
         return $rezepte;
@@ -74,7 +319,7 @@ class RezeptDAO {
         FROM Rezept r
         LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
         WHERE r.ErstellerID = ?
-        ORDER BY r.Erstellungsdatum DESC
+        ORDER BY r.Erstellungsdatum DESC, r.RezeptID DESC
     ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$nutzerId]);
@@ -193,30 +438,55 @@ class RezeptDAO {
         return $rezept;
     }
 
+    /**
+     * Löscht ein Rezept mit verbesserter Fehlerbehandlung
+     * Verwendet CASCADE DELETE für automatisches Löschen verknüpfter Datensätze
+     *
+     * @param int $id Die ID des zu löschenden Rezepts
+     * @return bool true bei erfolgreichem Löschen
+     * @throws InvalidArgumentException wenn Rezept nicht existiert
+     * @throws RuntimeException bei Datenbankfehlern
+     */
     public function loesche(int $id): bool {
         try {
             $this->db->beginTransaction();
 
+            // Prüfen ob Rezept existiert und Bildpfad ermitteln
             $stmt = $this->db->prepare("SELECT BildPfad FROM Rezept WHERE RezeptID = ?");
             $stmt->execute([$id]);
             $bildPfad = $stmt->fetchColumn();
 
-            $this->db->prepare("DELETE FROM RezeptKategorie WHERE RezeptID = ?")->execute([$id]);
-            $this->db->prepare("DELETE FROM RezeptZutat WHERE RezeptID = ?")->execute([$id]);
-            $this->db->prepare("DELETE FROM RezeptUtensil WHERE RezeptID = ?")->execute([$id]);
-            $this->db->prepare("DELETE FROM Bewertung WHERE RezeptID = ?")->execute([$id]);
-            $this->db->prepare("DELETE FROM Rezept WHERE RezeptID = ?")->execute([$id]);
+            if ($bildPfad === false) {
+                $this->db->rollBack();
+                throw new InvalidArgumentException("Rezept mit ID $id nicht gefunden");
+            }
+
+            // Mit CASCADE DELETE werden verknüpfte Datensätze automatisch gelöscht
+            $stmt = $this->db->prepare("DELETE FROM Rezept WHERE RezeptID = ?");
+            $result = $stmt->execute([$id]);
+
+            if (!$result) {
+                throw new RuntimeException("Fehler beim Löschen des Rezepts");
+            }
 
             $this->db->commit();
 
+            // Bilddatei löschen falls vorhanden
             if ($bildPfad && file_exists($bildPfad)) {
-                unlink($bildPfad);
+                if (!unlink($bildPfad)) {
+                    error_log("Warnung: Bilddatei $bildPfad konnte nicht gelöscht werden");
+                }
             }
 
             return true;
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            error_log("Datenbankfehler beim Löschen von Rezept $id: " . $e->getMessage());
+            throw new RuntimeException("Datenbankfehler beim Löschen des Rezepts");
         } catch (Exception $e) {
             $this->db->rollBack();
-            return false;
+            error_log("Fehler beim Löschen von Rezept $id: " . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -240,7 +510,7 @@ class RezeptDAO {
             JOIN Kategorie k ON rk.KategorieID = k.KategorieID
             LEFT JOIN Nutzer n ON r.ErstellerID = n.NutzerID
             WHERE k.Bezeichnung = ?
-            ORDER BY r.Erstellungsdatum DESC
+            ORDER BY r.Erstellungsdatum DESC, r.RezeptID DESC
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$kategorie]);
@@ -275,6 +545,22 @@ class RezeptDAO {
         return $rezepte;
     }
 
+    /**
+     * Fügt ein neues Rezept hinzu mit konsistenter Rückgabe
+     * Verwendet Transaktionen für Datenintegrität
+     *
+     * @param string $titel Titel des Rezepts
+     * @param string $zubereitung Zubereitungsanleitung
+     * @param string $bildPfad Pfad zum Rezeptbild
+     * @param int $erstellerID ID des Erstellers
+     * @param int $preisklasseID ID der Preisklasse
+     * @param int $portionsgroesseID ID der Portionsgröße
+     * @param array $kategorien Array mit Kategorie-IDs
+     * @param array $zutaten Array mit Zutaten-Daten
+     * @param array $utensilien Array mit Utensil-IDs
+     * @return int ID des erstellten Rezepts
+     * @throws RuntimeException bei Datenbankfehlern
+     */
     public function addRezept(
         string $titel,
         string $zubereitung,
@@ -285,13 +571,15 @@ class RezeptDAO {
         array $kategorien,
         array $zutaten,
         array $utensilien
-    ): int|false {
+    ): int {
         try {
             $this->db->beginTransaction();
 
+            // Aktuelles Datum verwenden - kompatibel mit SQLite und MySQL
+            $currentDate = date('Y-m-d');
             $stmt = $this->db->prepare("
                 INSERT INTO Rezept (Titel, Zubereitung, BildPfad, ErstellerID, PreisklasseID, PortionsgroesseID, Erstellungsdatum)
-                VALUES (?, ?, ?, ?, ?, ?, date('now'))
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 trim($titel),
@@ -299,44 +587,78 @@ class RezeptDAO {
                 trim($bildPfad),
                 $erstellerID,
                 $preisklasseID,
-                $portionsgroesseID
+                $portionsgroesseID,
+                $currentDate
             ]);
 
             $rezeptID = (int)$this->db->lastInsertId();
+            if ($rezeptID === 0) {
+                throw new RuntimeException("Fehler beim Erstellen des Rezepts - keine ID erhalten");
+            }
 
-            $stmtKategorie = $this->db->prepare("INSERT INTO RezeptKategorie (RezeptID, KategorieID) VALUES (?, ?)");
-            foreach ($kategorien as $katID) {
-                if (is_int($katID)) {
-                    $stmtKategorie->execute([$rezeptID, $katID]);
+            // Kategorien hinzufügen
+            if (!empty($kategorien)) {
+                $stmtKategorie = $this->db->prepare("INSERT INTO RezeptKategorie (RezeptID, KategorieID) VALUES (?, ?)");
+                foreach ($kategorien as $katID) {
+                    if (is_numeric($katID)) {
+                        $stmtKategorie->execute([$rezeptID, (int)$katID]);
+                    }
                 }
             }
 
-            $stmtZutat = $this->db->prepare("INSERT INTO RezeptZutat (RezeptID, Zutat, Menge, Einheit) VALUES (?, ?, ?, ?)");
-            foreach ($zutaten as $z) {
-                $zutat = trim($z['zutat'] ?? '');
-                $menge = trim($z['menge'] ?? '');
-                $einheit = trim($z['einheit'] ?? '');
+            // Zutaten hinzufügen
+            if (!empty($zutaten)) {
+                $stmtZutat = $this->db->prepare("INSERT INTO RezeptZutat (RezeptID, Zutat, Menge, Einheit) VALUES (?, ?, ?, ?)");
+                foreach ($zutaten as $z) {
+                    $zutat = trim($z['zutat'] ?? '');
+                    $menge = trim($z['menge'] ?? '');
+                    $einheit = trim($z['einheit'] ?? '');
 
-                if ($zutat !== '' && $menge !== '' && $einheit !== '') {
-                    $stmtZutat->execute([$rezeptID, $zutat, $menge, $einheit]);
+                    if ($zutat !== '' && $menge !== '' && $einheit !== '') {
+                        $stmtZutat->execute([$rezeptID, $zutat, $menge, $einheit]);
+                    }
                 }
             }
 
-            $stmtUtensil = $this->db->prepare("INSERT INTO RezeptUtensil (RezeptID, UtensilID) VALUES (?, ?)");
-            foreach ($utensilien as $utenID) {
-                if (is_int($utenID)) {
-                    $stmtUtensil->execute([$rezeptID, $utenID]);
+            // Utensilien hinzufügen
+            if (!empty($utensilien)) {
+                $stmtUtensil = $this->db->prepare("INSERT INTO RezeptUtensil (RezeptID, UtensilID) VALUES (?, ?)");
+                foreach ($utensilien as $utenID) {
+                    if (is_numeric($utenID)) {
+                        $stmtUtensil->execute([$rezeptID, (int)$utenID]);
+                    }
                 }
             }
 
             $this->db->commit();
             return $rezeptID;
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            error_log("Datenbankfehler beim Erstellen des Rezepts: " . $e->getMessage());
+            throw new RuntimeException("Datenbankfehler beim Erstellen des Rezepts");
         } catch (Exception $e) {
             $this->db->rollBack();
-            return false;
+            error_log("Fehler beim Erstellen des Rezepts: " . $e->getMessage());
+            throw $e;
         }
     }
 
+    /**
+     * Aktualisiert ein Rezept mit optimierter Methode
+     * Löscht Nährwerte bei Änderungen und verwendet effiziente DELETE/INSERT-Operationen
+     *
+     * @param int $rezeptID ID des zu aktualisierenden Rezepts
+     * @param string $titel Neuer Titel
+     * @param string $zubereitung Neue Zubereitungsanleitung
+     * @param string|null $bildPfad Neuer Bildpfad (optional)
+     * @param int $preisklasseID Neue Preisklasse-ID
+     * @param int $portionsgroesseID Neue Portionsgröße-ID
+     * @param array $kategorien Array mit Kategorie-IDs
+     * @param array $zutaten Array mit Zutaten-Daten
+     * @param array $utensilien Array mit Utensil-IDs
+     * @return bool true bei erfolgreichem Update
+     * @throws RuntimeException bei Datenbankfehlern
+     */
     public function aktualisiere(
         int $rezeptID,
         string $titel,
@@ -351,6 +673,7 @@ class RezeptDAO {
         try {
             $this->db->beginTransaction();
 
+            // Hauptrezept-Daten aktualisieren
             $sql = "UPDATE Rezept SET Titel = ?, Zubereitung = ?, PreisklasseID = ?, PortionsgroesseID = ?";
             $params = [$titel, $zubereitung, $preisklasseID, $portionsgroesseID];
 
@@ -364,32 +687,54 @@ class RezeptDAO {
 
             $this->db->prepare($sql)->execute($params);
 
+            // Nährwerte löschen da sich Zutaten geändert haben könnten
+            // (Benutzer muss Nährwerte neu berechnen lassen)
+            $this->db->prepare("DELETE FROM RezeptNaehrwerte WHERE RezeptID = ?")->execute([$rezeptID]);
+
+            // Kategorien aktualisieren (DELETE + INSERT für Einfachheit)
             $this->db->prepare("DELETE FROM RezeptKategorie WHERE RezeptID = ?")->execute([$rezeptID]);
-            $this->db->prepare("DELETE FROM RezeptZutat WHERE RezeptID = ?")->execute([$rezeptID]);
-            $this->db->prepare("DELETE FROM RezeptUtensil WHERE RezeptID = ?")->execute([$rezeptID]);
-
-            $stmtKategorie = $this->db->prepare("INSERT INTO RezeptKategorie (RezeptID, KategorieID) VALUES (?, ?)");
-            foreach ($kategorien as $k) {
-                $stmtKategorie->execute([$rezeptID, $k]);
-            }
-
-            $stmtZutat = $this->db->prepare("INSERT INTO RezeptZutat (RezeptID, Zutat, Menge, Einheit) VALUES (?, ?, ?, ?)");
-            foreach ($zutaten as $z) {
-                if (isset($z['zutat'], $z['menge'], $z['einheit'])) {
-                    $stmtZutat->execute([$rezeptID, $z['zutat'], $z['menge'], $z['einheit']]);
+            if (!empty($kategorien)) {
+                $stmtKategorie = $this->db->prepare("INSERT INTO RezeptKategorie (RezeptID, KategorieID) VALUES (?, ?)");
+                foreach ($kategorien as $k) {
+                    if (is_numeric($k)) {
+                        $stmtKategorie->execute([$rezeptID, (int)$k]);
+                    }
                 }
             }
 
-            $stmtUtensil = $this->db->prepare("INSERT INTO RezeptUtensil (RezeptID, UtensilID) VALUES (?, ?)");
-            foreach ($utensilien as $u) {
-                $stmtUtensil->execute([$rezeptID, $u]);
+            // Zutaten aktualisieren (DELETE + INSERT für Einfachheit)
+            $this->db->prepare("DELETE FROM RezeptZutat WHERE RezeptID = ?")->execute([$rezeptID]);
+            if (!empty($zutaten)) {
+                $stmtZutat = $this->db->prepare("INSERT INTO RezeptZutat (RezeptID, Zutat, Menge, Einheit) VALUES (?, ?, ?, ?)");
+                foreach ($zutaten as $z) {
+                    if (isset($z['zutat'], $z['menge'], $z['einheit']) &&
+                        trim($z['zutat']) !== '' && trim($z['menge']) !== '' && trim($z['einheit']) !== '') {
+                        $stmtZutat->execute([$rezeptID, trim($z['zutat']), trim($z['menge']), trim($z['einheit'])]);
+                    }
+                }
+            }
+
+            // Utensilien aktualisieren (DELETE + INSERT für Einfachheit)
+            $this->db->prepare("DELETE FROM RezeptUtensil WHERE RezeptID = ?")->execute([$rezeptID]);
+            if (!empty($utensilien)) {
+                $stmtUtensil = $this->db->prepare("INSERT INTO RezeptUtensil (RezeptID, UtensilID) VALUES (?, ?)");
+                foreach ($utensilien as $u) {
+                    if (is_numeric($u)) {
+                        $stmtUtensil->execute([$rezeptID, (int)$u]);
+                    }
+                }
             }
 
             $this->db->commit();
             return true;
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            error_log("Datenbankfehler beim Aktualisieren von Rezept $rezeptID: " . $e->getMessage());
+            throw new RuntimeException("Datenbankfehler beim Aktualisieren des Rezepts");
         } catch (Exception $e) {
             $this->db->rollBack();
-            return false;
+            error_log("Fehler beim Aktualisieren von Rezept $rezeptID: " . $e->getMessage());
+            throw $e;
         }
     }
 }

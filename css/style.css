@@ -830,13 +830,20 @@ select {
   text-align: center;
 }
 
-.modal-overlay {
+.modal-overlay,
+.modal-dialog {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   display: grid;
   place-items: center;
   z-index: 1000;
+  border: none;
+  padding: 0;
+}
+
+.modal-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .modal-box {
@@ -863,7 +870,8 @@ select {
   margin-top: 1.5em;
 }
 
-.modal-overlay[hidden] .modal-box {
+.modal-overlay[hidden] .modal-box,
+.modal-dialog:not([open]) .modal-box {
   opacity: 0;
   transform: scale(0.95);
 }
@@ -1108,7 +1116,8 @@ select {
 }
 
 /* Modal*/
-.modal-overlay[hidden] {
+.modal-overlay[hidden],
+.modal-dialog:not([open]) {
   display: none !important;
 }
 

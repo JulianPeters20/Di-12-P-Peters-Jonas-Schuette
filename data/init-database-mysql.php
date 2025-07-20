@@ -7,6 +7,8 @@ try {
     $db->beginTransaction();
 
     // Tabellen löschen (Reihenfolge wegen FK)
+    // WICHTIG: Tabellen werden gelöscht um eine saubere Neuinitialisierung zu gewährleisten
+    // und Konflikte mit geänderten Tabellenstrukturen zu vermeiden
     $tables = [
         'Bewertung', 'RezeptKategorie', 'RezeptUtensil', 'RezeptZutat', 'RezeptNaehrwerte',
         'Rezept', 'Kategorie', 'Utensil', 'Zutat', 'Preisklasse', 'Portionsgröße', 'Nutzer',
@@ -44,18 +46,18 @@ try {
         )
     ");
 
-    // Rezept
+    // Rezept - BildPfad ohne Längenbeschränkung für große Pfade
     $db->exec("
         CREATE TABLE Rezept (
             RezeptID INT AUTO_INCREMENT PRIMARY KEY,
             Titel VARCHAR(255) NOT NULL,
             Zubereitung TEXT NOT NULL,
-            BildPfad VARCHAR(255),
+            BildPfad TEXT,
             ErstellerID INT,
             PreisklasseID INT,
             PortionsgrößeID INT,
             Erstellungsdatum DATE NOT NULL,
-            FOREIGN KEY (ErstellerID) REFERENCES Nutzer(NutzerID) ON DELETE SET NULL,
+            FOREIGN KEY (ErstellerID) REFERENCES Nutzer(NutzerID) ON DELETE CASCADE,
             FOREIGN KEY (PreisklasseID) REFERENCES Preisklasse(PreisklasseID),
             FOREIGN KEY (PortionsgrößeID) REFERENCES Portionsgröße(PortionsgrößeID)
         )
@@ -175,10 +177,16 @@ try {
     $stmt->execute(['admin', 'admin@example.com', password_hash('admin123', PASSWORD_DEFAULT), date('Y-m-d'), true]);
 
     // Beispieldaten
-    $db->exec("INSERT INTO Preisklasse (Preisspanne) VALUES ('unter 5€'), ('5–10€')");
-    $db->exec("INSERT INTO Portionsgröße (Angabe) VALUES ('1 Person'), ('2 Personen')");
-    $db->exec("INSERT INTO Utensil (Name) VALUES ('Topf'), ('Pfanne')");
-    $db->exec("INSERT INTO Kategorie (Bezeichnung) VALUES ('Vegetarisch'), ('Schnell')");
+    $db->exec("INSERT INTO Preisklasse (Preisspanne) VALUES ('unter 5€'), ('5–10€'), ('10–15€'), ('15–20€'), ('über 20€')");
+    $db->exec("INSERT INTO Portionsgröße (Angabe) VALUES ('1 Person'), ('2 Personen'), ('3 Personen'), ('4 Personen'), ('Familie (5+)')");
+    $db->exec("INSERT INTO Utensil (Name) VALUES ('Topf'), ('Pfanne'), ('Kochlöffel'), ('Sieb'), ('Schneidebrett'), ('Messer'), ('Backofen'), ('Mixer'), ('Schüssel')");
+
+    $db->exec("INSERT INTO Kategorie (Bezeichnung) VALUES
+        ('Vegetarisch'), ('Schnell (unter 30 Min)'), ('Vegan'), ('Herzhaft'), ('Dessert'),
+        ('Glutenfrei'), ('Low-Carb'), ('Frühstück'), ('Asiatisch'), ('Italienisch'),
+        ('Meal Prep'), ('Kinderfreundlich'), ('Snacks'), ('Salate'), ('Grillen'),
+        ('Laktosefrei'), ('Aufwendig (über 60 Min)'), ('Hauptgericht'), ('Vorspeise'),
+        ('Mexikanisch'), ('Deutsch'), ('Mediterran'), ('High Protein'), ('Keto'), ('Paleo'), ('Gesund')");
 
     $db->exec("
         INSERT INTO Rezept (Titel, Zubereitung, BildPfad, ErstellerID, PreisklasseID, PortionsgrößeID, Erstellungsdatum)
@@ -191,9 +199,12 @@ try {
     $db->exec("INSERT INTO Bewertung VALUES (1, 1, 5, CURDATE())");
 
     $db->commit();
-    echo "MySQL-Datenbank erfolgreich initialisiert.";
+
+    error_log("MySQL-Datenbank erfolgreich initialisiert.");
+    return true;
 } catch (Exception $e) {
     $db->rollBack();
-    die("Fehler bei Initialisierung: " . $e->getMessage());
+    error_log("Fehler bei MySQL-Datenbankinitialisierung: " . $e->getMessage());
+    throw new RuntimeException("Datenbankinitialisierung fehlgeschlagen: " . $e->getMessage());
 }
 

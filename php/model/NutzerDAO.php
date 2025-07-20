@@ -41,8 +41,16 @@ class NutzerDAO {
         ) : null;
     }
 
-    // Registrierung erzeugt neuen Nutzer (nach Bestätigung)
-    public function registrieren(string $benutzername, string $email, string $passwort): bool {
+    /**
+     * Registriert einen neuen Nutzer in der Datenbank
+     * Passwort-Hashing wurde in UserService (Business Logic Layer) verlagert
+     *
+     * @param string $benutzername Gewünschter Benutzername
+     * @param string $email E-Mail-Adresse (muss eindeutig sein)
+     * @param string $hashedPassword Bereits gehashtes Passwort
+     * @return bool true bei erfolgreicher Registrierung
+     */
+    public function registrieren(string $benutzername, string $email, string $hashedPassword): bool {
         try {
             $this->db->beginTransaction();
 
@@ -59,7 +67,7 @@ class NutzerDAO {
             $stmt->execute([
                 $benutzername,
                 $email,
-                password_hash($passwort, PASSWORD_DEFAULT),
+                $hashedPassword, // Bereits in UserService gehasht
                 date('Y-m-d')
             ]);
 
@@ -75,14 +83,6 @@ class NutzerDAO {
         $stmt = $this->db->prepare("SELECT 1 FROM Nutzer WHERE Benutzername = ?");
         $stmt->execute([$name]);
         return (bool)$stmt->fetchColumn();
-    }
-
-    public function findeBenutzer(string $email, string $passwort): ?Nutzer {
-        $nutzer = $this->findeNachEmail($email);
-        if ($nutzer && password_verify($passwort, $nutzer->passwortHash)) {
-            return $nutzer;
-        }
-        return null;
     }
 
     public function findeAlle(): array {
@@ -106,5 +106,18 @@ class NutzerDAO {
     public function loesche(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM Nutzer WHERE NutzerID = ?");
         return $stmt->execute([$id]);
+    }
+
+    /**
+     * Aktualisiert das Passwort eines Nutzers
+     * Passwort-Hashing sollte in UserService (Business Logic Layer) erfolgen
+     *
+     * @param int $nutzerId ID des Nutzers
+     * @param string $hashedPassword Bereits gehashtes neues Passwort
+     * @return bool true bei erfolgreicher Aktualisierung
+     */
+    public function passwortAktualisieren(int $nutzerId, string $hashedPassword): bool {
+        $stmt = $this->db->prepare("UPDATE Nutzer SET PasswortHash = ? WHERE NutzerID = ?");
+        return $stmt->execute([$hashedPassword, $nutzerId]);
     }
 }

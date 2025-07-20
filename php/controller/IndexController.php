@@ -9,10 +9,28 @@ require_once 'php/model/BewertungDAO.php';
 function showHome(): void
 {
     $dao = new RezeptDAO();
-    $alle = $dao->findeAlle();
-
     $bewertungDAO = new BewertungDAO();
-    // Neue 3 Rezepte mit Bewertungen anreichern
+
+    // Beliebte Rezepte (nach Anzahl Bewertungen sortiert) - 3 Stück
+    $beliebteste = $dao->findeBeliebteste(3);
+    foreach ($beliebteste as &$rezept) {
+        $rezeptID = $rezept['RezeptID'] ?? 0;
+        $rezept['durchschnitt'] = $bewertungDAO->berechneDurchschnittRating($rezeptID);
+        $rezept['anzahlBewertungen'] = $bewertungDAO->zaehleBewertungen($rezeptID);
+    }
+    unset($rezept);
+
+    // Bestbewertete Rezepte (min. 3 Bewertungen, nach Durchschnitt sortiert) - 3 Stück
+    $bestBewertete = $dao->findeBestBewertete(3);
+    foreach ($bestBewertete as &$rezept) {
+        $rezeptID = $rezept['RezeptID'] ?? 0;
+        $rezept['durchschnitt'] = $bewertungDAO->berechneDurchschnittRating($rezeptID);
+        $rezept['anzahlBewertungen'] = $bewertungDAO->zaehleBewertungen($rezeptID);
+    }
+    unset($rezept);
+
+    // Neueste Rezepte - 3 Stück
+    $alle = $dao->findeAlle();
     $neuesteRezepte = array_slice($alle, 0, 3);
     foreach ($neuesteRezepte as &$rezept) {
         $rezeptID = $rezept['RezeptID'] ?? 0;
@@ -21,13 +39,13 @@ function showHome(): void
     }
     unset($rezept);
 
-    $rezepte = $neuesteRezepte;
     require 'php/view/index.php';
 }
 
 function showRezepte(): void
 {
     $dao = new RezeptDAO();
+    // Alle Rezepte anzeigen (keine Limitierung)
     $alleRezepte = $dao->findeAlle();
 
     $bewertungDAO = new BewertungDAO();

@@ -1,41 +1,29 @@
 <main>
     <?php if (!empty($rezept)): ?>
-        <!-- Flash-Toast anzeigen -->
-        <?php if (!empty($_SESSION['flash'])): ?>
-            <script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    // Flash-Toast erstellen
-                    const toast = document.createElement("div");
-                    toast.className = "flash-toast <?= $_SESSION['flash']['type'] ?>";
-                    toast.textContent = "<?= htmlspecialchars($_SESSION['flash']['message']) ?>";
 
-                    // Längere Anzeigedauer für Nährwerte-Nachrichten
-                    const message = "<?= $_SESSION['flash']['message'] ?>";
-                    const isNutritionMessage = message.includes("Nährwerte");
-                    const displayDuration = isNutritionMessage ? 6000 : 4600; // 6s für Nährwerte, 4.6s für andere
-
-                    // Custom Animation für längere Anzeige
-                    if (isNutritionMessage) {
-                        toast.style.animation = "fadein 0.3s forwards, fadeout 0.4s forwards 5.5s";
-                    }
-
-                    // Toast zum Body hinzufügen
-                    document.body.appendChild(toast);
-
-                    // Toast nach Animation automatisch entfernen
-                    setTimeout(() => {
-                        if (toast.parentNode) {
-                            toast.parentNode.removeChild(toast);
-                        }
-                    }, displayDuration);
-                });
-            </script>
-            <?php unset($_SESSION['flash']); ?>
-        <?php endif; ?>
 
         <article class="rezept-detail">
             <header>
                 <h2 class="rezept-titel"><?= htmlspecialchars($rezept['titel'] ?? 'Unbekannt') ?></h2>
+
+                <!-- Speichern Button für angemeldete Nutzer (nicht Ersteller) -->
+                <?php if (!empty($_SESSION['nutzerId']) && isset($istEigenerErsteller) && !$istEigenerErsteller): ?>
+                    <?php
+                    // Prüfen ob Rezept bereits gespeichert ist
+                    require_once 'php/model/GespeicherteRezepteDAO.php';
+                    $gespeicherteRezepteDAO = new GespeicherteRezepteDAO();
+                    $istGespeichert = $gespeicherteRezepteDAO->istGespeichert((int)$_SESSION['nutzerId'], (int)$rezept['id']);
+                    ?>
+                    <div class="rezept-speichern-oben" style="margin: 15px 0;">
+                        <button type="button"
+                                class="btn <?= $istGespeichert ? 'btn-secondary' : 'btn-primary' ?>"
+                                id="speichern-btn"
+                                data-rezept-id="<?= $rezept['id'] ?>"
+                                data-ist-gespeichert="<?= $istGespeichert ? 'true' : 'false' ?>">
+                            <?= $istGespeichert ? '❤️ Gespeichert' : '🤍 Speichern' ?>
+                        </button>
+                    </div>
+                <?php endif; ?>
             </header>
 
             <section class="rezept-block">
@@ -266,6 +254,8 @@
             }
             ?>
 
+
+
             <?php if ($darfBearbeiten): ?>
                 <div class="rezept-aktion" style="margin-top: 16px;">
                     <a href="index.php?page=rezept-bearbeiten&id=<?= urlencode($rezept['id']) ?>" class="btn">Bearbeiten</a>
@@ -302,7 +292,7 @@
         <a href="index.php?page=rezepte" class="btn">Zurück zur Übersicht</a>
     </div>
 
-    <div id="loesch-modal" class="modal-overlay" hidden>
+    <dialog id="loesch-modal" class="modal-dialog">
         <div class="modal-box">
             <h3>Rezept löschen</h3>
             <p id="loesch-text">Möchtest du dieses Rezept wirklich löschen?</p>
@@ -311,50 +301,11 @@
                 <button class="btn" id="btn-bestaetigen">Löschen</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
 </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const stars = document.querySelectorAll('#star-rating .star');
-            const hiddenInput = document.getElementById('punkte-input');
 
-            function setStars(rating) {
-                stars.forEach(star => {
-                    if (parseInt(star.dataset.value) <= rating) {
-                        star.classList.add('selected');
-                        star.style.color = '#f5c518';
-                    } else {
-                        star.classList.remove('selected');
-                        star.style.color = '#ccc';
-                    }
-                });
-                hiddenInput.value = rating;
-            }
-
-            // Initiale Färbung direkt beim Laden setzen
-            setStars(parseInt(hiddenInput.value) || 0);
-
-            stars.forEach(star => {
-                star.addEventListener('click', () => {
-                    const rating = parseInt(star.dataset.value);
-                    setStars(rating);
-                });
-
-                star.addEventListener('mouseover', () => {
-                    const rating = parseInt(star.dataset.value);
-                    stars.forEach(s => {
-                        s.style.color = (parseInt(s.dataset.value) <= rating) ? '#f5c518' : '#ccc';
-                    });
-                });
-
-                star.addEventListener('mouseout', () => {
-                    setStars(parseInt(hiddenInput.value) || 0);
-                });
-            });
-        });
-    </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -370,12 +321,12 @@
                     aktiveButton = btn;
                     const titel = btn.closest(".rezept-karte").querySelector("h4")?.innerText || "dieses Rezept";
                     loeschText.textContent = `Möchtest du „${titel}“ wirklich löschen?`;
-                    modal.removeAttribute("hidden");
+                    modal.showModal();
                 });
             });
 
             abbrechenBtn.addEventListener("click", () => {
-                modal.setAttribute("hidden", true);
+                modal.close();
                 aktiveButton = null;
             });
 
@@ -398,8 +349,120 @@
                     alert("Fehler: " + json.message);
                 }
 
-                modal.setAttribute("hidden", true);
+                modal.close();
                 aktiveButton = null;
             });
+
+            // Speichern-Button Funktionalität
+            const speichernBtn = document.getElementById("speichern-btn");
+            if (speichernBtn) {
+                speichernBtn.addEventListener("click", async () => {
+                    const rezeptId = speichernBtn.dataset.rezeptId;
+                    const istGespeichert = speichernBtn.dataset.istGespeichert === 'true';
+                    const aktion = istGespeichert ? 'entfernen' : 'speichern';
+
+                    // Button während der Anfrage deaktivieren
+                    speichernBtn.disabled = true;
+                    const originalText = speichernBtn.textContent;
+                    speichernBtn.textContent = istGespeichert ? 'Entferne...' : 'Speichere...';
+
+                    const formData = new FormData();
+                    formData.append("rezeptId", rezeptId);
+                    formData.append("aktion", aktion);
+                    formData.append("csrf_token", "<?php require_once 'php/include/csrf_protection.php'; echo generateCSRFToken(); ?>");
+
+                    try {
+                        const res = await fetch("api/rezept-speichern.php", {
+                            method: "POST",
+                            body: formData
+                        });
+
+                        const json = await res.json();
+                        if (json.success) {
+                            // Button-Status aktualisieren
+                            const neuerStatus = json.istGespeichert;
+                            speichernBtn.dataset.istGespeichert = neuerStatus ? 'true' : 'false';
+                            speichernBtn.textContent = neuerStatus ? '❤️ Gespeichert' : '🤍 Speichern';
+                            speichernBtn.className = neuerStatus ? 'btn btn-secondary' : 'btn btn-primary';
+
+                            // Toast-Nachricht anzeigen
+                            showToast(json.message, "success");
+                        } else {
+                            showToast("Fehler: " + json.message, "error");
+                            speichernBtn.textContent = originalText;
+                        }
+                    } catch (error) {
+                        showToast("Netzwerkfehler beim Speichern", "error");
+                        speichernBtn.textContent = originalText;
+                    } finally {
+                        speichernBtn.disabled = false;
+                    }
+                });
+            }
+
+            // Toast-Funktion
+            function showToast(message, type) {
+                const toast = document.createElement("div");
+                toast.className = `flash-toast ${type}`;
+                toast.textContent = message;
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 20px;
+                    border-radius: 4px;
+                    color: white;
+                    font-weight: bold;
+                    z-index: 1000;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                `;
+
+                if (type === "success") {
+                    toast.style.backgroundColor = "#28a745";
+                } else if (type === "error") {
+                    toast.style.backgroundColor = "#dc3545";
+                }
+
+                document.body.appendChild(toast);
+
+                // Einblenden
+                setTimeout(() => toast.style.opacity = "1", 10);
+
+                // Ausblenden und entfernen
+                setTimeout(() => {
+                    toast.style.opacity = "0";
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
         });
     </script>
+
+    <style>
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+            border-color: #4e555b;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>

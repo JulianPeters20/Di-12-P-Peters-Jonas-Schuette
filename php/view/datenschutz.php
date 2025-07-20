@@ -67,7 +67,7 @@
         </p>
         <p>
             <strong>Rechtsgrundlage:</strong> Die Datenübertragung erfolgt auf Grundlage deiner Einwilligung gemäß Art. 6 Abs. 1 lit. a DSGVO.
-            Du kannst diese Einwilligung jederzeit widerrufen.
+            Du kannst diese Einwilligung jederzeit widerrufen, indem du uns eine E-Mail an <a href="mailto:info@brokeandhungry.de">info@brokeandhungry.de</a> sendest.
         </p>
         <p>
             <strong>Datenschutz bei Spoonacular:</strong> Informationen zum Umgang mit Datenschutz durch Spoonacular findest du hier:

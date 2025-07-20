@@ -5,6 +5,8 @@
  * CSRF-Schutz für Formulare
  */
 
+require_once __DIR__ . '/../exceptions/SecurityException.php';
+
 /**
  * Generiert ein CSRF-Token und speichert es in der Session
  */
@@ -27,18 +29,22 @@ function validateCSRFToken(string $token): bool {
  */
 function getCSRFTokenField(): string {
     $token = generateCSRFToken();
-    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($token) . '">';
+    return '<input type="hidden" name="csrf_token" value="' . $token . '">';
 }
 
 /**
  * Prüft CSRF-Token bei POST-Requests
+ * Verwendet Exception statt die()
+ *
+ * @throws SecurityException bei ungültigem CSRF-Token
  */
 function checkCSRFToken(): void {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $token = $_POST['csrf_token'] ?? '';
         if (!validateCSRFToken($token)) {
             http_response_code(403);
-            die('CSRF-Token ungültig. Bitte versuche es erneut.');
+            error_log("CSRF-Token-Validierung fehlgeschlagen für IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unbekannt'));
+            throw new SecurityException('CSRF-Token ungültig. Bitte versuche es erneut.');
         }
     }
 }
