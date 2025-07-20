@@ -1,0 +1,248 @@
+/* ======= Broke & Hungry - Modular CSS Architecture ======= */
+
+/* Import all CSS modules in the correct order */
+
+/* 1. Base styles (reset, variables, typography) */
+@import url('base.css');
+
+/* 2. Layout styles (grid, header, footer, navigation) */
+@import url('layout.css');
+
+/* 3. Component styles (buttons, forms, cards, alerts) */
+@import url('components.css');
+
+/* 4. Application-specific styles (recipes, search, ratings) */
+@import url('app-specific.css');
+
+/* 5. Responsive styles (media queries) */
+@import url('responsive.css');
+
+/* ======= Critical CSS Overrides ======= */
+/* Only add styles here that need to override imported modules */
+
+/* Ensure proper z-index stacking */
+.modal-overlay {
+  z-index: 1050;
+}
+
+.dropdown-list {
+  z-index: 1000;
+}
+
+.kopfzeile {
+  z-index: 100;
+}
+
+/* Performance optimizations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #000;
+    --text: #000;
+    --bg: #fff;
+    --card-bg: #fff;
+  }
+}
+
+/* Dark mode support (future enhancement) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #5CBF60;
+    --primary-hover: #4CAF50;
+    --secondary: #2d3748;
+    --accent: #4299e1;
+    --text: #e2e8f0;
+    --text-light: #a0aec0;
+    --muted: #718096;
+    --border: #4a5568;
+    --card-bg: #2d3748;
+    --bg: #1a202c;
+    --success: #48bb78;
+    --warning: #ed8936;
+    --danger: #f56565;
+    --info: #4299e1;
+  }
+  
+  .dropdown-list,
+  .dropdown-header {
+    background-color: var(--card-bg);
+    color: var(--text);
+  }
+  
+  .form-row input,
+  .form-row select,
+  .form-row textarea,
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background-color: var(--card-bg);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  
+  .suchleiste input {
+    background-color: var(--card-bg);
+    color: var(--text);
+  }
+}
+
+/* Print optimizations */
+@media print {
+  /* Hide all interactive elements */
+  .btn,
+  .dropdown-multiselect,
+  .suchleiste-container,
+  .nutzer-aktionen-container,
+  .rezept-aktion {
+    display: none !important;
+  }
+  
+  /* Optimize layout for print */
+  .rezept-galerie {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .rezept-karte {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  /* Ensure text is readable */
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  h1 { font-size: 18pt; }
+  h2 { font-size: 16pt; }
+  h3 { font-size: 14pt; }
+  h4 { font-size: 12pt; }
+}
+
+/* Focus management for accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--accent);
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+  z-index: 1000;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Ensure proper focus indicators */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse users */
+.js-focus-visible button:focus:not(.focus-visible),
+.js-focus-visible input:focus:not(.focus-visible),
+.js-focus-visible select:focus:not(.focus-visible),
+.js-focus-visible textarea:focus:not(.focus-visible),
+.js-focus-visible a:focus:not(.focus-visible) {
+  outline: none;
+}
+
+/* ======= Performance Critical Styles ======= */
+/* These styles are loaded inline for better performance */
+
+/* Critical above-the-fold styles */
+.kopfzeile {
+  contain: layout style;
+}
+
+.rezept-galerie {
+  contain: layout;
+}
+
+/* GPU acceleration for animations */
+.rezept-karte,
+.btn,
+.dropdown-header {
+  will-change: transform;
+}
+
+.rezept-karte:hover,
+.btn:hover {
+  transform: translateY(-2px);
+  will-change: auto;
+}
+
+/* Optimize font loading */
+@font-face {
+  font-family: 'Segoe UI';
+  font-display: swap;
+}
+
+/* ======= Browser Compatibility ======= */
+/* Fallbacks for older browsers */
+
+/* CSS Grid fallback */
+@supports not (display: grid) {
+  .rezept-galerie {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .rezept-karte {
+    flex: 0 0 calc(33.333% - 20px);
+    margin: 10px;
+  }
+}
+
+/* CSS Custom Properties fallback */
+@supports not (color: var(--primary)) {
+  .btn {
+    background-color: #4CAF50;
+  }
+  
+  .btn:hover {
+    background-color: #45a049;
+  }
+}
+
+/* Flexbox fallback */
+@supports not (display: flex) {
+  .kopfzeile {
+    display: table;
+    width: 100%;
+  }
+  
+  .logo,
+  .haupt-nav,
+  .nutzer-nav {
+    display: table-cell;
+    vertical-align: middle;
+  }
+}

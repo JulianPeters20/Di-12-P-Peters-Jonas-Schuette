@@ -13,8 +13,21 @@ require_once 'php/include/form_utils.php';
  * Alle Rezepte anzeigen, optional mit Suchfilter
  */
 function showRezepte(): void {
+    // Sortier-Parameter aus URL oder Session holen
+    $sortBy = $_GET['sort'] ?? $_SESSION['rezepte_sort'] ?? 'datum';
+
+    // Gültige Sortier-Parameter validieren
+    $validSortOptions = ['bewertung', 'beliebtheit', 'datum'];
+
+    if (!in_array($sortBy, $validSortOptions)) {
+        $sortBy = 'datum';
+    }
+
+    // Sortierung in Session speichern
+    $_SESSION['rezepte_sort'] = $sortBy;
+
     $dao = new RezeptDAO();
-    $alleRezepte = $dao->findeAlle();
+    $alleRezepte = $dao->findeAlleMitSortierung($sortBy, 'desc'); // Immer absteigend
 
     $bewertungDAO = new BewertungDAO();
 
@@ -25,7 +38,8 @@ function showRezepte(): void {
     }
     unset($rezept);
 
-    // Filter je nach Suche etc.
+    // Parameter für View verfügbar machen
+    $currentSort = $sortBy;
 
     $rezepte = $alleRezepte;
     require 'php/view/rezepte.php';

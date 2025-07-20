@@ -1,20 +1,16 @@
 <main>
     <h2>Registrierung</h2>
-
-    <div style="display: flex; gap: 30px; align-items: flex-start;">
-        <!-- Hauptformular -->
-        <div style="flex: 1; max-width: 500px;">
-            <form action="index.php?page=registrierung" method="post" autocomplete="off" novalidate>
+    <form action="index.php?page=registrierung" method="post" autocomplete="off" novalidate>
         <?= getCSRFTokenField() ?>
 
         <div class="form-row">
             <label for="benutzername">Benutzername:</label>
-            <div style="display:flex; align-items:center; gap:10px; flex:1;">
-                <input type="text" id="benutzername" name="benutzername" maxlength="30"
-                       autocomplete="username"
-                       value="<?= isset($benutzername) ? htmlspecialchars($benutzername) : (isset($_POST['benutzername']) ? htmlspecialchars($_POST['benutzername']) : '') ?>">
-                <span class="hinweis">(öffentlich sichtbar, optional)</span>
-            </div>
+            <input type="text" id="benutzername" name="benutzername" maxlength="30"
+                   autocomplete="username"
+                   value="<?= isset($benutzername) ? htmlspecialchars($benutzername) : (isset($_POST['benutzername']) ? htmlspecialchars($_POST['benutzername']) : '') ?>">
+        </div>
+        <div style="text-align: center; margin-bottom: 18px; font-size: 14px; color: #6c757d;">
+            (öffentlich sichtbar)
         </div>
         <div class="form-row-benutzername-fehler">
             <span id="benutzername-fehler" class="benutzername-fehler"></span>
@@ -53,47 +49,45 @@
             <input type="submit" value="Registrieren" class="btn">
             <input type="reset" value="Zurücksetzen">
         </div>
-            </form>
-            <div style="margin-top: 16px; text-align:center;">
-                Du hast bereits ein Konto?
-                <form action="index.php?page=anmeldung" method="get" style="display:inline;">
-                    <input type="hidden" name="page" value="anmeldung">
-                    <button type="submit" class="btn" style="margin-left:8px;">Hier anmelden</button>
-                </form>
-            </div>
-        </div>
+    </form>
+    <div style="margin-top: 16px; text-align:center;">
+        Du hast bereits ein Konto?
+        <form action="index.php?page=anmeldung" method="get" style="display:inline;">
+            <input type="hidden" name="page" value="anmeldung">
+            <button type="submit" class="btn" style="margin-left:8px;">Hier anmelden</button>
+        </form>
+    </div>
 
-        <!-- Passwort-Feedback-Panel -->
-        <div id="password-feedback" style="flex: 0 0 320px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; font-size: 14px; height: fit-content; position: sticky; top: 20px;">
-            <h4 style="margin: 0 0 15px 0; color: #495057; font-size: 16px; font-weight: bold;">Passwort-Anforderungen:</h4>
-            <ul style="margin: 0; padding: 0; list-style: none;">
-                <li id="rule-length" class="password-rule">
-                    <span class="rule-icon">•</span>
-                    <span class="rule-text">Mindestens 8 Zeichen</span>
-                </li>
-                <li id="rule-number" class="password-rule">
-                    <span class="rule-icon">•</span>
-                    <span class="rule-text">Mindestens eine Zahl (0-9)</span>
-                </li>
-                <li id="rule-uppercase" class="password-rule">
-                    <span class="rule-icon">•</span>
-                    <span class="rule-text">Mindestens einen Großbuchstaben (A-Z)</span>
-                </li>
-                <li id="rule-lowercase" class="password-rule">
-                    <span class="rule-icon">•</span>
-                    <span class="rule-text">Mindestens einen Kleinbuchstaben (a-z)</span>
-                </li>
-                <li id="rule-special" class="password-rule">
-                    <span class="rule-icon">•</span>
-                    <span class="rule-text">Mindestens ein Sonderzeichen (!@#$%^&*()_+-=[]{}|;:,.<>?)</span>
-                </li>
-            </ul>
-            <div id="password-strength" style="margin-top: 15px; padding: 8px 12px; border-radius: 4px; text-align: center; font-weight: bold; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; display: none;">
-                Schwach
-            </div>
-            <div id="no-js-info" style="margin-top: 15px; padding: 8px 12px; border-radius: 4px; text-align: center; font-size: 12px; color: #6c757d; background: #e9ecef; border: 1px solid #dee2e6;">
-                💡 Mit aktiviertem JavaScript erhalten Sie Live-Feedback
-            </div>
+    <!-- Passwort-Feedback-Panel (unter dem Formular) -->
+    <div id="password-feedback" style="margin: 30px auto 0 auto; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; font-size: 14px;">
+        <h4 style="margin: 0 0 15px 0; color: #495057; font-size: 16px; font-weight: bold;">Passwort-Anforderungen:</h4>
+        <ul style="margin: 0; padding: 0; list-style: none;">
+            <li id="rule-length" class="password-rule">
+                <span class="rule-icon">•</span>
+                <span class="rule-text">Mindestens 8 Zeichen</span>
+            </li>
+            <li id="rule-number" class="password-rule">
+                <span class="rule-icon">•</span>
+                <span class="rule-text">Mindestens eine Zahl (0-9)</span>
+            </li>
+            <li id="rule-uppercase" class="password-rule">
+                <span class="rule-icon">•</span>
+                <span class="rule-text">Mindestens einen Großbuchstaben (A-Z)</span>
+            </li>
+            <li id="rule-lowercase" class="password-rule">
+                <span class="rule-icon">•</span>
+                <span class="rule-text">Mindestens einen Kleinbuchstaben (a-z)</span>
+            </li>
+            <li id="rule-special" class="password-rule">
+                <span class="rule-icon">•</span>
+                <span class="rule-text">Mindestens ein Sonderzeichen (!@#$%^&*()_+-=[]{}|;:,.<>?)</span>
+            </li>
+        </ul>
+        <div id="password-strength" style="margin-top: 15px; padding: 8px 12px; border-radius: 4px; text-align: center; font-weight: bold; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; display: none;">
+            Schwach
+        </div>
+        <div id="no-js-info" style="margin-top: 15px; padding: 8px 12px; border-radius: 4px; text-align: center; font-size: 12px; color: #6c757d; background: #e9ecef; border: 1px solid #dee2e6;">
+            💡 Mit aktiviertem JavaScript erhalten Sie Live-Feedback
         </div>
     </div>
 </main>
@@ -353,16 +347,8 @@
 
 /* Responsive Design für kleinere Bildschirme */
 @media (max-width: 768px) {
-    main > div[style*="display: flex"] {
-        flex-direction: column !important;
-        gap: 20px !important;
-    }
-
     #password-feedback {
-        flex: 1 !important;
-        max-width: none !important;
-        position: static !important;
-        order: -1; /* Zeige Feedback-Panel über dem Formular auf mobilen Geräten */
+        margin: 20px auto 0 auto !important;
     }
 }
 

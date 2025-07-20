@@ -10,10 +10,8 @@
 
         <form action="index.php?page=rezept-neu" method="post" enctype="multipart/form-data">
             <?= getCSRFTokenField() ?>
-            <div class="form-row">
+            <div class="form-group">
                 <label for="titel">Titel:</label>
-            </div>
-            <div class="form-row">
                 <input
                         type="text"
                         id="titel"
@@ -24,7 +22,7 @@
                 >
             </div>
 
-            <div class="form-row">
+            <div class="form-group">
                 <label for="zutaten">Zutaten:</label>
             </div>
 
@@ -37,7 +35,7 @@
                     $einheitenListe = ["g", "kg", "ml", "l", "Msp", "TL", "EL", "Stück"];
                     $count = max(count($zutatennamen), count($mengen), count($einheiten));
                     for ($i = 0; $i < $count; $i++): ?>
-                        <div class="zutaten-paar" style="display: flex; gap: 8px; margin-bottom: 6px; align-items:center;">
+                        <div class="zutaten-paar">
                             <input type="text" name="zutatennamen[]" placeholder="Zutat" value="<?= htmlspecialchars($zutatennamen[$i]) ?>">
                             <input type="text" name="mengen[]" placeholder="Menge" value="<?= htmlspecialchars($mengen[$i]) ?>">
                             <select name="einheiten[]">
@@ -51,27 +49,25 @@
                     <?php endfor; ?>
                 </div>
 
-                <div class="form-row" style="margin-top: 8px;">
+                <div class="zutaten-buttons">
                     <button type="button" class="btn" onclick="neueZutat()">+ Neue Zutat</button>
-                    <button type="button" class="btn" id="btn-remove-zutat" onclick="entferneZutat()" disabled style="margin-left: 8px;">- Zutat entfernen</button>
+                    <button type="button" class="btn" id="btn-remove-zutat" onclick="entferneZutat()" disabled>- Zutat entfernen</button>
                 </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-group">
                 <label for="zubereitung">Zubereitung:</label>
-            </div>
-            <div class="form-row">
                 <textarea
                         id="zubereitung"
                         name="zubereitung"
                         rows="6"
                         maxlength="2000"
                         required
+                        placeholder="Beschreibe hier die Zubereitung deines Rezepts..."
                 ><?= htmlspecialchars($_SESSION["formdata"]["zubereitung"] ?? "") ?></textarea>
             </div>
 
-            <!-- Rest des Formulars unverändert -->
-            <div class="form-row">
+            <div class="form-group">
                 <label for="utensilien">Utensilien:</label>
                 <div class="dropdown-multiselect">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
@@ -91,7 +87,7 @@
                 </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-group">
                 <label>Kategorien:</label>
                 <div class="dropdown-multiselect">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
@@ -111,14 +107,14 @@
                 </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-group">
                 <label for="preisklasse">Preisklasse:</label>
                 <div class="dropdown-multiselect single-select">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
                         <span class="dropdown-label">-- auswählen --</span>
                         <span class="dropdown-arrow">▾</span>
                     </div>
-                    <select name="preisklasse" id="preisklasse-select" style="display:none;">
+                    <select name="preisklasse" id="preisklasse-select" class="hidden-select">
                         <?php foreach ($_SESSION['preisklasseListe'] as $id => $pl):
                             $selected = ((string)($_SESSION["formdata"]["preisklasse"] ?? '') === (string)$id) ? "selected" : "";
                             ?>
@@ -136,14 +132,14 @@
                 </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-group">
                 <label for="portionsgroesse">Portionsgröße:</label>
                 <div class="dropdown-multiselect single-select">
                     <div class="dropdown-header" onclick="toggleDropdown(this)">
                         <span class="dropdown-label">-- auswählen --</span>
                         <span class="dropdown-arrow">▾</span>
                     </div>
-                    <select name="portionsgroesse" id="portionsgroesse-select" style="display:none;">
+                    <select name="portionsgroesse" id="portionsgroesse-select" class="hidden-select">
                         <?php foreach ($_SESSION['portionsgroesseListe'] as $id => $pg):
                             $selected = ((string)($_SESSION["formdata"]["portionsgroesse"] ?? '') === (string)$id) ? "selected" : "";
                             ?>
@@ -161,7 +157,8 @@
                 </div>
             </div>
 
-            <div class="form-row datei-auswahl">
+            <div class="form-group">
+                <label for="bild">Bild:</label>
                 <div class="custom-file-upload">
                     <button type="button" id="btn-select-file" class="btn">Datei auswählen</button>
                     <span id="selected-file-name">Keine Datei ausgewählt</span>
@@ -169,11 +166,11 @@
                 </div>
             </div>
 
-            <div id="preview-container" style="display:none; border-radius:6px; margin-top: 10px; overflow: visible;">
-                <img id="img-preview" src="" alt="Bildvorschau" style="border-radius:6px; display:none; width:auto; max-width:300px; height:auto; object-fit:contain;">
+            <div id="preview-container" class="image-preview-container">
+                <img id="img-preview" src="" alt="Bildvorschau" class="image-preview">
             </div>
 
-            <div class="form-row">
+            <div class="form-group">
                 <input type="submit" value="Rezept speichern" class="btn">
                 <input type="reset" value="Eingaben zurücksetzen" class="btn">
             </div>

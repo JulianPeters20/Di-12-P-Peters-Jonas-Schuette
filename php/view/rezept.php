@@ -130,8 +130,8 @@
                 <h3>Nährwerte pro Portion</h3>
 
                 <!-- Einwilligungsbereich (wird nur angezeigt wenn noch keine Einwilligung) -->
-                <div id="consent-area" style="<?= !empty($_SESSION['naehrwerte_einwilligung']) ? 'display: none;' : '' ?>">
-                    <div class="consent-info" style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                <div id="consent-area" class="<?= !empty($_SESSION['naehrwerte_einwilligung']) ? 'flash-hidden' : '' ?>">
+                    <div class="consent-info">
                         <h4>Datenschutzhinweis</h4>
                         <p>Zur Berechnung der Nährwerte werden die Zutaten dieses Rezepts an den externen Dienst <strong>Spoonacular</strong> übertragen. Es werden keine personenbezogenen Daten übermittelt.</p>
                         <p>Weitere Informationen findest du in unserer <a href="index.php?page=datenschutz" target="_blank">Datenschutzerklärung</a>.</p>
@@ -438,31 +438,3 @@
         });
     </script>
 
-    <style>
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #004085;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #545b62;
-            border-color: #4e555b;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-    </style>

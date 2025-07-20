@@ -18,7 +18,7 @@
 
     // Flash-Nachrichten für JavaScript verfügbar machen
     if (!empty($_SESSION['flash'])) {
-        echo '<div data-flash-type="' . htmlspecialchars($_SESSION['flash']['type']) . '" data-flash-message="' . htmlspecialchars($_SESSION['flash']['message']) . '" style="display:none;"></div>';
+        echo '<div data-flash-type="' . htmlspecialchars($_SESSION['flash']['type']) . '" data-flash-message="' . htmlspecialchars($_SESSION['flash']['message']) . '" class="flash-hidden"></div>';
         // Flash-Nachricht NICHT hier löschen - wird in main.js nach Anzeige gelöscht
     }
     ?>
