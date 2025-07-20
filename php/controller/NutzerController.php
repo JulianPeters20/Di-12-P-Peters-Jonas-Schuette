@@ -329,6 +329,15 @@ function loescheNutzer(int $id): void {
     }
 
     $dao = new NutzerDAO();
+
+    // Prüfen, ob der zu löschende Nutzer ein Admin ist
+    $zuLoeschenderNutzer = $dao->findeNachID($id);
+    if ($zuLoeschenderNutzer && $zuLoeschenderNutzer->istAdmin) {
+        flash("warning", "Administratoren können nicht gelöscht werden.");
+        header("Location: index.php?page=nutzerliste");
+        exit;
+    }
+
     $ok = $dao->loesche($id);
 
     if ($ok) {

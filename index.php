@@ -187,6 +187,16 @@ switch ($page) {
             exit;
         }
 
+        // Zusätzlicher Schutz: Prüfen ob der zu löschende Nutzer ein Admin ist
+        require_once 'php/model/NutzerDAO.php';
+        $nutzerDAO = new NutzerDAO();
+        $zuLoeschenderNutzer = $nutzerDAO->findeNachID($id);
+        if ($zuLoeschenderNutzer && $zuLoeschenderNutzer->istAdmin) {
+            flash("warning", "Administratoren können nicht gelöscht werden.");
+            header("Location: index.php?page=nutzerliste");
+            exit;
+        }
+
         loescheNutzer($id);
         break;
 
